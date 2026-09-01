@@ -178,6 +178,10 @@ def edit_profile(request):
 
     return render(request, 'users/edit_profile.html', {'form': form})
 
+@login_required
+def security(request):
+    return render(request, 'users/security.html')
+
 def logout_view(request):
     logout(request)
     return redirect('home')

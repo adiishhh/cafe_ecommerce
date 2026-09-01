@@ -1,0 +1,102 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Security | SmartCafe</title>
+
+    <link rel="icon"
+          type="image/png"
+          href="{% static 'users/images/favicon.png' %}">
+
+    <link rel="stylesheet"
+          href="{% static 'users/css/profile.css' %}">
+
+</head>
+
+
+<body>
+
+<main class="profile-page">
+
+    <div class="profile-container">
+
+        <!-- Header -->
+
+        <header class="profile-header">
+
+            <a href="{% url 'profile' %}"
+               class="back-button">
+                ←
+            </a>
+
+            <div>
+
+                <h1>Security</h1>
+
+                <p>Manage your account security</p>
+
+            </div>
+
+        </header>
+
+
+        <!-- Security Options -->
+
+        <section class="profile-section security-options">
+
+            <a href="#"
+               class="security-option">
+
+                <div class="security-option-content">
+
+                    <h2>Change Email</h2>
+
+                    <p>
+                        Update your email address with verification
+                    </p>
+
+                </div>
+
+                <span class="security-option-arrow">
+                    →
+                </span>
+
+            </a>
+
+
+            <a href="#"
+               class="security-option">
+
+                <div class="security-option-content">
+
+                    <h2>Change Password</h2>
+
+                    <p>
+                        Update your account password
+                    </p>
+
+                </div>
+
+                <span class="security-option-arrow">
+                    →
+                </span>
+
+            </a>
+
+        </section>
+
+    </div>
+
+</main>
+
+</body>
+
+</html>
