@@ -258,6 +258,34 @@ a {
     height: 18px;
 }
 
+.social-login {
+    margin-top: 16px;
+}
+
+.google-button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 12px 16px;
+
+    border: 1px solid #ddd;
+    border-radius: 8px;
+
+    background: white;
+    color: #333;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    text-decoration: none;
+}
+
+.google-button:hover {
+    background: #f7f7f7;
+}
+
 
 /* Divider */
 
