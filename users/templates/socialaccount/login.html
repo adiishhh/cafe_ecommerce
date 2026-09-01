@@ -1,0 +1,318 @@
+{% load i18n %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Sign in with {{ provider.name }} | SmartCafe</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 24px;
+
+            font-family:
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Helvetica,
+                Arial,
+                sans-serif;
+
+            background: #f8f7f4;
+            color: #222;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 430px;
+        }
+
+        .brand {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .brand-name {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #2f241f;
+        }
+
+        .brand-subtitle {
+            margin-top: 6px;
+            font-size: 14px;
+            color: #777;
+        }
+
+        .auth-card {
+            background: #fff;
+            border: 1px solid #e8e5e1;
+            border-radius: 18px;
+            padding: 36px 32px;
+
+            box-shadow:
+                0 10px 30px rgba(0, 0, 0, 0.06);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+
+            margin-bottom: 28px;
+
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+
+            transition: color 0.2s ease;
+        }
+
+        .back-link:hover {
+            color: #2f241f;
+        }
+
+        .back-arrow {
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .google-icon {
+            width: 52px;
+            height: 52px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            margin: 0 auto 20px;
+
+            border: 1px solid #e5e5e5;
+            border-radius: 50%;
+
+            background: #fff;
+        }
+
+        .google-icon svg {
+            width: 25px;
+            height: 25px;
+        }
+
+        .heading {
+            text-align: center;
+            font-size: 25px;
+            font-weight: 700;
+            letter-spacing: -0.4px;
+
+            color: #2f241f;
+        }
+
+        .description {
+            margin: 12px auto 28px;
+
+            max-width: 330px;
+
+            text-align: center;
+            line-height: 1.6;
+            font-size: 14px;
+            color: #707070;
+        }
+
+        .continue-button {
+            width: 100%;
+            height: 50px;
+
+            border: none;
+            border-radius: 10px;
+
+            background: #2f241f;
+            color: #fff;
+
+            font-size: 15px;
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition:
+                background 0.2s ease,
+                transform 0.15s ease;
+        }
+
+        .continue-button:hover {
+            background: #1f1815;
+        }
+
+        .continue-button:active {
+            transform: scale(0.99);
+        }
+
+        .cancel-link {
+            display: block;
+
+            margin-top: 18px;
+
+            text-align: center;
+
+            color: #777;
+            text-decoration: none;
+
+            font-size: 14px;
+            font-weight: 500;
+
+            transition: color 0.2s ease;
+        }
+
+        .cancel-link:hover {
+            color: #2f241f;
+        }
+
+        .security-note {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+
+            margin-top: 26px;
+            padding-top: 20px;
+
+            border-top: 1px solid #eee;
+
+            font-size: 12px;
+            line-height: 1.5;
+            color: #858585;
+        }
+
+        .security-icon {
+            flex-shrink: 0;
+            font-size: 14px;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 18px;
+            }
+
+            .brand {
+                margin-bottom: 22px;
+            }
+
+            .brand-name {
+                font-size: 25px;
+            }
+
+            .auth-card {
+                padding: 28px 22px;
+                border-radius: 16px;
+            }
+
+            .heading {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="auth-container">
+
+        <div class="brand">
+            <div class="brand-name">SmartCafe</div>
+            <div class="brand-subtitle">Order smarter. Enjoy better.</div>
+        </div>
+
+        <section class="auth-card">
+
+            <a href="{% url 'account_login' %}" class="back-link">
+                <span class="back-arrow">←</span>
+                Back to sign in
+            </a>
+
+            <div class="google-icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                        fill="#4285F4"
+                        d="M21.35 12.23c0-.71-.06-1.39-.18-2.05H12v3.88h5.24a4.48 4.48 0 0 1-1.94 2.94v2.45h3.14c1.84-1.69 2.91-4.18 2.91-7.22z"
+                    />
+                    <path
+                        fill="#34A853"
+                        d="M12 21.6c2.63 0 4.84-.87 6.45-2.35l-3.14-2.45c-.87.58-1.98.93-3.31.93-2.54 0-4.69-1.72-5.46-4.03H3.3v2.53A9.74 9.74 0 0 0 12 21.6z"
+                    />
+                    <path
+                        fill="#FBBC05"
+                        d="M6.54 13.7A5.86 5.86 0 0 1 6.23 12c0-.59.1-1.17.31-1.7V7.77H3.3A9.76 9.76 0 0 0 2.25 12c0 1.57.38 3.05 1.05 4.23l3.24-2.53z"
+                    />
+                    <path
+                        fill="#EA4335"
+                        d="M12 6.27c1.43 0 2.71.49 3.72 1.45l2.79-2.79C16.84 3.35 14.63 2.4 12 2.4a9.74 9.74 0 0 0-8.7 5.37l3.24 2.53C7.31 7.99 9.46 6.27 12 6.27z"
+                    />
+                </svg>
+            </div>
+
+            {% if process == "connect" %}
+
+                <h1 class="heading">
+                    Connect {{ provider.name }}
+                </h1>
+
+                <p class="description">
+                    You're about to connect your
+                    {{ provider.name }} account to SmartCafe.
+                </p>
+
+            {% else %}
+
+                <h1 class="heading">
+                    Sign in with {{ provider.name }}
+                </h1>
+
+                <p class="description">
+                    You're about to sign in to SmartCafe
+                    using your {{ provider.name }} account.
+                </p>
+
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+
+                <button type="submit" class="continue-button">
+                    Continue with {{ provider.name }}
+                </button>
+            </form>
+
+            <a href="{% url 'account_login' %}" class="cancel-link">
+                Cancel
+            </a>
+
+            <div class="security-note">
+                <span class="security-icon">🔒</span>
+
+                <span>
+                    Your {{ provider.name }} password is never shared
+                    with SmartCafe. Authentication is securely handled
+                    by {{ provider.name }}.
+                </span>
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+</html>
