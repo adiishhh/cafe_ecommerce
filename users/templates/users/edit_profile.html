@@ -1,0 +1,299 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Edit Profile | SmartCafe</title>
+
+    <link rel="icon"
+          type="image/png"
+          href="{% static 'users/images/favicon.png' %}">
+
+    <link rel="stylesheet"
+          href="{% static 'users/css/profile.css' %}">
+
+</head>
+
+
+<body>
+
+<main class="profile-page">
+
+    <div class="profile-container">
+
+        <!-- Header -->
+
+        <header class="profile-header">
+
+            <a href="{% url 'profile' %}"
+               class="back-button">
+                ←
+            </a>
+
+            <div>
+
+                <h1>Edit Profile</h1>
+
+                <p>Update your personal information</p>
+
+            </div>
+
+        </header>
+
+
+        <!-- Edit Profile -->
+
+        <section class="profile-section edit-profile-section">
+
+            <div class="section-title">
+
+                <h2>Personal Information</h2>
+
+            </div>
+
+
+            <form method="POST"
+                  enctype="multipart/form-data"
+                  class="profile-edit-form">
+
+                {% csrf_token %}
+
+
+                {% if form.non_field_errors %}
+
+                    <div class="form-errors">
+
+                        {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+
+                    </div>
+
+                {% endif %}
+
+                <!-- Profile Image -->
+
+                <div class="profile-image-field">
+                
+                    <div class="edit-avatar" id="profilePreview">
+                    
+                        {% if request.user.profile_image %}
+                    
+                            <img src="{{ request.user.profile_image.url }}"
+                                 alt="Profile image">
+                    
+                        {% else %}
+                    
+                            <span>
+                                {{ request.user.name|first|upper }}
+                            </span>
+                        
+                        {% endif %}
+                        
+                    </div>
+                
+                
+                    <div class="image-controls">
+                    
+                        <div class="image-heading">
+                        
+                            <h3>Profile Photo</h3>
+                        
+                            <p>
+                                Choose a profile photo to personalize your account.
+                            </p>
+                        
+                        </div>
+                    
+                    
+                        <label for="{{ form.profile_image.id_for_label }}"
+                               class="choose-image-button">
+                    
+                            Choose Photo
+                    
+                        </label>
+                    
+                        <input type="file"
+                               name="profile_image"
+                               id="{{ form.profile_image.id_for_label }}"
+                               accept="image/*"
+                               class="profile-image-input">
+                    
+                    
+                        <div class="image-meta">
+                        
+                            <span id="selectedFile">
+                            
+                                {% if request.user.profile_image %}
+                                    Current photo
+                                {% else %}
+                                    No photo selected
+                                {% endif %}
+                            
+                            </span>
+                        
+                        
+                            {% if request.user.profile_image %}
+                        
+                                <div class="remove-image-wrapper">
+                                
+                                    <input type="checkbox"
+                                           name="profile_image-clear"
+                                           id="profile_image-clear"
+                                           class="clear-image-checkbox">
+                                
+                                    <label for="profile_image-clear"
+                                           class="remove-image">
+                                
+                                        Remove current photo
+                                
+                                    </label>
+                                
+                                </div>
+                            
+                            {% endif %}
+                            
+                        </div>
+                    
+                    
+                        {% for error in form.profile_image.errors %}
+                    
+                            <p class="field-error">
+                                {{ error }}
+                            </p>
+                        
+                        {% endfor %}
+                        
+                    </div>
+                
+                </div>
+
+
+                <!-- Name -->
+
+                <div class="form-field">
+
+                    <label for="{{ form.name.id_for_label }}">
+                        NAME
+                    </label>
+
+                    {{ form.name }}
+
+                    {% for error in form.name.errors %}
+
+                        <p class="field-error">
+                            {{ error }}
+                        </p>
+
+                    {% endfor %}
+
+                </div>
+
+
+                <!-- Email -->
+
+                <div class="form-field">
+
+                    <label>
+                        EMAIL
+                    </label>
+
+                    <input type="email"
+                           value="{{ request.user.email }}"
+                           disabled>
+
+                    <small class="field-help">
+                        Email changes require verification.
+                    </small>
+
+                </div>
+
+
+                <!-- Phone -->
+
+                <div class="form-field">
+
+                    <label for="{{ form.phone.id_for_label }}">
+                        PHONE
+                    </label>
+
+                    {{ form.phone }}
+
+                    {% for error in form.phone.errors %}
+
+                        <p class="field-error">
+                            {{ error }}
+                        </p>
+
+                    {% endfor %}
+
+                </div>
+
+
+                <!-- Actions -->
+
+                <div class="profile-edit-actions">
+
+                    <a href="{% url 'profile' %}"
+                       class="guest-button">
+                        Cancel
+                    </a>
+
+                    <button type="submit"
+                            class="primary-button">
+                        Save Changes
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+    </div>
+
+</main>
+
+<script>
+
+const imageInput = document.getElementById('id_profile_image');
+const profilePreview = document.getElementById('profilePreview');
+const selectedFile = document.getElementById('selectedFile');
+
+imageInput.addEventListener('change', function () {
+
+    const file = this.files[0];
+
+    if (!file) {
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function (event) {
+
+        profilePreview.innerHTML = `
+            <img src="${event.target.result}"
+                 alt="Profile image preview">
+        `;
+
+    };
+
+    reader.readAsDataURL(file);
+
+    selectedFile.textContent = file.name;
+
+});
+
+</script>
+
+</body>
+
+</html>

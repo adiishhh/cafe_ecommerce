@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from users.forms import SignupForm, SignupOTPForm
+from users.forms import SignupForm, SignupOTPForm, ProfileEditForm
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login, authenticate,get_user_model
 from django.contrib.auth.decorators import login_required
@@ -163,6 +163,20 @@ def login_view(request):
 def profile(request):
     default_address = request.user.addresses.filter(is_default=True).first()
     return render(request, 'users/profile.html', {'default_address': default_address})
+
+@login_required
+def edit_profile(request):
+    if request.method == 'POST':
+        form = ProfileEditForm(request.POST, request.FILES, instance=request.user)
+
+        if form.is_valid():
+            form.save()
+            return redirect('profile')
+
+    else:
+        form = ProfileEditForm(instance=request.user)
+
+    return render(request, 'users/edit_profile.html', {'form': form})
 
 def logout_view(request):
     logout(request)
