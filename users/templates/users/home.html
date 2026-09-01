@@ -1,0 +1,205 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>SmartCafe</title>
+
+    <link rel="icon"
+          type="image/png"
+          href="{% static 'users/images/favicon.png' %}">
+
+    <link rel="stylesheet"
+          href="{% static 'users/css/home.css' %}">
+
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
+
+</head>
+
+
+<body>
+
+<main class="home-page">
+
+    <div class="home-container">
+
+
+        <!-- Header -->
+
+        <header class="home-header">
+
+            <a href="{% url 'home' %}" class="brand">
+
+                <span class="brand-icon">☕</span>
+
+                <span class="brand-name">
+                    SmartCafe
+                </span>
+
+            </a>
+
+
+            {% if user.is_authenticated %}
+
+                <a href="{% url 'profile' %}"
+                   class="profile-avatar">
+
+                    {{ user.name|first|upper }}
+
+                </a>
+
+            {% else %}
+
+                <a href="{% url 'login' %}"
+                   class="sign-in-button">
+
+                    Sign In
+
+                </a>
+
+            {% endif %}
+
+        </header>
+
+
+        <!-- Greeting -->
+
+        <section class="greeting">
+            {% if user.is_authenticated %}
+
+                <h1>
+                    Hello, {{ user.name }} 👋
+                </h1>
+
+            {% else %}
+
+                <h1>
+                    Hello there 👋
+                </h1>
+
+            {% endif %}
+
+        </section>
+
+
+        <!-- Navigation -->
+
+        <nav class="home-navigation">
+
+            <a href="#" class="nav-item active">
+                ☆
+                My Usuals
+            </a>
+
+            <a href="#" class="nav-item">
+                ◷
+                Current Orders
+            </a>
+
+            {% if user.is_authenticated %}
+
+                <a href="{% url 'profile' %}"
+                   class="nav-item">
+
+                    <i class="fa fa-user"></i>
+                    Profile
+
+                </a>
+
+            {% else %}
+
+                <a href="{% url 'login' %}"
+                   class="nav-item">
+
+                    <i class="fa fa-user"></i>
+                    Profile
+
+                </a>
+
+            {% endif %}
+
+        </nav>
+
+
+        <!-- Search -->
+
+        <div class="search-box">
+
+            <span class="search-icon">⌕</span>
+
+            <input type="text"
+                   placeholder="Search food & drinks..."
+                   disabled>
+
+        </div>
+
+
+        <!-- Categories -->
+
+        <div class="categories">
+
+            <button class="category active">
+                All
+            </button>
+
+            <button class="category">
+                Coffee
+            </button>
+
+            <button class="category">
+                Meals
+            </button>
+
+            <button class="category">
+                Burgers
+            </button>
+
+            <button class="category">
+                Snacks
+            </button>
+
+        </div>
+    </div>
+</main>
+<footer class="home-footer">
+
+    <div class="footer-content">
+        <div class="contact-section">
+
+            <h2>Contact Us</h2>
+
+            <div class="contact-links">
+
+                <a href="tel:+919876543210">
+                    <span>☎</span>
+                    +91 98765 43210
+                </a>
+
+                <a href="mailto:support@smartcafe.local">
+                    <span>✉</span>
+                    support@smartcafe.local
+                </a>
+
+                <a href="https://instagram.com/smartcafe" target="_blank" rel="noopener noreferrer">
+                    <span><i class="fa fa-instagram"></i></span>Instagram</a>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="footer-bottom">
+        <p>© 2026 SmartCafe. All rights reserved.</p>
+    </div>
+
+</footer>
+</body>
+</html>
