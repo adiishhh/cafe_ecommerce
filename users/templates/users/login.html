@@ -1,0 +1,106 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In | SmartCafe</title>
+    <link rel="icon" type="image/png" href="{% static 'users/images/favicon.png' %}">
+    <link rel="stylesheet" href="{% static 'users/css/auth.css' %}">
+</head>
+
+<body>
+
+    <main class="auth-page">
+
+        <div class="auth-container">
+
+            <header class="brand">
+                <div class="brand-name">
+                    <span class="brand-icon">☕</span>
+                    <span>SmartCafe</span>
+                </div>
+
+                <p>Order smarter. Enjoy better.</p>
+            </header>
+
+
+            <section class="auth-card">
+
+                <div class="auth-heading">
+                    <h1>Sign In</h1>
+                    <p>Welcome back to SmartCafe</p>
+                </div>
+
+
+                {% if form.non_field_errors %}
+                    <div class="form-errors">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+
+                <form method="POST" class="auth-form">
+                    {% csrf_token %}
+
+
+                    <div class="form-field">
+                        <label for="{{ form.username.id_for_label }}">EMAIL</label>
+
+                        {{ form.username }}
+
+                        {% for error in form.username.errors %}
+                            <p class="field-error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+
+                    <div class="form-field">
+                        <label for="{{ form.password.id_for_label }}">PASSWORD</label>
+
+                        {{ form.password }}
+
+                        {% for error in form.password.errors %}
+                            <p class="field-error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+
+                    <div class="forgot-password">
+                        <a href="{% url "password_reset" %}">Forgot password?</a>
+                    </div>
+
+
+                    <button type="submit" class="primary-button">
+                        Sign In
+                    </button>
+
+                </form>
+
+
+                <div class="divider">
+                    <span></span>
+                    <p>or</p>
+                    <span></span>
+                </div>
+
+
+                <a href="/" class="guest-button">
+                    🛒 &nbsp; Order as Guest (Scan QR)
+                </a>
+
+
+                <p class="switch-auth">
+                    Don't have an account?
+                    <a href="{% url 'signup' %}">Create Account</a>
+                </p>
+
+            </section>
+
+        </div>
+
+    </main>
+
+</body>
+</html>

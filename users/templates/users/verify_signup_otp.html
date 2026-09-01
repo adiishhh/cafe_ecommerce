@@ -1,0 +1,145 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Verify Email | SmartCafe</title>
+
+    <link rel="icon" type="image/png"
+          href="{% static 'users/images/favicon.png' %}">
+
+    <link rel="stylesheet"
+          href="{% static 'users/css/auth.css' %}">
+</head>
+
+<body>
+
+    <div class="auth-page">
+
+        <div class="auth-container">
+
+            <!-- Brand -->
+            <div class="brand">
+
+                <div class="brand-name">
+                    <div class="brand-icon">
+                        ☕
+                    </div>
+
+                    SmartCafe
+                </div>
+
+                <p>Order smarter. Enjoy better.</p>
+
+            </div>
+
+
+            <!-- Card -->
+            <div class="auth-card">
+
+                <div class="auth-heading">
+
+                    <h1>Verify your email</h1>
+
+                    <p>
+                        We've sent a 6-digit verification code
+                        to your email address.
+                    </p>
+
+                </div>
+
+
+                <form method="POST" class="auth-form">
+
+                    {% csrf_token %}
+
+                    <div class="form-field">
+
+                        <label for="{{ form.otp.id_for_label }}">
+                            VERIFICATION CODE
+                        </label>
+
+                        {{ form.otp }}
+
+                        {% if form.otp.errors %}
+                            <div class="field-error">
+                                {{ form.otp.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <button type="submit" class="primary-button">
+                        Verify Email
+                    </button>
+
+                </form>
+
+
+                <!-- Resend OTP -->
+                <div class="switch-auth">
+
+                    <p>
+                        Didn't receive the code?
+                        <a href="{% url 'resend_signup_otp' signup_id=signup_id %}"
+                           id="resend-link">
+                            Resend OTP
+                        </a>
+                    </p>
+
+                    <p class="otp-timer" id="otp-timer">
+                    {% if resend_available_in > 0 %}
+                    Resend available in
+                    <span id="timer">{{ resend_available_in }}</span>s
+                    {% else %}
+                    You can resend the OTP now.
+                    {% endif %}
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        const resendLink = document.getElementById("resend-link");
+        const timerElement = document.getElementById("timer");
+
+        let seconds = {{ resend_available_in }};
+
+        resendLink.style.pointerEvents = "none";
+        resendLink.style.opacity = "0.5";
+
+        const timer = setInterval(() => {
+
+            seconds--;
+
+            timerElement.textContent = seconds;
+
+            if (seconds <= 0) {
+
+                clearInterval(timer);
+
+                resendLink.style.pointerEvents = "auto";
+                resendLink.style.opacity = "1";
+
+                timerElement.parentElement.textContent =
+                    "You can resend the OTP now.";
+
+            }
+
+        }, 1000);
+
+    </script>
+
+</body>
+</html>

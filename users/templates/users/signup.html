@@ -1,0 +1,134 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account | SmartCafe</title>
+    <link rel="icon" type="image/png" href="{% static 'users/images/favicon.png' %}">
+    <link rel="stylesheet" href="{% static 'users/css/auth.css' %}">
+</head>
+
+<body>
+
+    <main class="auth-page">
+
+        <div class="auth-container">
+
+            <header class="brand">
+                <div class="brand-name">
+                    <span class="brand-icon">☕</span>
+                    <span>SmartCafe</span>
+                </div>
+
+                <p>Order smarter. Enjoy better.</p>
+            </header>
+
+
+            <section class="auth-card">
+
+                <div class="auth-heading">
+                    <h1>Create Account</h1>
+                    <p>Create your SmartCafe account</p>
+                </div>
+
+
+                {% if form.non_field_errors %}
+                    <div class="form-errors">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+
+                <form method="POST" class="auth-form">
+                    {% csrf_token %}
+
+
+                    <div class="form-field">
+                        <label for="{{ form.name.id_for_label }}">FULL NAME</label>
+
+                        {{ form.name }}
+
+                        {% for error in form.name.errors %}
+                            <p class="field-error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+
+                    <div class="form-field">
+                        <label for="{{ form.email.id_for_label }}">EMAIL</label>
+
+                        {{ form.email }}
+
+                        {% for error in form.email.errors %}
+                            <p class="field-error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+
+                    <div class="form-field">
+                        <label for="{{ form.phone.id_for_label }}">PHONE</label>
+
+                        {{ form.phone }}
+
+                        {% for error in form.phone.errors %}
+                            <p class="field-error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+
+                    <div class="form-field">
+                        <label for="{{ form.password1.id_for_label }}">PASSWORD</label>
+
+                        {{ form.password1 }}
+
+                        {% for error in form.password1.errors %}
+                            <p class="field-error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+
+                    <div class="form-field">
+                        <label for="{{ form.password2.id_for_label }}">CONFIRM PASSWORD</label>
+
+                        {{ form.password2 }}
+
+                        {% for error in form.password2.errors %}
+                            <p class="field-error">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+
+
+                    <button type="submit" class="primary-button">
+                        Create Account
+                    </button>
+
+                </form>
+
+
+                <div class="divider">
+                    <span></span>
+                    <p>or</p>
+                    <span></span>
+                </div>
+
+
+                <a href="/" class="guest-button">
+                    🛒 &nbsp; Order as Guest (Scan QR)
+                </a>
+
+
+                <p class="switch-auth">
+                    Already have an account?
+                    <a href="{% url 'login' %}">Sign In</a>
+                </p>
+
+            </section>
+
+        </div>
+
+    </main>
+
+</body>
+</html>
