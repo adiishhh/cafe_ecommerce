@@ -615,6 +615,72 @@ a {
     margin-left: 20px;
 }
 
+/* OTP */
+
+.otp-content {
+    padding: 24px 20px;
+}
+
+.otp-content > p {
+    margin: 0 0 6px;
+
+    color: #6f6862;
+    font-size: 14px;
+}
+
+.otp-content > strong {
+    display: block;
+
+    margin-bottom: 24px;
+
+    font-size: 14px;
+    word-break: break-word;
+}
+
+.otp-resend {
+    margin-top: 20px;
+
+    text-align: center;
+}
+
+.otp-resend p {
+    margin: 0;
+
+    color: #8f8984;
+    font-size: 13px;
+}
+
+.otp-resend a {
+    color: #d93600;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.verify-button{
+    width: auto;
+    height: 44px;
+
+    padding: 0 22px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #d93600;
+    color: #ffffff;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    box-shadow: 0 5px 12px rgba(217, 54, 0, 0.16);
+}
+
+
 /* Mobile */
 
 @media (max-width: 600px) {

@@ -1,0 +1,120 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Change Email | SmartCafe</title>
+
+    <link rel="icon"
+          type="image/png"
+          href="{% static 'users/images/favicon.png' %}">
+
+    <link rel="stylesheet"
+          href="{% static 'users/css/profile.css' %}">
+
+</head>
+
+
+<body>
+
+<main class="profile-page">
+
+    <div class="profile-container">
+
+        <header class="profile-header">
+
+            <a href="{% url 'security' %}"
+               class="back-button">
+                ←
+            </a>
+
+            <div>
+
+                <h1>Change Email</h1>
+
+                <p>Update your account email address</p>
+
+            </div>
+
+        </header>
+
+
+        <section class="profile-section">
+
+            <div class="section-title">
+
+                <h2>New Email Address</h2>
+
+            </div>
+
+
+            <form method="POST"
+                  class="profile-edit-form">
+
+                {% csrf_token %}
+
+
+                {% if form.non_field_errors %}
+
+                    <div class="form-errors">
+
+                        {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+
+                    </div>
+
+                {% endif %}
+
+
+                <div class="form-field">
+
+                    <label for="{{ form.new_email.id_for_label }}">
+                        NEW EMAIL
+                    </label>
+
+                    {{ form.new_email }}
+
+                    {% for error in form.new_email.errors %}
+
+                        <p class="field-error">
+                            {{ error }}
+                        </p>
+
+                    {% endfor %}
+
+                </div>
+
+
+                <div class="profile-edit-actions">
+
+                    <a href="{% url 'security' %}"
+                       class="guest-button">
+                        Cancel
+                    </a>
+
+                    <button type="submit"
+                            class="primary-button">
+                        Send Verification Code
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+    </div>
+
+</main>
+
+</body>
+
+</html>

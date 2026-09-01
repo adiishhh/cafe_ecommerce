@@ -1,0 +1,173 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Verify Email | SmartCafe</title>
+
+    <link rel="icon"
+          type="image/png"
+          href="{% static 'users/images/favicon.png' %}">
+
+    <link rel="stylesheet"
+          href="{% static 'users/css/profile.css' %}">
+
+</head>
+
+
+<body>
+
+<main class="profile-page">
+
+    <div class="profile-container">
+
+        <header class="profile-header">
+
+            <a href="{% url 'security' %}"
+               class="back-button">
+                ←
+            </a>
+
+            <div>
+
+                <h1>Verify Email</h1>
+
+                <p>Confirm your new email address</p>
+
+            </div>
+
+        </header>
+
+
+        <section class="profile-section">
+
+            <div class="section-title">
+
+                <h2>Verification Code</h2>
+
+            </div>
+
+
+            <div class="otp-content">
+
+                <p>
+                    We sent a 6-digit verification code to:
+                </p>
+
+                <strong>
+                    {{ new_email }}
+                </strong>
+
+
+                <form method="POST"
+                      class="profile-edit-form">
+
+                    {% csrf_token %}
+
+
+                    {% if form.non_field_errors %}
+
+                        <div class="form-errors">
+
+                            {% for error in form.non_field_errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <div class="form-field">
+
+                        <label for="{{ form.otp.id_for_label }}">
+                            VERIFICATION CODE
+                        </label>
+
+                        {{ form.otp }}
+
+                        {% for error in form.otp.errors %}
+
+                            <p class="field-error">
+                                {{ error }}
+                            </p>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    <button type="submit"
+                            class="verify-button">
+                        Verify Email
+                    </button>
+
+                </form>
+
+
+                <div class="otp-resend">
+
+                    {% if resend_available_in > 0 %}
+
+                        <p>
+                            Resend available in
+                            <span id="countdown">
+                                {{ resend_available_in }}
+                            </span>
+                            seconds
+                        </p>
+
+                    {% else %}
+
+                        <a href="{% url 'resend_change_email_otp' change_email_id=change_email_id %}">
+                            Resend Code
+                        </a>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </div>
+
+</main>
+
+
+<script>
+
+    let remaining = {{ resend_available_in }};
+
+    if (remaining > 0) {
+
+        const countdown = document.getElementById("countdown");
+
+        const timer = setInterval(function () {
+
+            remaining--;
+
+            countdown.textContent = remaining;
+
+            if (remaining <= 0) {
+                clearInterval(timer);
+                location.reload();
+            }
+
+        }, 1000);
+
+    }
+
+</script>
+
+</body>
+
+</html>

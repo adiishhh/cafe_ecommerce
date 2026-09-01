@@ -7,11 +7,14 @@ urlpatterns = [
     path("signup/", views.signup, name='signup'),
     path("login/", views.login_view, name='login'),
     path("profile/", views.profile, name='profile'),
-    path('profile/edit', views.edit_profile, name='edit_profile'),
-    path('profile/security', views.security, name='security'),
+    path('profile/edit/', views.edit_profile, name='edit_profile'),
+    path('profile/security/', views.security, name='security'),
+    path("profile/security/change-email/", views.change_email,name="change_email"),
+    path("profile/security/change-email/<uuid:change_email_id>/", views.verify_change_email, name="verify_change_email"),
+    path("profile/security/change-email/<uuid:change_email_id>/resend/", views.resend_change_email_otp, name="resend_change_email_otp"),
     path("logout/", views.logout_view, name="logout"),
-    path('verify-signup-otp/<uuid:signup_id>/',views.verify_signup_otp,name='verify_signup_otp'),
-    path('resend-signup-otp/<uuid:signup_id>/',views.resend_signup_otp,name='resend_signup_otp'),
+    path('verify-signup-otp/<uuid:signup_id>/', views.verify_signup_otp,name='verify_signup_otp'),
+    path('resend-signup-otp/<uuid:signup_id>/', views.resend_signup_otp,name='resend_signup_otp'),
     path(
         'forgot-password/', 
         auth_views.PasswordResetView.as_view(
