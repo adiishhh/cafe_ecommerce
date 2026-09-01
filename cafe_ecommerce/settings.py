@@ -157,8 +157,17 @@ SITE_ID = 1
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+
+ACCOUNT_USER_MODEL_EMAIL_FIELD = 'email'
+
 ACCOUNT_LOGIN_METHODS = {'email'}
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+
+ACCOUNT_SIGNUP_FIELDS = [
+    'email*',
+    'password1*',
+    'password2*',
+]
 
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
