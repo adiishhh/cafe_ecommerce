@@ -90,24 +90,30 @@
 
 
             <!-- Delivery Address -->
-
+                    
             <section class="profile-section address-section">
-
+            
                 <div class="section-title address-title">
+                
                     <h2>Delivery Address</h2>
-
-                    <a href="#" class="edit-link">Edit</a>
+                
+                    <a href="{% url 'addresses' %}"
+                       class="edit-link"
+                       aria-label="Manage delivery addresses">
+                        →
+                    </a>
+                
                 </div>
-
-
+            
+            
                 {% if default_address %}
-
+            
                     <div class="address-content">
-
+                    
                         <p class="recipient-name">
                             {{ default_address.name }}
                         </p>
-
+                    
                         <p class="address-text">
                             {{ default_address.flat_house }}<br>
                             {{ default_address.area_street }}<br>
@@ -115,27 +121,31 @@
                             {{ default_address.state }} -
                             {{ default_address.pincode }}
                         </p>
-
+                    
                         <p class="address-contact">
                             {{ default_address.contact_number }}
                         </p>
-
+                    
                     </div>
-
+                
+                
                 {% else %}
-
+                
                     <div class="empty-address">
-
-                        <p>No delivery address added.</p>
-
-                        <a href="#" class="add-address">
+                    
+                        <p>
+                            No delivery address added.
+                        </p>
+                    
+                        <a href="{% url 'add_address' %}"
+                           class="add-address">
                             Add Address
                         </a>
-
+                    
                     </div>
-
+                
                 {% endif %}
-
+                
             </section>
 
             <!-- Security -->

@@ -26,7 +26,7 @@ class Address(models.Model):
     name = models.CharField(max_length=100)
     contact_number = models.CharField(max_length=15)
     flat_house = models.CharField(max_length=250)
-    area_street = models.CharField(250)
+    area_street = models.CharField(max_length=250)
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
     pincode = models.CharField(max_length=10)

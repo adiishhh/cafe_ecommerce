@@ -1,0 +1,130 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>{{ page_title }} | SmartCafe</title>
+
+    <link rel="icon"
+          type="image/png"
+          href="{% static 'users/images/favicon.png' %}">
+
+    <link rel="stylesheet"
+          href="{% static 'users/css/profile.css' %}">
+
+</head>
+
+
+<body>
+
+<main class="profile-page">
+
+    <div class="profile-container">
+
+
+        <!-- Header -->
+
+        <header class="profile-header">
+
+            <a href="{% url 'addresses' %}"
+               class="back-button">
+                ←
+            </a>
+
+            <div>
+
+                <h1>{{ page_title }}</h1>
+
+                <p>{{ page_subtitle }}</p>
+
+            </div>
+
+        </header>
+
+
+        <!-- Address Form -->
+
+        <section class="profile-section">
+
+            <div class="section-title">
+
+                <h2>Delivery Address</h2>
+
+            </div>
+
+
+            <form method="POST"
+                  class="profile-edit-form">
+
+                {% csrf_token %}
+
+
+                {% if form.non_field_errors %}
+
+                    <div class="form-errors">
+
+                        {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+
+                    </div>
+
+                {% endif %}
+
+
+                {% for field in form %}
+
+                    <div class="form-field">
+
+                        <label for="{{ field.id_for_label }}">
+                            {{ field.label|upper }}
+                        </label>
+
+                        {{ field }}
+
+                        {% for error in field.errors %}
+
+                            <p class="field-error">
+                                {{ error }}
+                            </p>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% endfor %}
+
+
+                <div class="profile-edit-actions">
+
+                    <a href="{% url 'addresses' %}"
+                       class="guest-button">
+                        Cancel
+                    </a>
+
+                    <button type="submit"
+                            class="primary-button">
+                        {{ button_text }}
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+
+    </div>
+
+</main>
+
+</body>
+
+</html>

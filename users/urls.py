@@ -15,7 +15,12 @@ urlpatterns = [
     path("profile/security/change-email/<uuid:change_email_id>/", views.verify_change_email, name="verify_change_email"),
     path("profile/security/change-email/<uuid:change_email_id>/resend/", views.resend_change_email_otp, name="resend_change_email_otp"),
     path("profile/security/change-password/", views.change_password, name="change_password"),
-    path("logout/", views.logout_view, name="logout"),
+    path("profile/addresses/",views.addresses,name="addresses"),
+    path("profile/addresses/", views.addresses, name="addresses"),
+    path("profile/addresses/add/", views.add_address, name="add_address"),
+    path("profile/addresses/<int:address_id>/edit/", views.edit_address, name="edit_address"),
+    path("profile/addresses/<int:address_id>/default/", views.set_default_address, name="set_default_address"),
+    path("profile/addresses/<int:address_id>/delete/", views.delete_address, name="delete_address"),
     path(
         'forgot-password/', 
         auth_views.PasswordResetView.as_view(
@@ -47,4 +52,5 @@ urlpatterns = [
         ),
         name="password_reset_complete",
     ),
+    path("logout/", views.logout_view, name="logout"),
 ]

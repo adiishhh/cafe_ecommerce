@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
-from users.forms import SignupForm, SignupOTPForm, ProfileEditForm, ChangeEmailForm, ChangeEmailOTPForm, PasswordChangeForm
+from users.forms import SignupForm, SignupOTPForm, ProfileEditForm, ChangeEmailForm, ChangeEmailOTPForm, PasswordChangeForm, AddressForm
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth import login, authenticate,get_user_model, update_session_auth_hash
+from django.contrib.auth import login,get_user_model, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 import random
 import uuid
@@ -9,6 +9,9 @@ from django.core.cache import cache
 from django.core.mail import send_mail
 from django.contrib.auth.hashers import make_password, check_password
 import time
+from users.models import Address
+from django.contrib import messages
+from django.db import transaction
 from django.contrib.auth import logout
 
 # Create your views here.
@@ -350,6 +353,117 @@ def change_password(request):
         form = PasswordChangeForm(request.user)
 
     return render(request, 'users/change_password.html', {'form': form})
+
+@login_required
+def addresses(request):
+
+    user_addresses = request.user.addresses.all().order_by('-is_default', '-id')
+
+    return render(request, 'users/addresses.html', {'addresses': user_addresses,})
+
+@login_required
+def add_address(request):
+
+    if request.method == 'POST':
+        form = AddressForm(request.POST)
+
+        if form.is_valid():
+            address = form.save(commit=False)
+            address.user = request.user
+
+            if not request.user.addresses.exists():
+                address.is_default = True
+
+            address.save()
+
+            return redirect('addresses')
+
+    else:
+        form = AddressForm()
+
+    return render(
+        request,
+        'users/address_form.html',
+        {
+            'form': form,
+            'page_title': 'Add Address',
+            'page_subtitle': 'Add a new delivery address',
+            'button_text': 'Add Address',
+        }
+    )
+
+@login_required
+def edit_address(request, address_id):
+    address = request.user.addresses.filter(id=address_id).first()
+
+    if not address:
+        return redirect('addresses')
+
+    if request.method == 'POST':
+        form = AddressForm(request.POST, instance=address)
+
+        if form.is_valid():
+            form.save()
+            return redirect('addresses')
+
+    else:
+        form = AddressForm(instance=address)
+
+    return render(
+        request,
+        'users/address_form.html',
+        {
+            'form': form,
+            'page_title': 'Edit Address',
+            'page_subtitle': 'Update your delivery address',
+            'button_text': 'Save Changes',
+        }
+    )
+
+@login_required
+@transaction.atomic
+def set_default_address(request, address_id):
+
+    if request.method != 'POST':
+        return redirect('addresses')
+
+    address = request.user.addresses.filter(id=address_id).first()
+
+    if not address:
+        return redirect('addresses')
+
+    request.user.addresses.update(is_default=False)
+
+    address.is_default = True
+    address.save(update_fields=['is_default'])
+
+    return redirect('addresses')
+
+@login_required
+@transaction.atomic
+def delete_address(request, address_id):
+
+    if request.method != 'POST':
+        return redirect('addresses')
+
+    address = request.user.addresses.filter(id=address_id).first()
+
+    if not address:
+        return redirect('addresses')
+
+    was_default = address.is_default
+
+    address.delete()
+
+    if was_default:
+
+        replacement = request.user.addresses.order_by('-id').first()
+
+        if replacement:
+            replacement.is_default = True
+            replacement.save(update_fields=['is_default'])
+
+    return redirect('addresses')
 
 def logout_view(request):
     logout(request)

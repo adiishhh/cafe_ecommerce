@@ -1,0 +1,182 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Delivery Addresses | SmartCafe</title>
+
+    <link rel="icon"
+          type="image/png"
+          href="{% static 'users/images/favicon.png' %}">
+
+    <link rel="stylesheet"
+          href="{% static 'users/css/profile.css' %}">
+
+</head>
+
+
+<body>
+
+<main class="profile-page">
+
+    <div class="profile-container">
+
+
+        <!-- Header -->
+
+        <header class="profile-header">
+
+            <a href="{% url 'profile' %}"
+               class="back-button">
+                ←
+            </a>
+
+            <div>
+
+                <h1>Delivery Addresses</h1>
+
+                <p>Manage your saved delivery addresses</p>
+
+            </div>
+
+        </header>
+
+
+        <!-- Addresses -->
+
+        <section class="profile-section">
+
+            <div class="section-title">
+
+                <h2>Your Addresses</h2>
+
+            </div>
+
+
+            <div class="address-list">
+
+                {% for address in addresses %}
+
+                    <div class="saved-address">
+
+                        <div class="saved-address-header">
+
+                            <div>
+
+                                <h3>
+                                    {{ address.name }}
+                                </h3>
+
+                                {% if address.is_default %}
+
+                                    <span class="default-badge">
+                                        Default
+                                    </span>
+
+                                {% endif %}
+
+                            </div>
+
+                            <a href="{% url 'edit_address' address.id %}"
+                               class="address-edit-link">
+                                Edit
+                            </a>
+
+                        </div>
+
+
+                        <div class="saved-address-details">
+
+                            <p>
+                                {{ address.flat_house }}<br>
+                                {{ address.area_street }}<br>
+                                {{ address.city }},
+                                {{ address.state }} -
+                                {{ address.pincode }}
+                            </p>
+
+                            <p>
+                                {{ address.contact_number }}
+                            </p>
+
+                        </div>
+
+
+                        <div class="address-actions">
+
+                            {% if not address.is_default %}
+
+                                <form method="POST"
+                                      action="{% url 'set_default_address' address.id %}">
+
+                                    {% csrf_token %}
+
+                                    <button type="submit"
+                                            class="secondary-button">
+                                        Set as Default
+                                    </button>
+
+                                </form>
+
+                            {% endif %}
+
+
+                            <form method="POST"
+                                  action="{% url 'delete_address' address.id %}">
+
+                                {% csrf_token %}
+
+                                <button type="submit"
+                                        class="danger-button">
+                                    Delete
+                                </button>
+
+                            </form>
+
+                        </div>
+
+                    </div>
+
+                {% empty %}
+
+                    <div class="empty-address">
+
+                        <p>
+                            You haven't added any delivery addresses yet.
+                        </p>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+
+            <!-- Add Address -->
+
+            <div class="address-page-actions">
+
+                <a href="{% url 'add_address' %}"
+                   class="primary-button">
+                    + Add Address
+                </a>
+
+            </div>
+
+        </section>
+
+
+    </div>
+
+</main>
+
+</body>
+
+</html>
