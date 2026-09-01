@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
-from users.forms import SignupForm, SignupOTPForm, ProfileEditForm, ChangeEmailForm, ChangeEmailOTPForm
+from users.forms import SignupForm, SignupOTPForm, ProfileEditForm, ChangeEmailForm, ChangeEmailOTPForm, PasswordChangeForm
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth import login, authenticate,get_user_model
+from django.contrib.auth import login, authenticate,get_user_model, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 import random
 import uuid
@@ -332,6 +332,24 @@ def  resend_change_email_otp(request, change_email_id):
         "verify_change_email",
         change_email_id=change_email_id
     )
+
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(
+            request.user,
+            request.POST
+        )
+
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            return redirect('security')
+        
+    else:
+        form = PasswordChangeForm(request.user)
+
+    return render(request, 'users/change_password.html', {'form': form})
 
 def logout_view(request):
     logout(request)
