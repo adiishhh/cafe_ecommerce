@@ -680,6 +680,50 @@ a {
     box-shadow: 0 5px 12px rgba(217, 54, 0, 0.16);
 }
 
+/* Password field */
+
+.password-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-input-wrapper input {
+    padding-right: 48px;
+}
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+
+    width: 32px;
+    height: 32px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transform: translateY(-50%);
+
+    border: none;
+    background: transparent;
+
+    color: #8f8984;
+
+    cursor: pointer;
+}
+
+.password-toggle:hover {
+    color: #d93600;
+}
+
+.password-toggle:focus {
+    outline: none;
+}
+
+.password-toggle i {
+    font-size: 15px;
+}
 
 /* Mobile */
 
