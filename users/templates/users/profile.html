@@ -1,0 +1,156 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Profile | SmartCafe</title>
+    <link rel="icon" type="image/png" href="{% static 'users/images/favicon.png' %}">
+    <link rel="stylesheet" href="{% static 'users/css/profile.css' %}">
+</head>
+
+<body>
+
+    <main class="profile-page">
+
+        <div class="profile-container">
+
+            <!-- Header -->
+
+            <header class="profile-header">
+
+                <a href="/" class="back-button">←</a>
+
+                <div>
+                    <h1>Profile</h1>
+                    <p>Manage your account</p>
+                </div>
+
+            </header>
+
+
+            <!-- User Summary -->
+
+            <section class="profile-summary">
+
+                <div class="avatar">
+                    {% if request.user.profile_image %}
+                        <img src="{{ request.user.profile_image.url }}" alt="Profile image">
+                    {% else %}
+                        <span>{{ request.user.name|first|upper }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="summary-details">
+                    <h2>{{ request.user.name }}</h2>
+                    <p>{{ request.user.email }}</p>
+                </div>
+
+            </section>
+
+
+            <!-- Personal Information -->
+
+            <section class="profile-section">
+
+                <div class="section-title">
+                    <h2>Personal Information</h2>
+                </div>
+
+                <div class="information-list">
+
+                    <div class="information-item">
+                        <span class="information-label">Name</span>
+                        <span class="information-value">
+                            {{ request.user.name }}
+                        </span>
+                    </div>
+
+                    <div class="information-item">
+                        <span class="information-label">Email</span>
+                        <span class="information-value">
+                            {{ request.user.email }}
+                        </span>
+                    </div>
+
+                    <div class="information-item">
+                        <span class="information-label">Phone</span>
+                        <span class="information-value">
+                            {{ request.user.phone }}
+                        </span>
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- Delivery Address -->
+
+            <section class="profile-section address-section">
+
+                <div class="section-title address-title">
+                    <h2>Delivery Address</h2>
+
+                    <a href="#" class="edit-link">Edit</a>
+                </div>
+
+
+                {% if default_address %}
+
+                    <div class="address-content">
+
+                        <p class="recipient-name">
+                            {{ default_address.name }}
+                        </p>
+
+                        <p class="address-text">
+                            {{ default_address.flat_house }}<br>
+                            {{ default_address.area_street }}<br>
+                            {{ default_address.city }},
+                            {{ default_address.state }} -
+                            {{ default_address.pincode }}
+                        </p>
+
+                        <p class="address-contact">
+                            {{ default_address.contact_number }}
+                        </p>
+
+                    </div>
+
+                {% else %}
+
+                    <div class="empty-address">
+
+                        <p>No delivery address added.</p>
+
+                        <a href="#" class="add-address">
+                            Add Address
+                        </a>
+
+                    </div>
+
+                {% endif %}
+
+            </section>
+
+
+            <!-- Logout -->
+
+        <form method="POST" action="{% url 'logout' %}">
+            {% csrf_token %}
+        
+            <button type="submit" class="logout-button">
+                <span>Log out</span>
+                <span class="logout-icon">↪</span>
+            </button>
+        </form>
+
+        </div>
+
+    </main>
+
+</body>
+</html>
