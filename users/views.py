@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from users.forms import SignupForm, SignupOTPForm, ProfileEditForm, ChangeEmailForm, ChangeEmailOTPForm, PasswordChangeForm, AddressForm
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login,get_user_model, update_session_auth_hash
@@ -13,12 +13,19 @@ from users.models import Address
 from django.contrib import messages
 from django.db import transaction
 from django.contrib.auth import logout
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.views.decorators.http import require_POST
 
 # Create your views here.
 
 User = get_user_model()
 
 def home(request):
+
+    if request.user.is_staff:
+        return redirect('admin_users')
+    
     return render(request, 'users/home.html')
 
 def signup(request):
@@ -155,6 +162,10 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+
+            if user.is_staff:
+                return redirect('admin_users')
+
             return redirect('home')
 
     else:
@@ -468,3 +479,63 @@ def delete_address(request, address_id):
 def logout_view(request):
     logout(request)
     return redirect('home')
+
+@login_required(login_url='login')
+def admin_users_view(request):
+    if not request.user.is_staff:
+        return redirect('home')
+
+    search_query = request.GET.get('q', '').strip()
+
+    users = User.objects.filter(
+        is_staff=False
+    ).order_by('-created_at')
+
+    if search_query:
+        users = users.filter(
+            Q(name__icontains=search_query) |
+            Q(email__icontains=search_query)
+        )
+
+    paginator = Paginator(users, 5)
+
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(
+        request,
+        'admin_panel/admin_users.html',
+        {
+            'page_obj': page_obj,
+            'search_query': search_query,
+        }
+    )
+    
+
+@login_required(login_url='login')
+@require_POST
+def toggle_user_status(request, user_id):
+    if not request.user.is_staff:
+        return redirect('home')
+
+    user = get_object_or_404(
+        User,
+        id=user_id,
+        is_staff=False
+    )
+
+    user.is_active = not user.is_active
+    user.save(update_fields=['is_active'])
+
+    if user.is_active:
+        messages.success(
+            request,
+            f'{user.name or user.email} has been activated.'
+        )
+    else:
+        messages.success(
+            request,
+            f'{user.name or user.email} has been deactivated.'
+        )
+
+    return redirect('admin_users')

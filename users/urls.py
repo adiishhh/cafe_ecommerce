@@ -15,7 +15,6 @@ urlpatterns = [
     path("profile/security/change-email/<uuid:change_email_id>/", views.verify_change_email, name="verify_change_email"),
     path("profile/security/change-email/<uuid:change_email_id>/resend/", views.resend_change_email_otp, name="resend_change_email_otp"),
     path("profile/security/change-password/", views.change_password, name="change_password"),
-    path("profile/addresses/",views.addresses,name="addresses"),
     path("profile/addresses/", views.addresses, name="addresses"),
     path("profile/addresses/add/", views.add_address, name="add_address"),
     path("profile/addresses/<int:address_id>/edit/", views.edit_address, name="edit_address"),
@@ -53,4 +52,6 @@ urlpatterns = [
         name="password_reset_complete",
     ),
     path("logout/", views.logout_view, name="logout"),
+    path("staff/users/", views.admin_users_view, name="admin_users"),
+    path("staff/users/<int:user_id>/toggle/", views.toggle_user_status, name="toggle_user_status"),
 ]

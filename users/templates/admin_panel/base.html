@@ -1,0 +1,419 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        {% block title %}SmartCafe Admin{% endblock %}
+    </title>
+    <link rel="icon" type="image/png" href="{% static 'users/images/favicon.png' %}">
+
+    <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    >
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+
+            font-family:
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Arial,
+                sans-serif;
+
+            background: #f5f5f5;
+            color: #222;
+        }
+
+
+        /* =========================
+           TOP BAR
+        ========================= */
+
+        .topbar {
+            height: 42px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: #292929;
+            color: white;
+
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+
+        /* =========================
+           LAYOUT
+        ========================= */
+
+        .admin-layout {
+            min-height: calc(100vh - 42px);
+
+            display: flex;
+        }
+
+
+        /* =========================
+           SIDEBAR
+        ========================= */
+
+        .sidebar {
+            width: 195px;
+            flex-shrink: 0;
+
+            display: flex;
+            flex-direction: column;
+
+            background: #0f0d0c;
+            color: white;
+        }
+
+
+        .brand {
+            padding: 22px 18px;
+
+            border-bottom: 1px solid #292624;
+        }
+
+        .brand-name {
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .brand-subtitle {
+            margin-top: 3px;
+
+            font-size: 11px;
+            color: #999;
+        }
+
+
+        /* =========================
+           NAVIGATION
+        ========================= */
+
+        .navigation {
+            padding: 12px 10px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+
+            height: 36px;
+
+            margin-bottom: 4px;
+            padding: 0 12px;
+
+            border-radius: 8px;
+
+            color: #c8c5c3;
+            text-decoration: none;
+
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background: #211f1e;
+            color: white;
+        }
+
+        .nav-link.active {
+            background: #e44700;
+            color: white;
+        }
+
+        .nav-icon {
+            width: 22px;
+            margin-right: 5px;
+
+            font-size: 14px;
+        }
+
+
+        /* =========================
+           SIDEBAR BOTTOM
+        ========================= */
+
+        .sidebar-bottom {
+            margin-top: auto;
+
+            padding: 15px 14px;
+
+            border-top: 1px solid #292624;
+        }
+
+        .admin-info {
+            display: flex;
+            align-items: center;
+
+            gap: 9px;
+        }
+
+        .admin-avatar {
+            width: 28px;
+            height: 28px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #e44700;
+            color: white;
+
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .admin-name {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .admin-email {
+            margin-top: 2px;
+
+            font-size: 10px;
+            color: #999;
+        }
+
+        .logout-link {
+            display: block;
+
+            margin-top: 13px;
+
+            color: #999;
+            text-decoration: none;
+
+            font-size: 11px;
+        }
+
+        .logout-link:hover {
+            color: white;
+        }
+
+
+        /* =========================
+           MAIN CONTENT
+        ========================= */
+
+        .main-content {
+            flex: 1;
+
+            min-width: 0;
+
+            padding: 28px 24px;
+        }
+
+
+        /* =========================
+           RESPONSIVE
+        ========================= */
+
+        @media (max-width: 700px) {
+
+            .sidebar {
+                width: 70px;
+            }
+
+            .brand {
+                padding: 18px 10px;
+                text-align: center;
+            }
+
+            .brand-name {
+                font-size: 0;
+            }
+
+            .brand-name::first-letter {
+                font-size: 17px;
+            }
+
+            .brand-subtitle {
+                display: none;
+            }
+
+            .nav-link {
+                justify-content: center;
+                padding: 0;
+            }
+
+            .nav-icon {
+                margin: 0;
+                width: auto;
+            }
+
+            .nav-text {
+                display: none;
+            }
+
+            .sidebar-bottom {
+                padding: 12px 8px;
+            }
+
+            .admin-info {
+                justify-content: center;
+            }
+
+            .admin-details,
+            .logout-link {
+                display: none;
+            }
+
+            .main-content {
+                padding: 20px 15px;
+            }
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+    <!-- TOP BAR -->
+
+    <header class="topbar">
+        SmartCafe Restaurant Management App
+    </header>
+
+
+    <div class="admin-layout">
+
+
+        <!-- SIDEBAR -->
+
+        <aside class="sidebar">
+
+            <div class="brand">
+
+                <div class="brand-name">
+                    SmartCafe
+                </div>
+
+                <div class="brand-subtitle">
+                    Admin Panel
+                </div>
+
+            </div>
+
+
+            <nav class="navigation">
+
+                <a href="#" class="nav-link">
+                    <span class="nav-icon"><i class="fa fa-th-large"></i></span>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+                
+                <a href="#" class="nav-link">
+                    <span class="nav-icon"><i class="fa fa-clipboard"></i></span>
+                    <span class="nav-text">Orders</span>
+                </a>
+                
+                <a href="#" class="nav-link">
+                    <span class="nav-icon"><i class="fa fa-cube"></i></span>
+                    <span class="nav-text">Products</span>
+                </a>
+                
+                <a href="#" class="nav-link">
+                    <span class="nav-icon"><i class="fa fa-tag"></i></span>
+                    <span class="nav-text">Categories</span>
+                </a>
+                
+                <a href="#" class="nav-link">
+                    <span class="nav-icon"><i class="fa fa-qrcode"></i></span>
+                    <span class="nav-text">Tables & QR</span>
+                </a>
+                
+                <a href="#" class="nav-link">
+                    <span class="nav-icon"><i class="fa fa-file-text-o"></i></span>
+                    <span class="nav-text">Bills</span>
+                </a>
+                
+                <a href="{% url 'admin_users' %}" class="nav-link active">
+                    <span class="nav-icon"><i class="fa fa-users"></i></span>
+                    <span class="nav-text">Users</span>
+                </a>
+                
+                <a href="#" class="nav-link">
+                    <span class="nav-icon"><i class="fa fa-bar-chart"></i></span>
+                    <span class="nav-text">Reports</span>
+                </a>
+
+            </nav>
+
+
+            <!-- ADMIN ACCOUNT -->
+
+            <div class="sidebar-bottom">
+
+                <div class="admin-info">
+
+                    <div class="admin-avatar">
+                        {{ request.user.email|first|upper }}
+                    </div>
+
+                    <div class="admin-details">
+
+                        <div class="admin-name">
+                            {{ request.user.name|default:"Admin User" }}
+                        </div>
+
+                        <div class="admin-email">
+                            {{ request.user.email }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <a
+                    href="{% url 'logout' %}"
+                    class="logout-link"
+                >
+                    ↪ Sign Out
+                </a>
+
+            </div>
+
+        </aside>
+
+
+        <!-- PAGE CONTENT -->
+
+        <main class="main-content">
+
+            {% block content %}
+            {% endblock %}
+
+        </main>
+
+    </div>
+
+</body>
+
+</html>
