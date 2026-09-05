@@ -54,4 +54,5 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("staff/users/", views.admin_users_view, name="admin_users"),
     path("staff/users/<int:user_id>/toggle/", views.toggle_user_status, name="toggle_user_status"),
+    path("staff/users/<int:user_id>/", views.admin_user_detail, name="admin_user_detail"),
 ]

@@ -14,7 +14,7 @@ from django.contrib import messages
 from django.db import transaction
 from django.contrib.auth import logout
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.views.decorators.http import require_POST
 
 # Create your views here.
@@ -476,9 +476,6 @@ def delete_address(request, address_id):
 
     return redirect('addresses')
 
-def logout_view(request):
-    logout(request)
-    return redirect('home')
 
 @login_required(login_url='login')
 def admin_users_view(request):
@@ -488,7 +485,13 @@ def admin_users_view(request):
     search_query = request.GET.get('q', '').strip()
 
     users = User.objects.filter(
-        is_staff=False
+    is_staff=False
+    ).prefetch_related(
+        Prefetch(
+            'addresses',
+            queryset=Address.objects.filter(is_default=True),
+            to_attr='default_addresses'
+        )
     ).order_by('-created_at')
 
     if search_query:
@@ -539,3 +542,31 @@ def toggle_user_status(request, user_id):
         )
 
     return redirect('admin_users')
+
+@login_required(login_url='login')
+def admin_user_detail(request, user_id):
+    if not request.user.is_staff:
+        return redirect('home')
+
+    user = get_object_or_404(
+        User,
+        id=user_id,
+        is_staff=False
+    )
+
+    default_address = user.addresses.filter(
+        is_default=True
+    ).first()
+
+    return render(
+        request,
+        'admin_panel/user_detail.html',
+        {
+            'user': user,
+            'default_address': default_address,
+        }
+    )
+
+def logout_view(request):
+    logout(request)
+    return redirect('home')

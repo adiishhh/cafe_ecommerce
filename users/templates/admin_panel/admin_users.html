@@ -310,6 +310,191 @@
         background: #f5f5f5;
     }
 
+    .user-modal {
+    display: none;
+
+    position: fixed;
+    inset: 0;
+
+    background: rgba(0, 0, 0, 0.5);
+
+    align-items: center;
+    justify-content: center;
+
+    z-index: 1000;
+    }
+
+    .user-modal.show {
+        display: flex;
+    }
+
+    .user-modal-content {
+        position: relative;
+
+        width: 440px;
+        max-width: calc(100% - 40px);
+
+        background: white;
+
+        border-radius: 16px;
+
+        padding: 22px;
+
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-close {
+        position: absolute;
+
+        top: 14px;
+        right: 16px;
+
+        border: none;
+        background: none;
+
+        font-size: 25px;
+
+        color: #999;
+
+        cursor: pointer;
+    }
+
+    .modal-header {
+        display: flex;
+        align-items: center;
+
+        gap: 12px;
+
+        margin-bottom: 20px;
+    }
+
+    .modal-avatar {
+        width: 44px;
+        height: 44px;
+
+        border-radius: 50%;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        background: #fff0e8;
+        color: #e44700;
+
+        font-weight: 600;
+    }
+
+    .modal-header h2 {
+        margin: 0 0 5px;
+
+        font-size: 20px;
+    }
+
+    .modal-status {
+        display: inline-block;
+
+        padding: 4px 9px;
+
+        border-radius: 20px;
+
+        font-size: 11px;
+        font-weight: 600;
+
+        background: #dcfce7;
+        color: #159447;
+    }
+
+    .modal-status.inactive {
+        background: #f1f1f1;
+        color: #888;
+    }
+
+    .user-info {
+        display: flex;
+        flex-direction: column;
+
+        gap: 12px;
+    }
+
+    .info-box {
+        display: flex;
+        flex-direction: column;
+
+        gap: 5px;
+
+        padding: 14px;
+
+        background: #fafafa;
+
+        border-radius: 10px;
+    }
+
+    .info-label {
+        font-size: 10px;
+
+        font-weight: 600;
+
+        color: #999;
+
+        letter-spacing: 0.5px;
+    }
+
+    .info-box span:last-child {
+        font-size: 12px;
+
+        color: #222;
+    }
+
+    .modal-actions {
+        display: flex;
+
+        gap: 10px;
+
+        margin-top: 18px;
+    }
+
+    .modal-actions button {
+        flex: 1;
+
+        height: 38px;
+
+        border-radius: 8px;
+
+        cursor: pointer;
+
+        font-size: 12px;
+    }
+
+    .modal-action-secondary {
+        background: white;
+
+        border: 1px solid #ddd;
+
+        color: #333;
+    }
+
+    .modal-action-primary {
+        background: #211f1e;
+
+        border: 1px solid #211f1e;
+
+        color: white;
+    }
+
+    .view-button {
+    padding: 7px 11px;
+    border: 1px solid #bbb;
+    border-radius: 7px;
+    background: white;
+    color: #333;
+    cursor: pointer;
+    font-size: 12px;
+    }
+
+    .view-button:hover {
+        background: #f5f5f5;
+    }
+
 </style>
 
 
@@ -450,6 +635,21 @@
 
 
                         <td>
+                            <button
+                                    type="button"
+                                    class="view-button"
+                                    onclick="openUserModal(
+                                        '{{ user.id }}',
+                                        '{{ user.name|default:"No name"|escapejs }}',
+                                        '{{ user.email|escapejs }}',
+                                        '{{ user.phone|default:"—"|escapejs }}',
+                                        '{% if user.is_active %}Active{% else %}Inactive{% endif %}',
+                                        '{{ user.created_at|date:"Y-m-d" }}',
+                                        '{% if user.default_addresses %}{{ user.default_addresses.0.flat_house|escapejs }}, {{ user.default_addresses.0.area_street|escapejs }}, {{ user.default_addresses.0.city|escapejs }}, {{ user.default_addresses.0.state|escapejs }} {{ user.default_addresses.0.pincode|escapejs }}{% else %}No default address{% endif %}'
+                                    )"
+                                >
+                                    View
+                            </button>
 
                             <form
                                 method="post"
@@ -570,6 +770,130 @@
     </div>
 
 {% endif %}
+
+<div id="userModal" class="user-modal">
+
+    <div class="user-modal-content">
+
+        <button
+            type="button"
+            class="modal-close"
+            onclick="closeUserModal()"
+        >
+            &times;
+        </button>
+
+        <div class="modal-header">
+
+            <div class="modal-avatar" id="modalAvatar">
+                A
+            </div>
+
+            <div>
+                <h2 id="modalName"></h2>
+
+                <span
+                    id="modalStatus"
+                    class="modal-status"
+                ></span>
+            </div>
+
+        </div>
+
+
+        <div class="user-info">
+
+            <div class="info-box">
+                <span class="info-label">EMAIL</span>
+                <span id="modalEmail"></span>
+            </div>
+
+            <div class="info-box">
+                <span class="info-label">PHONE</span>
+                <span id="modalPhone"></span>
+            </div>
+
+            <div class="info-box">
+                <span class="info-label">ADDRESS</span>
+                <span id="modalAddress"></span>
+            </div>
+
+            <div class="info-box">
+                <span class="info-label">JOINED</span>
+                <span id="modalJoined"></span>
+            </div>
+
+        </div>
+
+
+        <div class="modal-actions">
+
+            <button
+                type="button"
+                class="modal-action-primary"
+                onclick="closeUserModal()"
+            >
+                Close
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+function openUserModal(
+    id,
+    name,
+    email,
+    phone,
+    status,
+    joined,
+    address
+) {
+    document.getElementById('modalName').textContent = name;
+    document.getElementById('modalEmail').textContent = email;
+    document.getElementById('modalPhone').textContent = phone;
+    document.getElementById('modalAddress').textContent = address;
+    document.getElementById('modalJoined').textContent = joined;
+
+    const avatar = document.getElementById('modalAvatar');
+    avatar.textContent = name.charAt(0).toUpperCase();
+
+    const statusElement = document.getElementById('modalStatus');
+
+    statusElement.textContent = status;
+
+    if (status === 'Inactive') {
+        statusElement.classList.add('inactive');
+    } else {
+        statusElement.classList.remove('inactive');
+    }
+
+    document.getElementById('userModal').classList.add('show');
+}
+
+
+function closeUserModal() {
+    document
+        .getElementById('userModal')
+        .classList.remove('show');
+}
+
+
+document
+    .getElementById('userModal')
+    .addEventListener('click', function(event) {
+
+        if (event.target === this) {
+            closeUserModal();
+        }
+
+    });
+
+</script>
 
 
 {% endblock %}
