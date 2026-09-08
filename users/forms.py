@@ -1,3 +1,4 @@
+import re
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from django import forms
@@ -7,21 +8,65 @@ from users.models import Address
 User = get_user_model()
 
 class SignupForm(UserCreationForm):
-     class Meta:
-          model = User
-          fields = ['name', 'email', 'phone']
+    class Meta:
+        model = User
+        fields = ['name', 'email', 'phone']
+
+    def clean_name(self):
+        name = self.cleaned_data['name'].strip()
+
+        if not re.fullmatch(r"[A-Za-z][A-Za-z\s.'-]*", name):
+            raise forms.ValidationError(
+                "Name can contain only letters, spaces, hyphens, apostrophes and periods."
+            )
+
+        return name
+
+    def clean_phone(self):
+        phone = self.cleaned_data['phone'].strip()
+
+        if not re.fullmatch(r"\d{7,15}", phone):
+            raise forms.ValidationError(
+                "Enter a valid phone number."
+            )
+
+        return phone
 
 class SignupOTPForm(forms.Form):
      otp = forms.CharField(max_length=6, min_length=6, widget=forms.TextInput(attrs={'placeholder': 'Enter 6-digit OTP'}))
 
 class ProfileEditForm(forms.ModelForm):
-     class Meta:
-          model = User
-          fields = ['name', 'phone', 'profile_image']
-          widgets = {
-               'name':forms.TextInput(attrs={'placeholder': 'Enter your name'}),
-               'phone':forms.TextInput(attrs={'placeholder': 'Enter you phone number'}),
-          }
+    class Meta:
+        model = User
+        fields = ['name', 'phone', 'profile_image']
+        widgets = {
+            'name': forms.TextInput(
+                attrs={'placeholder': 'Enter your name'}
+            ),
+            'phone': forms.TextInput(
+                attrs={'placeholder': 'Enter your phone number'}
+            ),
+        }
+
+    def clean_name(self):
+        name = self.cleaned_data['name'].strip()
+
+        if not re.fullmatch(r"[A-Za-z][A-Za-z\s.'-]*", name):
+            raise forms.ValidationError(
+                "Name can contain only letters, spaces, hyphens, apostrophes and periods."
+            )
+
+        return name
+
+    def clean_phone(self):
+        phone = self.cleaned_data['phone'].strip()
+
+        if not re.fullmatch(r"\d{7,15}", phone):
+            raise forms.ValidationError(
+                "Enter a valid phone number."
+            )
+
+        return phone
 
 class ChangeEmailForm(forms.Form):
      new_email = forms.EmailField(
