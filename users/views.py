@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from users.forms import SignupForm, SignupOTPForm, ProfileEditForm, ChangeEmailForm, ChangeEmailOTPForm, PasswordChangeForm, AddressForm
-from django.contrib.auth.forms import AuthenticationForm
+from users.forms import SignupForm, SignupOTPForm, ProfileEditForm, ChangeEmailForm, ChangeEmailOTPForm, AddressForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth import login,get_user_model, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 import random
@@ -35,6 +35,8 @@ def signup(request):
         if form.is_valid():
             otp = str(random.randint(100000, 999999))
             signup_id =str(uuid.uuid4())
+            request.session['signup_id'] = signup_id
+
             signup_data = {
                 'name': form.cleaned_data['name'],
                 'email': form.cleaned_data['email'],
@@ -61,18 +63,23 @@ def signup(request):
                 time.time() + 60,
                 timeout=60
             )
-            return redirect('verify_signup_otp', signup_id=signup_id)
+            return redirect('verify_signup_otp')
 
     else:
         form = SignupForm()
 
     return render(request, 'users/signup.html', {'form': form})
 
-def verify_signup_otp(request, signup_id):
+def verify_signup_otp(request):
+    signup_id = request.session.get('signup_id')
+
+    if not signup_id:
+        return redirect('signup')
 
     signup_data = cache.get(f'signup_{signup_id}')
 
     if not signup_data:
+        request.session.pop('signup_id', None)
         return redirect('signup')
 
     if request.method == 'POST':
@@ -91,6 +98,7 @@ def verify_signup_otp(request, signup_id):
                 )
 
                 cache.delete(f'signup_{signup_id}')
+                request.session.pop('signup_id', None)
 
                 return redirect('login')
             else:
@@ -108,11 +116,14 @@ def verify_signup_otp(request, signup_id):
     return render(request,'users/verify_signup_otp.html',
     {
         'form': form,
-        'signup_id': signup_id,
         'resend_available_in': resend_available_in,
     })
 
-def resend_signup_otp(request, signup_id):
+def resend_signup_otp(request):
+    signup_id = request.session.get('signup_id')
+
+    if not signup_id:
+        return redirect('signup')
 
     signup_data = cache.get(f'signup_{signup_id}')
 
@@ -124,7 +135,6 @@ def resend_signup_otp(request, signup_id):
     if cooldown_until:
         return redirect(
             'verify_signup_otp',
-            signup_id=signup_id
         )
 
     otp = str(random.randint(100000, 999999))
@@ -150,10 +160,7 @@ def resend_signup_otp(request, signup_id):
         timeout=60
     )
 
-    return redirect(
-        'verify_signup_otp',
-        signup_id=signup_id
-    )
+    return redirect('verify_signup_otp')
 
 def login_view(request):
     if request.method == 'POST':
@@ -205,6 +212,7 @@ def change_email(request):
             new_email = form.cleaned_data['new_email']
             otp = str(random.randint(100000, 999999))
             change_email_id = str(uuid.uuid4())
+            request.session['change_email_id'] = change_email_id
             change_email_data =  {
                 "user_id": request.user.id,
                 "new_email": new_email,
@@ -232,7 +240,7 @@ def change_email(request):
                 timeout=60
             )
 
-            return redirect('verify_change_email', change_email_id=change_email_id)
+            return redirect('verify_change_email')
 
     else:
         form = ChangeEmailForm(
@@ -242,7 +250,12 @@ def change_email(request):
     return render(request, 'users/change_email.html', {'form': form})
 
 @login_required
-def verify_change_email(request, change_email_id):
+def verify_change_email(request):
+    change_email_id = request.session.get('change_email_id')
+
+    if not change_email_id:
+        return redirect('change_email')
+    
     change_email_data = cache.get(f"change_email_{change_email_id}")
 
     if not change_email_data:
@@ -264,6 +277,8 @@ def verify_change_email(request, change_email_id):
                 cache.delete(f"change_email_{change_email_id}")
 
                 cache.delete(f"change_email_resend_{change_email_id}")
+
+                request.session.pop('change_email_id', None)
 
                 return redirect('security')
             
@@ -296,7 +311,12 @@ def verify_change_email(request, change_email_id):
     )
 
 @login_required
-def  resend_change_email_otp(request, change_email_id):
+def  resend_change_email_otp(request):
+    change_email_id = request.session.get('change_email_id')
+
+    if not change_email_id:
+        return redirect('change_email')
+    
     change_email_data = cache.get(
         f"change_email_{change_email_id}"
     )
@@ -342,10 +362,7 @@ def  resend_change_email_otp(request, change_email_id):
         timeout=60
     )
 
-    return redirect(
-        "verify_change_email",
-        change_email_id=change_email_id
-    )
+    return redirect("verify_change_email",)
 
 @login_required
 def change_password(request):
