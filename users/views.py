@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponseForbidden
 from users.forms import SignupForm, SignupOTPForm, ProfileEditForm, ChangeEmailForm, ChangeEmailOTPForm, AddressForm
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth import login,get_user_model, update_session_auth_hash
@@ -262,7 +263,7 @@ def verify_change_email(request):
         return redirect('change_email')
 
     if change_email_data['user_id'] != request.user.id:
-        return redirect('security')
+        return HttpResponseForbidden("You do not have permission to access this request.")
 
     if request.method == 'POST':
         form = ChangeEmailOTPForm(request.POST)
@@ -288,7 +289,7 @@ def verify_change_email(request):
             else:
                 form.add_error("otp", "Invalid OTP")
     else:
-         form = ChangeEmailOTPForm()
+        form = ChangeEmailOTPForm()
 
     cooldown_until = cache.get(
         f"change_email_resend_{change_email_id}"
@@ -328,7 +329,7 @@ def  resend_change_email_otp(request):
         return redirect("change_email")
 
     if change_email_data["user_id"] != request.user.id:
-        return redirect("security")
+        return HttpResponseForbidden("You do not have permission to access this request.")
 
     cooldown_until = cache.get(
         f"change_email_resend_{change_email_id}"
@@ -431,10 +432,10 @@ def add_address(request):
 
 @login_required
 def edit_address(request, address_id):
-    address = request.user.addresses.filter(id=address_id).first()
-
-    if not address:
-        return redirect('addresses')
+    address = get_object_or_404(
+        request.user.addresses,
+        id=address_id
+    )
 
     if request.method == 'POST':
         form = AddressForm(request.POST, instance=address)
@@ -458,16 +459,13 @@ def edit_address(request, address_id):
     )
 
 @login_required
+@require_POST
 @transaction.atomic
 def set_default_address(request, address_id):
-
-    if request.method != 'POST':
-        return redirect('addresses')
-
-    address = request.user.addresses.filter(id=address_id).first()
-
-    if not address:
-        return redirect('addresses')
+    address = get_object_or_404(
+        request.user.addresses,
+        id=address_id
+    )
 
     request.user.addresses.update(is_default=False)
 
@@ -477,16 +475,13 @@ def set_default_address(request, address_id):
     return redirect('addresses')
 
 @login_required
+@require_POST
 @transaction.atomic
 def delete_address(request, address_id):
-
-    if request.method != 'POST':
-        return redirect('addresses')
-
-    address = request.user.addresses.filter(id=address_id).first()
-
-    if not address:
-        return redirect('addresses')
+    address = get_object_or_404(
+        request.user.addresses,
+        id=address_id
+    )
 
     was_default = address.is_default
 
@@ -506,8 +501,8 @@ def delete_address(request, address_id):
 @login_required(login_url='login')
 def admin_users_view(request):
     if not request.user.is_staff:
-        return redirect('home')
-
+        return HttpResponseForbidden("You do not have permission to access this page.")
+    
     search_query = request.GET.get('q', '').strip()
 
     users = User.objects.filter(
@@ -545,7 +540,7 @@ def admin_users_view(request):
 @require_POST
 def toggle_user_status(request, user_id):
     if not request.user.is_staff:
-        return redirect('home')
+        return HttpResponseForbidden("You do not have permission to perform this action.")
 
     user = get_object_or_404(
         User,
@@ -572,7 +567,7 @@ def toggle_user_status(request, user_id):
 @login_required(login_url='login')
 def admin_user_detail(request, user_id):
     if not request.user.is_staff:
-        return redirect('home')
+        return HttpResponseForbidden("You do not have permission to access this page.")
 
     user = get_object_or_404(
         User,
