@@ -27,7 +27,7 @@ def home(request):
     if request.user.is_staff:
         return redirect('admin_users')
     
-    return render(request, 'users/home.html')
+    return render(request, 'users_panel/home.html')
 
 def signup(request):
     if request.method == 'POST':
