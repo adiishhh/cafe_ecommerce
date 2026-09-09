@@ -275,10 +275,13 @@ def verify_change_email(request):
                 request.user.save(update_fields=['email'])
 
                 cache.delete(f"change_email_{change_email_id}")
-
                 cache.delete(f"change_email_resend_{change_email_id}")
-
                 request.session.pop('change_email_id', None)
+
+                messages.success(
+                    request,
+                    'Your email address has been changed successfully.'
+                )                
 
                 return redirect('security')
             
@@ -375,6 +378,12 @@ def change_password(request):
         if form.is_valid():
             user = form.save()
             update_session_auth_hash(request, user)
+
+            messages.success(
+                request,
+                'Your password has been changed successfully.'
+            )
+
             return redirect('security')
         
     else:

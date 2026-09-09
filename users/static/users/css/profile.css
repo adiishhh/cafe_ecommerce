@@ -899,6 +899,67 @@ a {
     background: #b92e00;
 }
 
+/* Success Message */
+
+.success-message {
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    z-index: 1000;
+
+    display: flex;
+    align-items: center;
+
+    padding: 14px 20px;
+    min-width: 280px;
+
+    background: #eaf8ef;
+    color: #1f7a3d;
+
+    border: 1px solid #b8e5c5;
+    border-radius: 10px;
+
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+
+    font-size: 14px;
+    font-weight: 500;
+
+    animation: successSlideIn 0.3s ease-out;
+}
+
+.success-message::before {
+    content: "✓";
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 22px;
+    height: 22px;
+
+    margin-right: 10px;
+
+    background: #2e9b50;
+    color: white;
+
+    border-radius: 50%;
+
+    font-size: 13px;
+    font-weight: bold;
+}
+
+@keyframes successSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
 
 @media (max-width: 600px) {
 

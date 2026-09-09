@@ -47,6 +47,14 @@
 
         </header>
 
+        {% if messages %}
+            {% for message in messages %}
+                <div class="success-message">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
 
         <!-- Security Options -->
 
