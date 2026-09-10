@@ -1,0 +1,320 @@
+{% extends "admin_panel/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'admin_panel/css/categories.css' %}"
+>
+
+{% endblock %}
+
+{% block title %}
+    Categories | SmartCafe Admin
+{% endblock %}
+
+
+{% block content %}
+
+{% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+
+
+<!-- =========================
+     HEADER
+========================= -->
+
+<div class="page-header">
+
+    <div>
+
+        <h1 class="page-title">
+            Categories
+        </h1>
+
+        <p class="page-subtitle">
+            {{ total_categories }} categories ·
+            {{ active_categories }} active
+        </p>
+
+    </div>
+
+
+    <a
+        href="{% url 'add_category' %}"
+        class="add-category-button"
+    >
+
+        <span>+</span>
+
+        Add Category
+
+    </a>
+
+</div>
+
+
+<!-- =========================
+     SEARCH
+========================= -->
+
+<div class="search-container">
+
+    <form
+        method="GET"
+        action="{% url 'category_list' %}"
+        class="search-form"
+    >
+
+        <input
+            type="text"
+            name="q"
+            value="{{ query }}"
+            class="search-input"
+            placeholder="Search categories..."
+        >
+
+        <button
+            type="submit"
+            class="search-button"
+        >
+            Search
+        </button>
+
+        {% if query %}
+
+            <a
+                href="{% url 'category_list' %}"
+                class="clear-button"
+            >
+                Clear
+            </a>
+
+        {% endif %}
+
+    </form>
+
+</div>
+
+
+<!-- =========================
+     CATEGORY CARDS
+========================= -->
+
+{% if page_obj.object_list %}
+
+    <div class="category-grid">
+
+        {% for category in page_obj %}
+
+            <div
+                class="category-card {% if not category.is_active %}inactive{% endif %}"
+            >
+
+
+                <div class="category-body">
+
+
+                    <div class="category-top">
+
+                        <div>
+
+                            <h2 class="category-name">
+                                {{ category.name }}
+                            </h2>
+
+                            <div class="category-count">
+                                0 products
+                            </div>
+
+                        </div>
+
+
+                        <form
+                            method="POST"
+                            action="{% url 'toggle_category_status' category.id %}"
+                        >
+
+                            {% csrf_token %}
+
+                            <button
+                                type="submit"
+                                class="status-toggle {% if category.is_active %}active{% else %}inactive{% endif %}"
+                                aria-label="{% if category.is_active %}Deactivate{% else %}Activate{% endif %} {{ category.name }}"
+                            ></button>
+
+                        </form>
+
+                    </div>
+
+
+                    <p class="category-description">
+
+                        {% if category.description %}
+                            {{ category.description }}
+                        {% else %}
+                            No description provided.
+                        {% endif %}
+
+                    </p>
+
+
+                    <span
+                        class="status-badge {% if category.is_active %}active{% else %}inactive{% endif %}"
+                    >
+
+                        {% if category.is_active %}
+                            Active
+                        {% else %}
+                            Inactive
+                        {% endif %}
+
+                    </span>
+
+
+                </div>
+
+
+                <!-- ACTIONS -->
+
+                <div class="category-actions">
+
+
+                    <a
+                        href="{% url 'edit_category' category.id %}"
+                        class="action-button edit-button"
+                    >
+                        Edit
+                    </a>
+
+
+                    <form
+                        method="POST"
+                        action="{% url 'toggle_category_status' category.id %}"
+                    >
+
+                        {% csrf_token %}
+
+                        <button
+                            type="submit"
+                            class="action-button toggle-button"
+                            style="width: 100%;"
+                        >
+
+                            {% if category.is_active %}
+                                Deactivate
+                            {% else %}
+                                Activate
+                            {% endif %}
+
+                        </button>
+
+                    </form>
+
+
+                </div>
+
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+
+{% else %}
+
+    <div class="empty-state">
+
+        {% if query %}
+            No categories found for "{{ query }}".
+        {% else %}
+            No categories have been created yet.
+        {% endif %}
+
+    </div>
+
+{% endif %}
+
+
+<!-- =========================
+     PAGINATION
+========================= -->
+
+{% if page_obj.paginator.num_pages > 1 %}
+
+    <div class="pagination">
+
+
+        {% if page_obj.has_previous %}
+
+            <a
+                href="?q={{ query|urlencode }}&page={{ page_obj.previous_page_number }}"
+                class="page-link"
+            >
+                Previous
+            </a>
+
+        {% else %}
+
+            <span class="page-link disabled">
+                Previous
+            </span>
+
+        {% endif %}
+
+
+        {% for number in page_obj.paginator.page_range %}
+
+            {% if number == page_obj.number %}
+
+                <span class="page-link current">
+                    {{ number }}
+                </span>
+
+            {% else %}
+
+                <a
+                    href="?q={{ query|urlencode }}&page={{ number }}"
+                    class="page-link"
+                >
+                    {{ number }}
+                </a>
+
+            {% endif %}
+
+        {% endfor %}
+
+
+        {% if page_obj.has_next %}
+
+            <a
+                href="?q={{ query|urlencode }}&page={{ page_obj.next_page_number }}"
+                class="page-link"
+            >
+                Next
+            </a>
+
+        {% else %}
+
+            <span class="page-link disabled">
+                Next
+            </span>
+
+        {% endif %}
+
+
+    </div>
+
+{% endif %}
+
+{% endblock %}
