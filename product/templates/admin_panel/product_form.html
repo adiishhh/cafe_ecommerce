@@ -1,0 +1,312 @@
+{% extends "admin_panel/base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+
+<link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css"
+>
+
+<link
+    rel="stylesheet"
+    href="{% static 'admin_panel/css/product_form.css' %}"
+>
+
+{% endblock %}
+
+
+{% block content %}
+
+{% if messages %}
+
+    <div class="messages">
+
+        {% for message in messages %}
+
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+{% endif %}
+
+<div class="form-page">
+
+    <div class="form-header">
+        <h1>{{ page_title }}</h1>
+    </div>
+
+
+    <div class="form-card">
+
+        <form
+            method="POST"
+            enctype="multipart/form-data"
+        >
+
+            {% csrf_token %}
+
+
+            {% if form.non_field_errors %}
+
+                <div class="form-error">
+                    {{ form.non_field_errors }}
+                </div>
+
+            {% endif %}
+
+
+            <!-- Category -->
+
+            <div class="form-group">
+
+                <label for="{{ form.category.id_for_label }}">
+                    Category
+                </label>
+
+                {{ form.category }}
+
+                {{ form.category.errors }}
+
+            </div>
+
+
+            <!-- Product Name -->
+
+            <div class="form-group">
+
+                <label for="{{ form.name.id_for_label }}">
+                    Product Name
+                </label>
+
+                {{ form.name }}
+
+                {{ form.name.errors }}
+
+            </div>
+
+
+            <!-- Description -->
+
+            <div class="form-group">
+
+                <label for="{{ form.description.id_for_label }}">
+                    Description
+                </label>
+
+                {{ form.description }}
+
+                {{ form.description.errors }}
+
+            </div>
+
+
+            <!-- Price + Availability -->
+
+            <div class="form-row">
+
+                <div class="form-group">
+
+                    <label for="{{ form.price.id_for_label }}">
+                        Price
+                    </label>
+
+                    {{ form.price }}
+
+                    {{ form.price.errors }}
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Availability
+                    </label>
+
+                    <div class="checkbox-group">
+
+                        {{ form.is_active }}
+
+                        <label for="{{ form.is_active.id_for_label }}">
+                            Available
+                        </label>
+
+                    </div>
+
+                    {{ form.is_active.errors }}
+
+                </div>
+
+            </div>
+
+
+            <!-- Product Images -->
+
+            <div class="image-section">
+
+                <h2 class="image-section-title">
+                    Product Images
+                </h2>
+
+                <p class="form-help">
+                    Upload at least 3 images for this product.
+                </p>
+
+
+                {{ image_formset.management_form }}
+
+
+                {% for image_form in image_formset %}
+
+                    <div class="image-upload">
+
+                        {{ image_form.id }}
+
+                        {% if image_form.instance.pk %}
+
+                            <div class="existing-image">
+
+                                <img
+                                    src="{{ image_form.instance.image.url }}"
+                                    alt="{{ product.name }}"
+                                    class="existing-image-preview"
+                                >
+
+                                <div class="existing-image-info">
+
+                                    <span>
+                                        Current image
+                                    </span>
+
+                                    <label class="delete-image">
+
+                                        {{ image_form.DELETE }}
+
+                                        Remove image
+
+                                    </label>
+
+                                </div>
+
+                            </div>
+
+                        {% endif %}
+
+
+                        {{ image_form.image }}
+
+                        {{ image_form.image.errors }}
+
+
+                        {% if image_form.DELETE.errors %}
+                            {{ image_form.DELETE.errors }}
+                        {% endif %}
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+
+            <!-- Actions -->
+
+            <div class="form-actions">
+
+                <a
+                    href="{% url 'product_list' %}"
+                    class="cancel-button"
+                >
+                    Cancel
+                </a>
+
+                <button
+                    type="submit"
+                    class="submit-button"
+                >
+                    {{ button_text }}
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- Crop Modal -->
+
+<div
+    id="crop-modal"
+    class="crop-modal"
+>
+
+    <div class="crop-modal-content">
+
+        <div class="crop-modal-header">
+
+            <h2>
+                Crop Image
+            </h2>
+
+        </div>
+
+
+        <div class="crop-container">
+
+            <img
+                id="crop-image"
+                src=""
+                alt="Crop image"
+            >
+
+        </div>
+
+
+        <div class="crop-modal-actions">
+
+            <button
+                type="button"
+                id="crop-cancel"
+                class="crop-cancel"
+            >
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                id="crop-button"
+                class="crop-confirm"
+            >
+                Crop & Use
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script
+    src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"
+></script>
+
+<script
+    src="{% static 'admin_panel/js/product_form.js' %}"
+></script>
+
+{% endblock %}

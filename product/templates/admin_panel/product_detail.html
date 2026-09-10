@@ -1,0 +1,267 @@
+{% extends "admin_panel/base.html" %}
+{% load static %}
+
+{% block title %}
+    {{ product.name }}
+{% endblock %}
+
+{% block extra_css %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'admin_panel/css/product_detail.css' %}"
+>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="product-detail-page">
+
+    <!-- Header -->
+
+    <div class="detail-header">
+
+        <div class="detail-title">
+
+            <a
+                href="{% url 'product_list' %}"
+                class="back-button"
+            >
+                ←
+            </a>
+
+            <div>
+                <h1>{{ product.name }}</h1>
+
+                <p>
+                    Product Details
+                </p>
+            </div>
+
+        </div>
+
+
+        <div class="detail-actions">
+
+            <a
+                href="{% url 'edit_product' product.id %}"
+                class="edit-product-button"
+            >
+                Edit Product
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- Main Product Information -->
+
+    <div class="product-main">
+
+        <!-- Images -->
+
+        <div class="product-gallery">
+
+            {% with first_image=product.images.first %}
+
+                {% if first_image %}
+
+                    <div class="main-product-image">
+
+                        <img
+                            src="{{ first_image.image.url }}"
+                            alt="{{ product.name }}"
+                        >
+
+                    </div>
+
+                {% else %}
+
+                    <div class="main-product-image no-image">
+                        No image
+                    </div>
+
+                {% endif %}
+
+            {% endwith %}
+
+
+            {% if product.images.count > 1 %}
+
+                <div class="image-thumbnails">
+
+                    {% for image in product.images.all %}
+
+                        <div class="image-thumbnail">
+
+                            <img
+                                src="{{ image.image.url }}"
+                                alt="{{ product.name }}"
+                            >
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- Product Information -->
+
+        <div class="product-info-card">
+
+            <div class="product-info-header">
+
+                <div>
+
+                    <span class="section-label">
+                        PRODUCT
+                    </span>
+
+                    <h2>
+                        {{ product.name }}
+                    </h2>
+
+                </div>
+
+
+                {% if product.is_active and product.category.is_active %}
+
+                    <span class="availability-badge available">
+                        Available
+                    </span>
+
+                {% else %}
+
+                    <span class="availability-badge unavailable">
+                        Unavailable
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+
+            <div class="info-section">
+
+                <span class="section-label">
+                    DESCRIPTION
+                </span>
+
+                <p class="product-description">
+                    {{ product.description }}
+                </p>
+
+            </div>
+
+
+            <div class="product-meta">
+
+                <div class="meta-card">
+
+                    <span>
+                        Price
+                    </span>
+
+                    <strong>
+                        ₹{{ product.price }}
+                    </strong>
+
+                </div>
+
+
+                <div class="meta-card">
+
+                    <span>
+                        Category
+                    </span>
+
+                    <strong>
+                        {{ product.category.name }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- Rating -->
+
+            <div class="rating-section">
+
+                <span class="section-label">
+                    RATING
+                </span>
+
+                <div class="rating-empty">
+
+                    <span class="rating-stars">
+                        ★★★★★
+                    </span>
+
+                    <strong>
+                        —
+                    </strong>
+
+                    <span>
+                        No reviews yet
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Reviews -->
+
+    <div class="reviews-card">
+
+        <div class="reviews-header">
+
+            <div>
+
+                <h2>
+                    Customer Reviews
+                </h2>
+
+                <p>
+                    Reviews for {{ product.name }}
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="no-reviews">
+
+            <div class="no-reviews-icon">
+                ★
+            </div>
+
+            <h3>
+                No reviews yet
+            </h3>
+
+            <p>
+                Customer reviews and ratings will appear here.
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

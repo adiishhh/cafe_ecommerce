@@ -1,0 +1,394 @@
+{% extends "admin_panel/base.html" %}
+{% load static %}
+
+{% block title %}Products{% endblock %}
+
+{% block extra_css %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'admin_panel/css/products.css' %}"
+>
+
+{% endblock %}
+
+
+{% block content %}
+
+{% if messages %}
+
+    <div class="messages">
+
+        {% for message in messages %}
+
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+{% endif %}
+
+
+<div class="products-page">
+
+    <!-- Page Header -->
+
+    <div class="products-header">
+
+        <div>
+            <h1>Products</h1>
+
+            <p>
+                {{ total_products }} total products
+            </p>
+        </div>
+
+        <a
+            href="{% url 'add_product' %}"
+            class="add-product-button"
+        >
+            + Add Product
+        </a>
+
+    </div>
+
+
+    <!-- Search + Filter -->
+
+    <div class="products-toolbar">
+
+        <form method="GET" class="products-search-form">
+
+            <div class="search-box">
+
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input
+                    type="text"
+                    name="q"
+                    value="{{ query }}"
+                    placeholder="Search products..."
+                >
+
+            </div>
+
+
+            <select
+                name="category"
+                class="category-filter"
+            >
+
+                <option value="">
+                    All
+                </option>
+
+                {% for category in categories %}
+
+                    <option
+                        value="{{ category.id }}"
+                        {% if category.id|stringformat:"s" == category_id %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ category.name }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+
+            <button
+                type="submit"
+                class="search-button"
+            >
+                Search
+            </button>
+
+
+            {% if query or category_id %}
+
+                <a
+                    href="{% url 'product_list' %}"
+                    class="clear-button"
+                >
+                    Clear
+                </a>
+
+            {% endif %}
+
+        </form>
+
+    </div>
+
+
+    <!-- Product Table -->
+
+    <div class="products-table-card">
+
+        <table class="products-table">
+
+            <thead>
+
+                <tr>
+
+                    <th class="product-column">
+                        PRODUCT
+                    </th>
+
+                    <th>
+                        CATEGORY
+                    </th>
+
+                    <th>
+                        PRICE
+                    </th>
+
+                    <th>
+                        AVAILABILITY
+                    </th>
+
+                    <th>
+                        ACTIONS
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for product in page_obj %}
+
+                    <tr>
+
+                        <!-- Product -->
+
+                        <td>
+
+                            <div class="product-info">
+
+                                {% with image=product.images.first %}
+
+                                    {% if image %}
+
+                                        <img
+                                            src="{{ image.image.url }}"
+                                            alt="{{ product.name }}"
+                                            class="product-image"
+                                        >
+
+                                    {% else %}
+
+                                        <div class="product-image no-image">
+                                            <i class="fa-regular fa-image"></i>
+                                        </div>
+
+                                    {% endif %}
+
+                                {% endwith %}
+
+
+                                <div class="product-details">
+
+                                    <div class="product-name">
+                                        {{ product.name }}
+                                    </div>
+
+                                    <div class="product-description">
+                                        {{ product.description|truncatechars:55 }}
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </td>
+
+
+                        <!-- Category -->
+
+                        <td>
+
+                            <span class="category-badge">
+                                {{ product.category.name }}
+                            </span>
+
+                        </td>
+
+
+                        <!-- Price -->
+
+                        <td>
+
+                            <span class="product-price">
+                                ₹{{ product.price }}
+                            </span>
+
+                        </td>
+
+
+                        <!-- Availability -->
+
+                        <td>
+
+                            <div class="availability">
+                            
+                                {% if product.category.is_active %}
+                            
+                                    <form
+                                        method="POST"
+                                        action="{% url 'toggle_product_status' product.id %}"
+                                        class="availability-form"
+                                    >
+                            
+                                        {% csrf_token %}
+                            
+                                        <button
+                                            type="submit"
+                                            class="availability-toggle
+                                            {% if not product.is_active %}inactive{% endif %}"
+                                            title="Toggle availability"
+                                        >
+                                            <span class="toggle-circle"></span>
+                                        </button>
+                                    
+                                    </form>
+                                
+                                {% else %}
+                                
+                                    <span
+                                        class="availability-toggle inactive category-inactive"
+                                        title="Category is inactive"
+                                    >
+                                        <span class="toggle-circle"></span>
+                                    </span>
+                                
+                                {% endif %}
+                                
+                                
+                                {% if product.is_active and product.category.is_active %}
+                                
+                                    <span class="availability-text available">
+                                        Available
+                                    </span>
+                                
+                                {% else %}
+                                
+                                    <span class="availability-text unavailable">
+                                        Unavailable
+                                    </span>
+                                
+                                {% endif %}
+                                
+                            </div>
+
+                        </td>
+
+
+                        <!-- Actions -->
+
+                        <td>
+
+                            <div class="product-actions">
+
+                                <a
+                                    href="{% url 'product_detail' product.id %}"
+                                    class="view-button"
+                                >
+                                    View
+                                </a>
+
+                                <a
+                                    href="{% url 'edit_product' product.id %}"
+                                    class="edit-button"
+                                >
+                                    Edit
+                                </a>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+
+                {% empty %}
+
+                    <tr>
+
+                        <td
+                            colspan="5"
+                            class="empty-products"
+                        >
+
+                            {% if query %}
+
+                                No products found for
+                                "{{ query }}".
+
+                            {% else %}
+
+                                No products available.
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- Pagination -->
+
+    {% if page_obj.paginator.num_pages > 1 %}
+
+        <div class="products-pagination">
+        
+            {% if page_obj.has_previous %}
+        
+                <a
+                    href="?q={{ query }}&category={{ category_id }}&page={{ page_obj.previous_page_number }}"
+                    class="pagination-button"
+                >
+                    Previous
+                </a>
+            
+            {% endif %}
+            
+            
+            <span class="pagination-info">
+                Page {{ page_obj.number }}
+                of {{ page_obj.paginator.num_pages }}
+            </span>
+        
+        
+            {% if page_obj.has_next %}
+        
+                <a
+                    href="?q={{ query }}&category={{ category_id }}&page={{ page_obj.next_page_number }}"
+                    class="pagination-button"
+                >
+                    Next
+                </a>
+            
+            {% endif %}
+            
+        </div>
+    
+    {% endif %}
+
+</div>
+
+{% endblock %}
