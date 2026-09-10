@@ -80,7 +80,6 @@
         flex: 1;
 
         height: 40px;
-
         padding: 0 13px;
 
         border: 1px solid #ddd;
@@ -440,8 +439,8 @@
     }
 
     .message.warning {
-        background: #e8f7ee;
-        color: orange;
+        background: #fff8e5;
+        color: #9a6700;
     }
 
 
