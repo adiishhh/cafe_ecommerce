@@ -1,16 +1,15 @@
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
-from django.db.models import Q
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.contrib import messages
 from django.views.decorators.http import require_POST
+from .forms import ProductForm, ProductImageFormSet
 from .models import Product
 from category.models import Category
 from decimal import Decimal, InvalidOperation
-from .forms import ProductForm, ProductImageFormSet
 
-# Create your views here.
 
 def customer_home(request):
 
@@ -28,6 +27,7 @@ def customer_home(request):
     ).prefetch_related(
         'images'
     ).filter(
+        is_active=True,
         category__is_active=True
     )
 
@@ -106,6 +106,28 @@ def customer_home(request):
         is_active=True
     ).order_by('name')
 
+    cart = request.session.get('cart', {})
+
+    cart_count = sum(
+        cart.values()
+    )
+
+    cart_total = Decimal('0.00')
+
+    if cart:
+
+        cart_products = Product.objects.filter(
+            id__in=cart.keys(),
+            is_active=True,
+            category__is_active=True
+        )
+
+        for product in cart_products:
+            cart_total += product.price * cart.get(
+                str(product.id),
+                0
+            )
+
     return render(
         request,
         'users_panel/home.html',
@@ -117,11 +139,324 @@ def customer_home(request):
             'sort': sort,
             'min_price': min_price,
             'max_price': max_price,
+            'cart_count': cart_count,
+            'cart_total': cart_total,
         }
     )
 
+def customer_product_detail(request, product_id):
+
+    product = get_object_or_404(
+        Product.objects.select_related(
+            'category'
+        ).prefetch_related(
+            'images'
+        ),
+        id=product_id
+    )
+
+    if not product.is_active or not product.category.is_active:
+
+        messages.error(
+            request,
+            'This product is currently unavailable.'
+        )
+
+        return redirect('home')
+
+    related_products = Product.objects.select_related(
+        'category'
+    ).prefetch_related(
+        'images'
+    ).filter(
+        category=product.category,
+        category__is_active=True,
+        is_active=True
+    ).exclude(
+        id=product.id
+    ).order_by(
+        '-created_at'
+    )[:4]
+
+    return render(
+        request,
+        'users_panel/product_detail.html',
+        {
+            'product': product,
+            'related_products': related_products,
+        }
+    )
+
+MAX_CART_QUANTITY = 10
+
+@require_POST
+def add_to_cart(request, product_id):
+
+    product = get_object_or_404(
+        Product.objects.select_related('category'),
+        id=product_id
+    )
+
+    if not product.is_active or not product.category.is_active:
+
+        messages.error(
+            request,
+            'This product is currently unavailable.'
+        )
+
+        return redirect('home')
+
+    try:
+        quantity = int(
+            request.POST.get('quantity', 1)
+        )
+
+    except (TypeError, ValueError):
+        quantity = 1
+
+    if quantity < 1:
+        quantity = 1
+
+    if quantity > MAX_CART_QUANTITY:
+        messages.error(
+            request,
+            f'You can add a maximum of {MAX_CART_QUANTITY} of this product.'
+        )
+
+        return redirect(
+            'customer_product_detail',
+            product_id=product.id
+        )
+
+    cart = request.session.get(
+        'cart',
+        {}
+    )
+
+    product_key = str(product.id)
+
+    current_quantity = cart.get(
+        product_key,
+        0
+    )
+
+    new_quantity = current_quantity + quantity
+
+    if new_quantity > MAX_CART_QUANTITY:
+
+        messages.error(
+            request,
+            f'Maximum quantity for "{product.name}" is {MAX_CART_QUANTITY}.'
+        )
+
+        return redirect(
+            'customer_product_detail',
+            product_id=product.id
+        )
+
+    cart[product_key] = new_quantity
+
+    request.session['cart'] = cart
+    request.session.modified = True
+
+    messages.success(
+        request,
+        f'{product.name} added to your order.'
+    )
+
+    return redirect('home')
+
+def cart(request):
+
+    session_cart = request.session.get(
+        'cart',
+        {}
+    )
+
+    if not session_cart:
+
+        return render(
+            request,
+            'users_panel/cart.html',
+            {
+                'cart_items': [],
+                'cart_count': 0,
+                'subtotal': Decimal('0.00'),
+                'gst': Decimal('0.00'),
+                'total': Decimal('0.00'),
+            }
+        )
+
+    products = Product.objects.select_related(
+        'category'
+    ).prefetch_related(
+        'images'
+    ).filter(
+        id__in=session_cart.keys()
+    )
+
+    valid_cart = {}
+    cart_items = []
+
+    subtotal = Decimal('0.00')
+    cart_count = 0
+
+    for product in products:
+
+        quantity = session_cart.get(
+            str(product.id),
+            0
+        )
+
+        if (
+            not product.is_active
+            or not product.category.is_active
+        ):
+            continue
+
+        if quantity < 1:
+            continue
+
+        if quantity > MAX_CART_QUANTITY:
+            quantity = MAX_CART_QUANTITY
+
+        valid_cart[str(product.id)] = quantity
+
+        item_total = product.price * quantity
+
+        subtotal += item_total
+        cart_count += quantity
+
+        cart_items.append(
+            {
+                'product': product,
+                'quantity': quantity,
+                'item_total': item_total,
+            }
+        )
+
+    if valid_cart != session_cart:
+
+        request.session['cart'] = valid_cart
+        request.session.modified = True
+
+    gst = (subtotal * Decimal('0.05')).quantize(
+        Decimal('0.01')
+    )
+
+    total = subtotal + gst
+
+    return render(
+        request,
+        'users_panel/cart.html',
+        {
+            'cart_items': cart_items,
+            'cart_count': cart_count,
+            'subtotal': subtotal,
+            'gst': gst,
+            'total': total,
+        }
+    )
+
+@require_POST
+def increase_cart_quantity(request, product_id):
+
+    cart = request.session.get(
+        'cart',
+        {}
+    )
+
+    product_key = str(product_id)
+
+    if product_key not in cart:
+        return redirect('cart')
+
+    product = get_object_or_404(
+        Product.objects.select_related('category'),
+        id=product_id
+    )
+
+    if not product.is_active or not product.category.is_active:
+
+        cart.pop(product_key)
+
+        request.session['cart'] = cart
+        request.session.modified = True
+
+        messages.error(
+            request,
+            f'"{product.name}" is no longer available.'
+        )
+
+        return redirect('cart')
+
+    if cart[product_key] >= MAX_CART_QUANTITY:
+
+        messages.error(
+            request,
+            f'Maximum quantity for "{product.name}" is {MAX_CART_QUANTITY}.'
+        )
+
+        return redirect('cart')
+
+    cart[product_key] += 1
+
+    request.session['cart'] = cart
+    request.session.modified = True
+
+    return redirect('cart')
+
+@require_POST
+def decrease_cart_quantity(request, product_id):
+
+    cart = request.session.get(
+        'cart',
+        {}
+    )
+
+    product_key = str(product_id)
+
+    if product_key not in cart:
+        return redirect('cart')
+
+    cart[product_key] -= 1
+
+    if cart[product_key] <= 0:
+        cart.pop(product_key)
+
+    request.session['cart'] = cart
+    request.session.modified = True
+
+    return redirect('cart')
+
+@require_POST
+def remove_from_cart(request, product_id):
+
+    cart = request.session.get(
+        'cart',
+        {}
+    )
+
+    product_key = str(product_id)
+
+    cart.pop(
+        product_key,
+        None
+    )
+
+    request.session['cart'] = cart
+    request.session.modified = True
+
+    messages.success(
+        request,
+        'Item removed from your order.'
+    )
+
+    return redirect('cart')
+
 @login_required(login_url='login')
 def product_list(request):
+
     if not request.user.is_staff:
         return HttpResponseForbidden(
             'You are not authorized to access this page.'
@@ -148,10 +483,16 @@ def product_list(request):
             category_id=category_id
         )
 
-    paginator = Paginator(products, 6)
+    paginator = Paginator(
+        products,
+        6
+    )
 
     page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+
+    page_obj = paginator.get_page(
+        page_number
+    )
 
     return render(
         request,
@@ -168,15 +509,21 @@ def product_list(request):
         }
     )
 
+
 @login_required(login_url='login')
 def product_detail(request, product_id):
+
     if not request.user.is_staff:
         return HttpResponseForbidden(
             'You are not authorized to access this page.'
         )
 
     product = get_object_or_404(
-        Product.objects.select_related('category').prefetch_related('images'),
+        Product.objects.select_related(
+            'category'
+        ).prefetch_related(
+            'images'
+        ),
         id=product_id
     )
 
@@ -188,8 +535,10 @@ def product_detail(request, product_id):
         }
     )
 
+
 @login_required(login_url='login')
 def add_product(request):
+
     if not request.user.is_staff:
         return HttpResponseForbidden(
             'You are not authorized to access this page.'
@@ -254,6 +603,7 @@ def add_product(request):
 @login_required(login_url='login')
 @require_POST
 def toggle_product_status(request, product_id):
+
     if not request.user.is_staff:
         return HttpResponseForbidden(
             'You are not authorized to perform this action.'
@@ -265,10 +615,12 @@ def toggle_product_status(request, product_id):
     )
 
     if not product.is_active and not product.category.is_active:
+
         messages.error(
             request,
             f'"{product.name}" cannot be made available because its category is inactive.'
         )
+
         return redirect('product_list')
 
     product.is_active = not product.is_active
@@ -281,11 +633,14 @@ def toggle_product_status(request, product_id):
     )
 
     if product.is_active:
+
         messages.success(
             request,
             f'"{product.name}" is now available.'
         )
+
     else:
+
         messages.warning(
             request,
             f'"{product.name}" is now unavailable.'
@@ -293,8 +648,10 @@ def toggle_product_status(request, product_id):
 
     return redirect('product_list')
 
+
 @login_required(login_url='login')
 def edit_product(request, product_id):
+
     if not request.user.is_staff:
         return HttpResponseForbidden(
             'You are not authorized to access this page.'

@@ -1,0 +1,295 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Review Order - SmartCafe</title>
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="{% static 'common/images/favicon.png' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'users_panel/css/cart.css' %}"
+    >
+
+</head>
+
+<body>
+
+{% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div class="cart-page">
+
+    <div class="cart-container">
+
+        <div class="cart-header">
+
+            <div>
+                <a href="{% url 'home' %}" class="back-link">
+                    ←
+                </a>
+
+                <div>
+                    <h1>Review Order</h1>
+
+                    <p>
+                        {{ cart_items|length }} item{{ cart_items|length|pluralize }}
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+
+        {% if cart_items %}
+
+            <section class="cart-section">
+
+                <h2>Your Items</h2>
+
+
+                <div class="cart-items">
+
+                    {% for item in cart_items %}
+
+                        {% with item.product.images.all|first as product_image %}
+
+                            <div class="cart-item">
+
+                                <div class="cart-item-image">
+
+                                    {% if product_image %}
+
+                                        <img
+                                            src="{{ product_image.image.url }}"
+                                            alt="{{ item.product.name }}"
+                                        >
+
+                                    {% else %}
+
+                                        <div class="no-image">
+                                            No image
+                                        </div>
+
+                                    {% endif %}
+
+                                </div>
+
+
+                                <div class="cart-item-info">
+
+                                    <h3>
+                                        {{ item.product.name }}
+                                    </h3>
+
+                                    <p>
+                                        ₹{{ item.product.price }} each
+                                    </p>
+
+
+                                <div class="quantity-row">
+                                
+                                    <form
+                                        method="POST"
+                                        action="{% url 'decrease_cart_quantity' item.product.id %}"
+                                    >
+                                        {% csrf_token %}
+                                
+                                        <button
+                                            type="submit"
+                                            {% if item.quantity <= 1 %}disabled{% endif %}
+                                        >
+                                            −
+                                        </button>
+                                    
+                                        <span>
+                                            {{ item.quantity }}
+                                        </span>
+                                    </form>
+                                
+                                
+                                    <form
+                                        method="POST"
+                                        action="{% url 'increase_cart_quantity' item.product.id %}"
+                                    >
+                                        {% csrf_token %}
+                                
+                                        <button
+                                            type="submit"
+                                            {% if item.quantity >= 10 %}disabled{% endif %}
+                                        >
+                                            +
+                                        </button>
+                                    </form>
+                                
+                                
+                                    <form
+                                        method="POST"
+                                        action="{% url 'remove_from_cart' item.product.id %}"
+                                    >
+                                        {% csrf_token %}
+                                
+                                        <button
+                                            type="submit"
+                                            class="remove-button"
+                                        >
+                                            Remove
+                                        </button>
+                                    </form>
+                                
+                                </div>
+
+                                </div>
+
+
+                                <strong class="item-subtotal">
+                                    ₹{{ item.item_total }}
+                                </strong>
+
+                            </div>
+
+                        {% endwith %}
+
+                    {% endfor %}
+
+                </div>
+
+
+                <a
+                    href="{% url 'home' %}"
+                    class="add-more-button"
+                >
+                    + Add More Items
+                </a>
+
+            </section>
+
+
+            <!-- Bill summary is only a prototype for now -->
+
+            <section class="bill-summary">
+
+                <h2>Bill Summary</h2>
+
+
+                {% for item in cart_items %}
+
+                    <div class="summary-row">
+
+                        <span>
+                            {{ item.product.name }} × {{ item.quantity }}
+                        </span>
+
+                        <span>
+                            ₹{{ item.item_total }}
+                        </span>
+
+                    </div>
+
+                {% endfor %}
+
+
+                <div class="summary-divider"></div>
+
+
+                <div class="summary-row">
+
+                    <span>Subtotal</span>
+
+                    <span>
+                        ₹{{ subtotal }}
+                    </span>
+
+                </div>
+
+
+                <div class="summary-row">
+
+                    <span>GST (5%)</span>
+
+                    <span>
+                        ₹{{ gst|floatformat:2 }}
+                    </span>
+
+                </div>
+
+
+                <div class="summary-divider"></div>
+
+
+                <div class="summary-row total-row">
+
+                    <strong>
+                        Total (incl. tax)
+                    </strong>
+
+                    <strong>
+                        ₹{{ total|floatformat:2 }}
+                    </strong>
+
+                </div>
+
+
+                <div class="prototype-note">
+                    ✓ Final tax-inclusive amount — no hidden charges
+                </div>
+
+            </section>
+
+
+            <button
+                type="button"
+                class="continue-button"
+            >
+                Continue · ₹{{ total|floatformat:2 }}
+            </button>
+
+        {% else %}
+
+            <div class="empty-cart">
+
+                <h2>Your order is empty</h2>
+
+                <p>
+                    Add some items from the menu to review your order.
+                </p>
+
+                <a
+                    href="{% url 'home' %}"
+                    class="add-more-button"
+                >
+                    Browse Menu
+                </a>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

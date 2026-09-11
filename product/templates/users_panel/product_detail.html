@@ -1,0 +1,582 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>{{ product.name }} - SmartCafe</title>
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="{% static 'common/images/favicon.png' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'users_panel/css/product_detail.css' %}"
+    >
+
+</head>
+
+
+<body>
+
+{% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div class="product-detail-page">
+
+    <div class="product-detail-container">
+
+
+        <!-- Breadcrumb -->
+
+        <div class="breadcrumb">
+
+            <a href="{% url 'home' %}">
+                Menu
+            </a>
+
+            <span>›</span>
+
+            <a href="{% url 'home' %}?category={{ product.category.id }}">
+                {{ product.category.name }}
+            </a>
+
+            <span>›</span>
+
+            <span class="current">
+                {{ product.name }}
+            </span>
+
+        </div>
+
+
+        <!-- Product Main Card -->
+
+        <div class="product-detail-card">
+
+
+            <!-- Product Gallery -->
+
+            <div class="product-gallery">
+
+                <div class="main-image-container">
+
+                    {% with product.images.all|first as main_image %}
+
+                        {% if main_image %}
+
+                            <img
+                                id="mainProductImage"
+                                class="main-product-image"
+                                src="{{ main_image.image.url }}"
+                                alt="{{ product.name }}"
+                            >
+
+                        {% else %}
+
+                            <div class="main-no-image">
+                                No image
+                            </div>
+
+                        {% endif %}
+
+                    {% endwith %}
+
+                </div>
+
+
+                {% if product.images.all %}
+
+                    <div class="thumbnail-list">
+
+                        {% for product_image in product.images.all %}
+
+                            <button
+                                type="button"
+                                class="thumbnail-button {% if forloop.first %}active{% endif %}"
+                                onclick="changeProductImage('{{ product_image.image.url }}', this)"
+                            >
+
+                                <img
+                                    src="{{ product_image.image.url }}"
+                                    alt="{{ product.name }}"
+                                >
+
+                            </button>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        <!-- Information -->
+
+            <div class="product-detail-info">
+            
+                <span class="product-category">
+                    {{ product.category.name }}
+                </span>
+            
+                <h1>
+                    {{ product.name }}
+                </h1>
+            
+                <p class="product-description">
+                    {{ product.description }}
+                </p>
+            
+                <div class="product-price">
+                    ₹{{ product.price }}
+                </div>
+            
+            
+                {% if product.is_active %}
+            
+                    <div class="availability available">
+                        <span></span>
+                        Available
+                    </div>
+                
+                
+                    <!-- Quantity -->
+                
+                    <div class="quantity-section">
+                    
+                        <label>
+                            QUANTITY
+                        </label>
+                    
+                        <div class="quantity-controls">
+                        
+                            <button
+                                type="button"
+                                id="decreaseQuantity"
+                            >
+                                −
+                            </button>
+                        
+                            <span id="quantity">
+                                1
+                            </span>
+                        
+                            <button
+                                type="button"
+                                id="increaseQuantity"
+                            >
+                                +
+                            </button>
+                        
+                        </div>
+                    
+                    </div>
+                
+                
+                    <!-- Special Instructions - Dummy -->
+                
+                    <div class="instructions-section">
+                    
+                        <label>
+                            SPECIAL INSTRUCTIONS
+                        </label>
+                    
+                        <div class="instruction-options">
+                        
+                            <button type="button">
+                                Less spicy
+                            </button>
+                        
+                            <button type="button">
+                                No onions
+                            </button>
+                        
+                            <button type="button">
+                                Extra sauce
+                            </button>
+                        
+                            <button type="button">
+                                Less sugar
+                            </button>
+                        
+                            <button type="button">
+                                No ice
+                            </button>
+                        
+                            <button type="button">
+                                Extra crispy
+                            </button>
+                        
+                        </div>
+                    
+                        <textarea
+                            placeholder="Or type your own instructions..."
+                            disabled
+                        ></textarea>
+                    
+                    </div>
+                
+                
+                    <!-- Customer Reviews - Dummy -->
+                
+                    <div class="reviews-section">
+                    
+                        <label>
+                            CUSTOMER REVIEWS
+                        </label>
+                    
+                        <div class="dummy-review">
+                        
+                            <div class="review-header">
+                            
+                                <strong>
+                                    Priya S.
+                                </strong>
+                            
+                                <span>
+                                    ★★★★★
+                                </span>
+                            
+                            </div>
+                        
+                            <p>
+                                Perfect on a hot afternoon. The caramel touch is lovely!
+                            </p>
+                        
+                        </div>
+                    
+                    </div>
+                
+                
+                    <!-- Add To Order -->
+                
+                    <form
+                        method="POST"
+                        action="{% url 'add_to_cart' product.id %}"
+                        class="add-to-order-form"
+                    >
+                
+                        {% csrf_token %}
+                
+                        <input
+                            type="hidden"
+                            name="quantity"
+                            id="quantityInput"
+                            value="1"
+                        >
+                
+                        <button
+                            type="submit"
+                            class="detail-add-button"
+                        >
+                
+                            <span id="addOrderText">
+                                Add 1 to Order
+                            </span>
+                        
+                            <strong id="orderTotal">
+                                ₹{{ product.price }}
+                            </strong>
+                        
+                        </button>
+                    
+                    </form>
+                
+                
+                {% else %}
+                
+                    <div class="availability unavailable">
+                        <span></span>
+                        Currently Unavailable
+                    </div>
+                
+                    <button
+                        type="button"
+                        class="detail-add-button disabled"
+                        disabled
+                    >
+                        Unavailable
+                    </button>
+                
+                {% endif %}
+                
+            </div>
+
+        </div>
+
+
+        <!-- Related Products -->
+
+        {% if related_products %}
+
+            <section class="related-section">
+
+                <div class="section-heading">
+
+                    <h2>
+                        You may also like
+                    </h2>
+
+                </div>
+
+
+                <div class="related-products">
+
+                    {% for related_product in related_products %}
+
+                        {% with related_product.images.all|first as related_image %}
+
+                            <a
+                                href="{% url 'customer_product_detail' related_product.id %}"
+                                class="related-card"
+                            >
+
+                                <div class="related-image">
+
+                                    {% if related_image %}
+
+                                        <img
+                                            src="{{ related_image.image.url }}"
+                                            alt="{{ related_product.name }}"
+                                        >
+
+                                    {% else %}
+
+                                        <div class="related-no-image">
+                                            No image
+                                        </div>
+
+                                    {% endif %}
+
+                                </div>
+
+
+                                <div class="related-info">
+
+                                    <h3>
+                                        {{ related_product.name }}
+                                    </h3>
+
+                                    <strong>
+                                        ₹{{ related_product.price }}
+                                    </strong>
+
+                                </div>
+
+                            </a>
+
+                        {% endwith %}
+
+                    {% endfor %}
+
+                </div>
+
+            </section>
+
+        {% endif %}
+
+
+    </div>
+
+</div>
+
+
+<!-- Image Zoom -->
+
+<div
+    id="imageZoom"
+    class="image-zoom"
+    onclick="closeImageZoom()"
+>
+
+    <img
+        id="zoomedImage"
+        src=""
+        alt=""
+    >
+
+</div>
+
+
+<script>
+
+function changeProductImage(imageUrl, button) {
+
+    const mainImage = document.getElementById(
+        'mainProductImage'
+    );
+
+    if (mainImage) {
+
+        mainImage.src = imageUrl;
+
+    }
+
+    document
+        .querySelectorAll('.thumbnail-button')
+        .forEach(function(item) {
+
+            item.classList.remove('active');
+
+        });
+
+    button.classList.add('active');
+}
+
+
+const mainImage = document.getElementById(
+    'mainProductImage'
+);
+
+if (mainImage) {
+
+    mainImage.addEventListener(
+        'click',
+        function() {
+
+            const zoomContainer =
+                document.getElementById('imageZoom');
+
+            const zoomedImage =
+                document.getElementById('zoomedImage');
+
+            zoomedImage.src = mainImage.src;
+
+            zoomContainer.classList.add('show');
+
+        }
+    );
+
+}
+
+
+function closeImageZoom() {
+
+    document
+        .getElementById('imageZoom')
+        .classList.remove('show');
+
+}
+
+
+/* =========================
+   QUANTITY
+   ========================= */
+
+const decreaseButton =
+    document.getElementById('decreaseQuantity');
+
+const increaseButton =
+    document.getElementById('increaseQuantity');
+
+const quantityDisplay =
+    document.getElementById('quantity');
+
+const quantityInput =
+    document.getElementById('quantityInput');
+
+const addOrderText =
+    document.getElementById('addOrderText');
+
+const orderTotal =
+    document.getElementById('orderTotal');
+
+
+const productPrice =
+    Number('{{ product.price }}');
+
+const maxQuantity = 10;
+
+
+function updateQuantity() {
+
+    const quantity =
+        Number(quantityDisplay.textContent);
+
+    quantityInput.value = quantity;
+
+    addOrderText.textContent =
+        `Add ${quantity} to Order`;
+
+    orderTotal.textContent =
+        `₹${(productPrice * quantity).toFixed(2)}`;
+
+}
+
+
+if (
+    decreaseButton &&
+    increaseButton &&
+    quantityDisplay
+) {
+
+    decreaseButton.addEventListener(
+        'click',
+        function() {
+
+            let quantity =
+                Number(quantityDisplay.textContent);
+
+            if (quantity > 1) {
+
+                quantity--;
+
+                quantityDisplay.textContent =
+                    quantity;
+
+                updateQuantity();
+
+            }
+
+        }
+    );
+
+
+    increaseButton.addEventListener(
+        'click',
+        function() {
+
+            let quantity =
+                Number(quantityDisplay.textContent);
+
+            if (quantity < maxQuantity) {
+
+                quantity++;
+
+                quantityDisplay.textContent =
+                    quantity;
+
+                updateQuantity();
+
+            }
+
+        }
+    );
+
+}
+
+</script>
+
+
+</body>
+
+</html>

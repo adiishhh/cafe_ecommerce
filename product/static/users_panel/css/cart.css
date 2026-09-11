@@ -1,0 +1,521 @@
+* {
+    box-sizing: border-box;
+}
+
+
+body {
+    margin: 0;
+
+    font-family: Arial, sans-serif;
+
+    background: #f7f5f2;
+
+    color: #1d1d1d;
+}
+
+
+a {
+    color: inherit;
+
+    text-decoration: none;
+}
+
+
+.cart-page {
+    min-height: 100vh;
+
+    padding: 30px 20px 50px;
+}
+
+
+.cart-container {
+    width: 100%;
+
+    max-width: 850px;
+
+    margin: 0 auto;
+}
+
+
+/* =========================
+   HEADER
+   ========================= */
+
+.cart-header > div {
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+}
+
+
+.back-link {
+    font-size: 25px;
+
+    color: #777;
+}
+
+
+.cart-header h1 {
+    margin: 0;
+
+    font-family: Georgia, serif;
+
+    font-size: 27px;
+}
+
+
+.cart-header p {
+    margin: 4px 0 0;
+
+    color: #999;
+
+    font-size: 12px;
+}
+
+
+/* =========================
+   SECTION
+   ========================= */
+
+.cart-section,
+.bill-summary {
+    margin-top: 25px;
+
+    padding: 18px;
+
+    border: 1px solid #e5e1dd;
+
+    border-radius: 14px;
+
+    background: #ffffff;
+}
+
+
+.cart-section h2,
+.bill-summary h2 {
+    margin: 0 0 15px;
+
+    font-size: 13px;
+
+    text-transform: uppercase;
+
+    color: #777;
+}
+
+
+/* =========================
+   CART ITEMS
+   ========================= */
+
+.cart-items {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+
+.cart-item {
+    display: flex;
+
+    align-items: center;
+
+    gap: 13px;
+
+    padding: 12px;
+
+    border: 1px solid #eee;
+
+    border-radius: 11px;
+}
+
+
+.cart-item-image {
+    flex: 0 0 68px;
+
+    width: 68px;
+
+    height: 68px;
+
+    overflow: hidden;
+
+    border-radius: 9px;
+
+    background: #f2f2f2;
+}
+
+
+.cart-item-image img {
+    display: block;
+
+    width: 100%;
+
+    height: 100%;
+
+    object-fit: cover;
+}
+
+
+.no-image {
+    width: 100%;
+
+    height: 100%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    color: #999;
+
+    font-size: 10px;
+}
+
+
+.cart-item-info {
+    flex: 1;
+
+    min-width: 0;
+}
+
+
+.cart-item-info h3 {
+    margin: 0 0 4px;
+
+    font-size: 14px;
+}
+
+
+.cart-item-info p {
+    margin: 0 0 8px;
+
+    color: #888;
+
+    font-size: 11px;
+}
+
+
+/* =========================
+   QUANTITY
+   ========================= */
+
+.quantity-row {
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+}
+
+
+.quantity-row form:first-child {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+}
+
+
+.quantity-row form:first-child button {
+    width: 27px;
+
+    height: 27px;
+
+    border: 1px solid #ddd;
+
+    border-radius: 7px;
+
+    background: #ffffff;
+
+    cursor: pointer;
+}
+
+
+.quantity-row form:first-child button:hover:not(:disabled) {
+    border-color: #d93600;
+
+    color: #d93600;
+}
+
+
+.quantity-row form:first-child button:disabled {
+    opacity: 0.4;
+
+    cursor: not-allowed;
+}
+
+
+.quantity-row form:first-child span {
+    min-width: 18px;
+
+    text-align: center;
+
+    font-size: 13px;
+
+    font-weight: 600;
+}
+
+
+.remove-button {
+    border: none;
+
+    background: none;
+
+    color: #999;
+
+    font-size: 11px;
+
+    cursor: pointer;
+}
+
+
+.remove-button:hover {
+    color: #d93600;
+}
+
+
+.item-subtotal {
+    white-space: nowrap;
+
+    font-family: Georgia, serif;
+
+    font-size: 15px;
+
+    color: #d94f00;
+}
+
+
+/* =========================
+   ADD MORE
+   ========================= */
+
+.add-more-button {
+    display: block;
+
+    margin-top: 15px;
+
+    padding: 11px;
+
+    border: 1px solid #d93600;
+
+    border-radius: 8px;
+
+    text-align: center;
+
+    color: #d93600;
+
+    font-size: 13px;
+
+    font-weight: 600;
+}
+
+
+.add-more-button:hover {
+    background: #fff5f0;
+}
+
+
+/* =========================
+   BILL SUMMARY
+   ========================= */
+
+.summary-row {
+    display: flex;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 10px;
+
+    color: #777;
+
+    font-size: 12px;
+}
+
+
+.summary-divider {
+    height: 1px;
+
+    margin: 12px 0;
+
+    border-top: 1px dashed #ddd;
+}
+
+
+.total-row {
+    margin-bottom: 0;
+
+    color: #222;
+
+    font-size: 14px;
+}
+
+
+.total-row strong:last-child {
+    font-family: Georgia, serif;
+
+    font-size: 18px;
+
+    color: #d94f00;
+}
+
+
+.prototype-note {
+    margin: 15px -18px -18px;
+
+    padding: 10px;
+
+    border-radius: 0 0 14px 14px;
+
+    background: #fff9e8;
+
+    color: #c77a00;
+
+    text-align: center;
+
+    font-size: 11px;
+}
+
+
+/* =========================
+   CONTINUE
+   ========================= */
+
+.continue-button {
+    width: 100%;
+
+    margin-top: 15px;
+
+    padding: 13px;
+
+    border: none;
+
+    border-radius: 9px;
+
+    background: #d93600;
+
+    color: #ffffff;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+/* =========================
+   EMPTY CART
+   ========================= */
+
+.empty-cart {
+    margin-top: 30px;
+
+    padding: 50px 20px;
+
+    border: 1px solid #e5e1dd;
+
+    border-radius: 14px;
+
+    background: #ffffff;
+
+    text-align: center;
+}
+
+
+.empty-cart h2 {
+    margin: 0 0 8px;
+
+    font-family: Georgia, serif;
+}
+
+
+.empty-cart p {
+    margin: 0 0 20px;
+
+    color: #888;
+
+    font-size: 13px;
+}
+
+
+.empty-cart .add-more-button {
+    max-width: 220px;
+
+    margin: 0 auto;
+}
+
+.messages {
+    margin-bottom: 16px;
+}
+
+.message {
+    padding: 11px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.message.success {
+    background: #e8f7ed;
+    color: #18733b;
+}
+
+.message.error {
+    background: #fdecec;
+    color: #b42318;
+}
+
+.message.warning {
+    background: #fff4df;
+    color: #9a6700;
+}
+
+.message.info {
+    background: #eaf2ff;
+    color: #2457a6;
+}
+
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 600px) {
+
+    .cart-page {
+        padding: 20px 12px 35px;
+    }
+
+
+    .cart-section,
+    .bill-summary {
+        padding: 14px;
+    }
+
+
+    .cart-item {
+        padding: 9px;
+    }
+
+
+    .cart-item-image {
+        flex-basis: 60px;
+
+        width: 60px;
+
+        height: 60px;
+    }
+
+
+    .item-subtotal {
+        font-size: 13px;
+    }
+
+}

@@ -27,6 +27,16 @@
 
 <body>
 
+{% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
 <main class="home-page">
 
     <div class="home-container">
@@ -35,42 +45,63 @@
         <!-- Header -->
 
         <header class="home-header">
-
+        
             <a href="{% url 'home' %}" class="brand">
-
+            
                 <span class="brand-icon">☕</span>
-
+            
                 <span class="brand-name">
                     SmartCafe
                 </span>
-
+            
             </a>
-
-
-            {% if user.is_authenticated %}
-
-                <a href="{% url 'profile' %}" class="profile-avatar">
+        
+        
+            <div class="header-actions">
+            
+                <a href="{% url 'cart' %}" class="review-order-button">
                 
-                    {% if user.profile_image %}
-                        <img src="{{ user.profile_image.url }}"
-                             alt="Profile image">
-                    {% else %}
-                        {{ user.name|first|upper }}
+                    <span>
+                        🛒
+                    </span>
+                
+                    Review Order
+                
+                    {% if cart_count > 0 %}
+                        <span class="cart-count">
+                            {{ cart_count }}
+                        </span>
                     {% endif %}
+                    
+                </a>
+            
+            
+                {% if user.is_authenticated %}
+            
+                    <a href="{% url 'profile' %}" class="profile-avatar">
+                    
+                        {% if user.profile_image %}
+                            <img src="{{ user.profile_image.url }}"
+                                 alt="Profile image">
+                        {% else %}
+                            {{ user.name|first|upper }}
+                        {% endif %}
+                    
+                    </a>
                 
-                </a>
-
-            {% else %}
-
-                <a href="{% url 'login' %}"
-                   class="sign-in-button">
-
-                    Sign In
-
-                </a>
-
-            {% endif %}
-
+                {% else %}
+                
+                    <a href="{% url 'login' %}"
+                       class="sign-in-button">
+                
+                        Sign In
+                
+                    </a>
+                
+                {% endif %}
+                
+            </div>
+        
         </header>
 
 
