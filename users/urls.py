@@ -3,7 +3,6 @@ from users import views
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
-    path('', views.home, name='home'),
     path("signup/", views.signup, name='signup'),
     path('verify-signup-otp/', views.verify_signup_otp, name='verify_signup_otp'),
     path('resend-signup-otp/', views.resend_signup_otp, name='resend_signup_otp'),

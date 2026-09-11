@@ -1,0 +1,166 @@
+<section class="product-section">
+
+    {% if page_obj.object_list %}
+
+        <div class="product-list">
+
+            {% for product in page_obj %}
+
+                {% with product.images.all|first as product_image %}
+
+                    {% if product.is_active %}
+
+                        <a
+                            href="{% url 'product_detail' product.id %}"
+                            class="product-card"
+                        >
+
+                            <div class="product-image">
+
+                                {% if product_image %}
+
+                                    <img
+                                        src="{{ product_image.image.url }}"
+                                        alt="{{ product.name }}"
+                                    >
+
+                                {% else %}
+
+                                    <div class="no-image">
+                                        No image
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+                            <div class="product-info">
+
+                                <h3>
+                                    {{ product.name }}
+                                </h3>
+
+                                <p>
+                                    {{ product.description|truncatechars:85 }}
+                                </p>
+
+                                <strong>
+                                    ₹{{ product.price }}
+                                </strong>
+
+                                <span class="add-button">
+                                    Add +
+                                </span>
+
+                            </div>
+
+                        </a>
+
+                    {% else %}
+
+                        <div class="product-card unavailable">
+
+                            <div class="product-image">
+
+                                {% if product_image %}
+
+                                    <img
+                                        src="{{ product_image.image.url }}"
+                                        alt="{{ product.name }}"
+                                    >
+
+                                {% else %}
+
+                                    <div class="no-image">
+                                        No image
+                                    </div>
+
+                                {% endif %}
+
+                                <div class="unavailable-label">
+                                    Unavailable
+                                </div>
+
+                            </div>
+
+                            <div class="product-info">
+
+                                <h3>
+                                    {{ product.name }}
+                                </h3>
+
+                                <p>
+                                    {{ product.description|truncatechars:85 }}
+                                </p>
+
+                                <strong>
+                                    ₹{{ product.price }}
+                                </strong>
+
+                                <span class="unavailable-price">
+                                    N/A
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+
+                {% endwith %}
+
+            {% endfor %}
+
+        </div>
+
+
+        <!-- Pagination -->
+
+        {% if page_obj.paginator.num_pages > 1 %}
+
+            <div class="pagination">
+
+                {% if page_obj.has_previous %}
+
+                    <a
+                        href="?q={{ query|urlencode }}&category={{ category_id }}&sort={{ sort }}&min_price={{ min_price }}&max_price={{ max_price }}&page={{ page_obj.previous_page_number }}"
+                    >
+                        Previous
+                    </a>
+
+                {% endif %}
+
+                <span>
+                    Page {{ page_obj.number }}
+                    of {{ page_obj.paginator.num_pages }}
+                </span>
+
+                {% if page_obj.has_next %}
+
+                    <a
+                        href="?q={{ query|urlencode }}&category={{ category_id }}&sort={{ sort }}&min_price={{ min_price }}&max_price={{ max_price }}&page={{ page_obj.next_page_number }}"
+                    >
+                        Next
+                    </a>
+
+                {% endif %}
+
+            </div>
+
+        {% endif %}
+
+    {% else %}
+
+        <div class="no-products">
+
+            <h3>No products found</h3>
+
+            <p>
+                Try changing your search or filters.
+            </p>
+
+        </div>
+
+    {% endif %}
+
+</section>

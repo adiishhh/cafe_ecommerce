@@ -22,13 +22,6 @@ from django.views.decorators.http import require_POST
 
 User = get_user_model()
 
-def home(request):
-
-    if request.user.is_staff:
-        return redirect('admin_users')
-    
-    return render(request, 'users_panel/home.html')
-
 def signup(request):
     if request.method == 'POST':
         form = SignupForm(request.POST)

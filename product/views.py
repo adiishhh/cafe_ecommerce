@@ -7,9 +7,118 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from .models import Product
 from category.models import Category
+from decimal import Decimal, InvalidOperation
 from .forms import ProductForm, ProductImageFormSet
 
 # Create your views here.
+
+def customer_home(request):
+
+    if request.user.is_staff:
+        return redirect('admin_users')
+
+    query = request.GET.get('q', '').strip()
+    category_id = request.GET.get('category', '').strip()
+    sort = request.GET.get('sort', '').strip()
+    min_price = request.GET.get('min_price', '').strip()
+    max_price = request.GET.get('max_price', '').strip()
+
+    products = Product.objects.select_related(
+        'category'
+    ).prefetch_related(
+        'images'
+    ).filter(
+        category__is_active=True
+    )
+
+    if query:
+        products = products.filter(
+            Q(name__icontains=query) |
+            Q(description__icontains=query) |
+            Q(category__name__icontains=query)
+        )
+
+    if category_id:
+        products = products.filter(
+            category_id=category_id
+        )
+
+    if min_price:
+        try:
+            min_price_value = Decimal(min_price)
+
+            if min_price_value >= 0:
+                products = products.filter(
+                    price__gte=min_price_value
+                )
+            else:
+                min_price = ''
+
+        except (InvalidOperation, ValueError):
+            min_price = ''
+
+    if max_price:
+        try:
+            max_price_value = Decimal(max_price)
+
+            if max_price_value >= 0:
+                products = products.filter(
+                    price__lte=max_price_value
+                )
+            else:
+                max_price = ''
+
+        except (InvalidOperation, ValueError):
+            max_price = ''
+
+    if sort == 'price_low':
+
+        products = products.order_by('price')
+
+    elif sort == 'price_high':
+
+        products = products.order_by('-price')
+
+    elif sort == 'name_az':
+
+        products = products.order_by('name')
+
+    elif sort == 'name_za':
+
+        products = products.order_by('-name')
+
+    else:
+
+        products = products.order_by('-created_at')
+
+    paginator = Paginator(
+        products,
+        6
+    )
+
+    page_number = request.GET.get('page')
+
+    page_obj = paginator.get_page(
+        page_number
+    )
+
+    categories = Category.objects.filter(
+        is_active=True
+    ).order_by('name')
+
+    return render(
+        request,
+        'users_panel/home.html',
+        {
+            'page_obj': page_obj,
+            'categories': categories,
+            'query': query,
+            'category_id': category_id,
+            'sort': sort,
+            'min_price': min_price,
+            'max_price': max_price,
+        }
+    )
 
 @login_required(login_url='login')
 def product_list(request):

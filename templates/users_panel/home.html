@@ -16,8 +16,9 @@
           type="image/png"
           href="{% static 'common/images/favicon.png' %}">
 
-    <link rel="stylesheet"
-          href="{% static 'users_panel/css/home.css' %}">
+    <link rel="stylesheet" href="{% static 'users_panel/css/home.css' %}">
+
+    <link rel="stylesheet" href="{% static 'users_panel/css/users_products.css' %}">
 
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
 
@@ -131,45 +132,205 @@
 
         </nav>
 
-
-        <!-- Search -->
-
-        <div class="search-box">
-
-            <span class="search-icon">⌕</span>
-
-            <input type="text"
-                   placeholder="Search food & drinks..."
-                   disabled>
-
-        </div>
-
-
+        <form method="GET" class="search-box">
+        
+            <span class="search-icon">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </span>
+        
+            <input
+                type="text"
+                name="q"
+                value="{{ query }}"
+                placeholder="Search food & drinks..."
+            >
+        
+            {% if category_id %}
+                <input type="hidden" name="category" value="{{ category_id }}">
+            {% endif %}
+        
+            {% if sort %}
+                <input type="hidden" name="sort" value="{{ sort }}">
+            {% endif %}
+        
+            {% if min_price %}
+                <input type="hidden" name="min_price" value="{{ min_price }}">
+            {% endif %}
+        
+            {% if max_price %}
+                <input type="hidden" name="max_price" value="{{ max_price }}">
+            {% endif %}
+        
+            <button type="submit" class="search-button">
+                Search
+            </button>
+        
+            {% if query %}
+                <a
+                    href="?{% if category_id %}category={{ category_id }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}{% if min_price %}min_price={{ min_price }}&{% endif %}{% if max_price %}max_price={{ max_price }}{% endif %}"
+                    class="clear-button"
+                >
+                    Clear Search
+                </a>
+            {% endif %}
+            
+        </form>
+        
+        
         <!-- Categories -->
-
+        
         <div class="categories">
-
-            <button class="category active">
+        
+            <a
+                href="?q={{ query|urlencode }}&sort={{ sort }}&min_price={{ min_price }}&max_price={{ max_price }}"
+                class="category {% if not category_id %}active{% endif %}"
+            >
                 All
-            </button>
-
-            <button class="category">
-                Coffee
-            </button>
-
-            <button class="category">
-                Meals
-            </button>
-
-            <button class="category">
-                Burgers
-            </button>
-
-            <button class="category">
-                Snacks
-            </button>
-
+            </a>
+        
+        
+            {% for category in categories %}
+        
+                <a
+                    href="?q={{ query|urlencode }}&category={{ category.id }}&sort={{ sort }}&min_price={{ min_price }}&max_price={{ max_price }}"
+                    class="category {% if category_id == category.id|stringformat:'s' %}active{% endif %}"
+                >
+                    {{ category.name }}
+                </a>
+            
+            {% endfor %}
+            
         </div>
+
+
+        <!-- Product Filters -->
+
+        <form method="GET" class="product-filters">
+        
+            <input
+                type="hidden"
+                name="q"
+                value="{{ query }}"
+            >
+        
+            <div class="filter-group">
+            
+                <label for="sort">
+                    Sort
+                </label>
+            
+                <select name="sort" id="sort">
+                
+                    <option
+                        value=""
+                        {% if not sort %}selected{% endif %}
+                    >
+                        Default
+                    </option>
+                
+                    <option
+                        value="price_low"
+                        {% if sort == 'price_low' %}selected{% endif %}
+                    >
+                        Price: Low to High
+                    </option>
+                
+                    <option
+                        value="price_high"
+                        {% if sort == 'price_high' %}selected{% endif %}
+                    >
+                        Price: High to Low
+                    </option>
+                
+                    <option
+                        value="name_az"
+                        {% if sort == 'name_az' %}selected{% endif %}
+                    >
+                        Name: A-Z
+                    </option>
+                
+                    <option
+                        value="name_za"
+                        {% if sort == 'name_za' %}selected{% endif %}
+                    >
+                        Name: Z-A
+                    </option>
+                
+                </select>
+            
+            </div>
+        
+        
+            <div class="filter-group">
+            
+                <label for="min_price">
+                    Min Price
+                </label>
+            
+                <input
+                    type="number"
+                    name="min_price"
+                    id="min_price"
+                    value="{{ min_price }}"
+                    placeholder="₹ Min"
+                    min="0"
+                    step="10.00"
+                >
+            
+            </div>
+        
+        
+            <div class="filter-group">
+            
+                <label for="max_price">
+                    Max Price
+                </label>
+            
+                <input
+                    type="number"
+                    name="max_price"
+                    id="max_price"
+                    value="{{ max_price }}"
+                    placeholder="₹ Max"
+                    min="0"
+                    step="10.00"
+                >
+            
+            </div>
+        
+        
+            {% if category_id %}
+                <input
+                    type="hidden"
+                    name="category"
+                    value="{{ category_id }}"
+                >
+            {% endif %}
+        
+        
+            <button
+                type="submit"
+                class="apply-filter-button"
+            >
+                Apply
+            </button>
+        
+        
+            {% if sort or min_price or max_price %}
+        
+                <a
+                    href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if category_id %}category={{ category_id }}{% endif %}"
+                    class="clear-filter-button"
+                >
+                    Clear Filters
+                </a>
+            
+            {% endif %}
+            
+        </form>
+
+        {% include "users_panel/users_products.html" %}
+
     </div>
 </main>
 <footer class="home-footer">
