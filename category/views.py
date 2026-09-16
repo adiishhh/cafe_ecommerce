@@ -136,6 +136,11 @@ def toggle_category_status(request, category_id):
         id=category_id
     )
 
+    # products = Category.objects.prefetch_related('products')
+
+    # if products :
+
+
     category.is_active = not category.is_active
     category.save(update_fields=['is_active', 'updated_at'])
 

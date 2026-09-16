@@ -26,10 +26,7 @@ def customer_home(request):
         'category'
     ).prefetch_related(
         'images'
-    ).filter(
-        is_active=True,
-        category__is_active=True
-    )
+    ).all()
 
     if query:
         products = products.filter(
@@ -155,23 +152,12 @@ def customer_product_detail(request, product_id):
         id=product_id
     )
 
-    if not product.is_active or not product.category.is_active:
-
-        messages.error(
-            request,
-            'This product is currently unavailable.'
-        )
-
-        return redirect('home')
-
     related_products = Product.objects.select_related(
         'category'
     ).prefetch_related(
         'images'
     ).filter(
-        category=product.category,
-        category__is_active=True,
-        is_active=True
+        category=product.category
     ).exclude(
         id=product.id
     ).order_by(
@@ -187,7 +173,7 @@ def customer_product_detail(request, product_id):
         }
     )
 
-MAX_CART_QUANTITY = 10
+MAX_CART_QUANTITY = 100
 
 @require_POST
 def add_to_cart(request, product_id):
@@ -267,6 +253,104 @@ def add_to_cart(request, product_id):
     return redirect('home')
 
 def cart(request):
+
+    session_cart = request.session.get(
+        'cart',
+        {}
+    )
+
+    if not session_cart:
+
+        return render(
+            request,
+            'users_panel/cart.html',
+            {
+                'cart_items': [],
+                'cart_count': 0,
+                'subtotal': Decimal('0.00'),
+                'gst': Decimal('0.00'),
+                'total': Decimal('0.00'),
+                'has_unavailable_items': False,
+            }
+        )
+
+    products = Product.objects.select_related(
+        'category'
+    ).prefetch_related(
+        'images'
+    ).filter(
+        id__in=session_cart.keys()
+    )
+
+    cart_items = []
+
+    subtotal = Decimal('0.00')
+    cart_count = 0
+    has_unavailable_items = False
+
+    for product in products:
+
+        quantity = session_cart.get(
+            str(product.id),
+            0
+        )
+
+        if quantity < 1:
+            continue
+
+        if quantity > MAX_CART_QUANTITY:
+            quantity = MAX_CART_QUANTITY
+
+        is_available = (
+            product.is_active
+            and product.category.is_active
+        )
+
+        if is_available:
+
+            item_total = (
+                product.price * quantity
+            )
+
+            subtotal += item_total
+
+        else:
+
+            item_total = Decimal('0.00')
+
+            has_unavailable_items = True
+
+        cart_count += quantity
+
+        cart_items.append(
+            {
+                'product': product,
+                'quantity': quantity,
+                'item_total': item_total,
+                'is_available': is_available,
+            }
+        )
+
+    gst = (
+        subtotal * Decimal('0.05')
+    ).quantize(
+        Decimal('0.01')
+    )
+
+    total = subtotal + gst
+
+    return render(
+        request,
+        'users_panel/cart.html',
+        {
+            'cart_items': cart_items,
+            'cart_count': cart_count,
+            'subtotal': subtotal,
+            'gst': gst,
+            'total': total,
+            'has_unavailable_items': has_unavailable_items,
+        }
+    )
 
     session_cart = request.session.get(
         'cart',
@@ -377,11 +461,6 @@ def increase_cart_quantity(request, product_id):
     )
 
     if not product.is_active or not product.category.is_active:
-
-        cart.pop(product_key)
-
-        request.session['cart'] = cart
-        request.session.modified = True
 
         messages.error(
             request,

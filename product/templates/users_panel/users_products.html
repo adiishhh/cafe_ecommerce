@@ -8,7 +8,7 @@
 
                 {% with product.images.all|first as product_image %}
 
-                    {% if product.is_active %}
+                    {% if product.is_active and product.category.is_active %}
 
                         <a
                             href="{% url 'customer_product_detail' product.id %}"

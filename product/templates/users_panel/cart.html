@@ -75,98 +75,148 @@
 
                         {% with item.product.images.all|first as product_image %}
 
-                            <div class="cart-item">
+                            <div class="cart-item {% if not item.is_available %}cart-item-unavailable{% endif %}">
 
                                 <div class="cart-item-image">
-
+                                
                                     {% if product_image %}
-
+                                
                                         <img
                                             src="{{ product_image.image.url }}"
                                             alt="{{ item.product.name }}"
                                         >
-
+                                
                                     {% else %}
-
+                                
                                         <div class="no-image">
                                             No image
                                         </div>
-
+                                    
                                     {% endif %}
-
+                                    
+                                    {% if not item.is_available %}
+                                    
+                                        <div class="cart-unavailable-label">
+                                            Unavailable
+                                        </div>
+                                    
+                                    {% endif %}
+                                    
                                 </div>
-
-
+                            
+                            
                                 <div class="cart-item-info">
-
+                                
                                     <h3>
                                         {{ item.product.name }}
                                     </h3>
-
+                                
                                     <p>
                                         ₹{{ item.product.price }} each
                                     </p>
-
-
-                                <div class="quantity-row">
                                 
-                                    <form
-                                        method="POST"
-                                        action="{% url 'decrease_cart_quantity' item.product.id %}"
-                                    >
-                                        {% csrf_token %}
                                 
-                                        <button
-                                            type="submit"
-                                            {% if item.quantity <= 1 %}disabled{% endif %}
-                                        >
-                                            −
-                                        </button>
+                                    {% if item.is_available %}
+                                
+                                        <div class="quantity-row">
+                                        
+                                            <form
+                                                method="POST"
+                                                action="{% url 'decrease_cart_quantity' item.product.id %}"
+                                            >
+                                                {% csrf_token %}
+                                        
+                                                <button
+                                                    type="submit"
+                                                    {% if item.quantity <= 1 %}disabled{% endif %}
+                                                >
+                                                    −
+                                                </button>
+                                            
+                                                <span>
+                                                    {{ item.quantity }}
+                                                </span>
+                                            
+                                            </form>
+                                        
+                                        
+                                            <form
+                                                method="POST"
+                                                action="{% url 'increase_cart_quantity' item.product.id %}"
+                                            >
+                                                {% csrf_token %}
+                                        
+                                                <button
+                                                    type="submit"
+                                                    {% if item.quantity >= 10 %}disabled{% endif %}
+                                                >
+                                                    +
+                                                </button>
+                                            
+                                            </form>
+                                        
+                                        
+                                            <form
+                                                method="POST"
+                                                action="{% url 'remove_from_cart' item.product.id %}"
+                                            >
+                                                {% csrf_token %}
+                                        
+                                                <button
+                                                    type="submit"
+                                                    class="remove-button"
+                                                >
+                                                    Remove
+                                                </button>
+                                            
+                                            </form>
+                                        
+                                        </div>
                                     
-                                        <span>
-                                            {{ item.quantity }}
-                                        </span>
-                                    </form>
-                                
-                                
-                                    <form
-                                        method="POST"
-                                        action="{% url 'increase_cart_quantity' item.product.id %}"
-                                    >
-                                        {% csrf_token %}
-                                
-                                        <button
-                                            type="submit"
-                                            {% if item.quantity >= 10 %}disabled{% endif %}
-                                        >
-                                            +
-                                        </button>
-                                    </form>
-                                
-                                
-                                    <form
-                                        method="POST"
-                                        action="{% url 'remove_from_cart' item.product.id %}"
-                                    >
-                                        {% csrf_token %}
-                                
-                                        <button
-                                            type="submit"
-                                            class="remove-button"
-                                        >
-                                            Remove
-                                        </button>
-                                    </form>
-                                
+                                    {% else %}
+                                    
+                                        <div class="unavailable-cart-info">
+                                        
+                                            <span>
+                                                Currently unavailable
+                                            </span>
+                                        
+                                            <form
+                                                method="POST"
+                                                action="{% url 'remove_from_cart' item.product.id %}"
+                                            >
+                                                {% csrf_token %}
+                                        
+                                                <button
+                                                    type="submit"
+                                                    class="remove-button"
+                                                >
+                                                    Remove
+                                                </button>
+                                            
+                                            </form>
+                                        
+                                        </div>
+                                    
+                                    {% endif %}
+                                    
                                 </div>
-
-                                </div>
-
-
+                            
+                            
                                 <strong class="item-subtotal">
-                                    ₹{{ item.item_total }}
+                                
+                                    {% if item.is_available %}
+                                
+                                        ₹{{ item.item_total }}
+                                
+                                    {% else %}
+                                
+                                        —
+                                
+                                    {% endif %}
+                                
                                 </strong>
-
+                            
                             </div>
 
                         {% endwith %}
@@ -195,21 +245,25 @@
 
                 {% for item in cart_items %}
 
-                    <div class="summary-row">
-
-                        <span>
-                            {{ item.product.name }} × {{ item.quantity }}
-                        </span>
-
-                        <span>
-                            ₹{{ item.item_total }}
-                        </span>
-
-                    </div>
-
+                    {% if item.is_available %}
+                            
+                        <div class="summary-row">
+                        
+                            <span>
+                                {{ item.product.name }} × {{ item.quantity }}
+                            </span>
+                        
+                            <span>
+                                ₹{{ item.item_total }}
+                            </span>
+                        
+                        </div>
+                    
+                    {% endif %}
+                    
                 {% endfor %}
-
-
+                    
+                    
                 <div class="summary-divider"></div>
 
 
