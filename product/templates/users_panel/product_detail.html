@@ -20,6 +20,12 @@
         href="{% static 'common/images/favicon.png' %}"
     >
 
+    <!-- Bootstrap 5 -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
     <link
         rel="stylesheet"
         href="{% static 'users_panel/css/product_detail.css' %}"
@@ -30,22 +36,32 @@
 
 <body>
 
+
 {% if messages %}
+
     <div class="messages">
+
         {% for message in messages %}
+
             <div class="message {{ message.tags }}">
                 {{ message }}
             </div>
+
         {% endfor %}
+
     </div>
+
 {% endif %}
+
 
 <div class="product-detail-page">
 
     <div class="product-detail-container">
 
 
-        <!-- Breadcrumb -->
+        <!-- =========================
+             BREADCRUMB
+             ========================= -->
 
         <div class="breadcrumb">
 
@@ -68,51 +84,122 @@
         </div>
 
 
-        <!-- Product Main Card -->
+        <!-- =========================
+             MAIN PRODUCT AREA
+             ========================= -->
 
         <div class="product-detail-card">
 
 
-            <!-- Product Gallery -->
+            <!-- =========================
+                 LEFT SIDE
+                 ========================= -->
 
             <div class="product-gallery">
 
-                <div class="main-image-container">
 
-                    {% with product.images.all|first as main_image %}
+                <!-- =========================
+                     MAIN IMAGE CAROUSEL
+                     ========================= -->
 
-                        {% if main_image %}
+                <div
+                    id="productImageCarousel"
+                    class="carousel slide product-image-carousel"
+                >
 
-                            <img
-                                id="mainProductImage"
-                                class="main-product-image"
-                                src="{{ main_image.image.url }}"
-                                alt="{{ product.name }}"
+                    <div class="carousel-inner">
+
+
+                        {% for product_image in product.images.all %}
+
+                            <div
+                                class="carousel-item {% if forloop.first %}active{% endif %}"
                             >
 
-                        {% else %}
+                                <div class="main-image-container">
 
-                            <div class="main-no-image">
-                                No image
+                                    <img
+                                        src="{{ product_image.image.url }}"
+                                        class="d-block w-100 main-product-image"
+                                        alt="{{ product.name }}"
+                                    >
+
+                                </div>
+
                             </div>
 
-                        {% endif %}
+                        {% empty %}
 
-                    {% endwith %}
+                            <div class="carousel-item active">
+
+                                <div class="main-image-container">
+
+                                    <div class="main-no-image">
+                                        No image
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    {% if product.images.all|length > 1 %}
+
+                        <button
+                            class="carousel-control-prev product-carousel-control"
+                            type="button"
+                            data-bs-target="#productImageCarousel"
+                            data-bs-slide="prev"
+                        >
+
+                            <span class="carousel-control-prev-icon"><</span>
+
+                            <span class="visually-hidden">
+                                Previous
+                            </span>
+
+                        </button>
+
+
+                        <button
+                            class="carousel-control-next product-carousel-control"
+                            type="button"
+                            data-bs-target="#productImageCarousel"
+                            data-bs-slide="next"
+                        >
+
+                            <span class="carousel-control-next-icon">></span>
+
+                            <span class="visually-hidden">
+                                Next
+                            </span>
+
+                        </button>
+
+                    {% endif %}
 
                 </div>
 
 
+                <!-- =========================
+                     IMAGE THUMBNAILS
+                     ========================= -->
+
                 {% if product.images.all %}
 
-                    <div class="thumbnail-list">
+                    <div class="product-thumbnails">
 
                         {% for product_image in product.images.all %}
 
                             <button
                                 type="button"
-                                class="thumbnail-button {% if forloop.first %}active{% endif %}"
-                                onclick="changeProductImage('{{ product_image.image.url }}', this)"
+                                class="product-thumbnail {% if forloop.first %}active{% endif %}"
+                                data-bs-target="#productImageCarousel"
+                                data-bs-slide-to="{{ forloop.counter0 }}"
                             >
 
                                 <img
@@ -128,187 +215,364 @@
 
                 {% endif %}
 
+
+                <!-- =========================
+                     RELATED PRODUCTS
+                     ========================= -->
+
+                {% if related_products %}
+
+                    <section class="related-products-section">
+
+                        <div class="related-products-header">
+
+                            <h2>
+                                Related Products
+                            </h2>
+
+                        </div>
+
+
+                        <div
+                            id="relatedProductsCarousel"
+                            class="carousel slide related-products-carousel"
+                        >
+
+                            <div class="carousel-inner">
+
+
+                                {% for related_product in related_products %}
+
+                                    {% if forloop.first or forloop.counter0|divisibleby:4 %}
+
+                                        <div
+                                            class="carousel-item {% if forloop.first %}active{% endif %}"
+                                        >
+
+                                            <div class="row related-products-row">
+
+                                    {% endif %}
+
+
+                                        <div class="col-6 col-md-3">
+
+                                            <a
+                                                href="{% url 'customer_product_detail' related_product.id %}"
+                                                class="related-product-card"
+                                            >
+
+                                                {% with related_image=related_product.images.all|first %}
+
+                                                    <div class="related-product-image">
+
+                                                        {% if related_image %}
+
+                                                            <img
+                                                                src="{{ related_image.image.url }}"
+                                                                alt="{{ related_product.name }}"
+                                                            >
+
+                                                        {% else %}
+
+                                                            <div class="related-product-no-image">
+                                                                No image
+                                                            </div>
+
+                                                        {% endif %}
+
+
+                                                        {% if not related_product.is_active or not related_product.category.is_active %}
+
+                                                            <div class="related-product-unavailable">
+                                                                Unavailable
+                                                            </div>
+
+                                                        {% endif %}
+
+                                                    </div>
+
+
+                                                    <div class="related-product-info">
+
+                                                        <h3>
+                                                            {{ related_product.name }}
+                                                        </h3>
+
+                                                        <strong>
+                                                            ₹{{ related_product.price }}
+                                                        </strong>
+
+                                                    </div>
+
+                                                {% endwith %}
+
+                                            </a>
+
+                                        </div>
+
+
+                                    {% if forloop.counter|divisibleby:4 or forloop.last %}
+
+                                            </div>
+
+                                        </div>
+
+                                    {% endif %}
+
+                                {% endfor %}
+
+                            </div>
+
+
+                            {% if related_products|length > 4 %}
+
+                                <button
+                                    class="carousel-control-prev related-carousel-control"
+                                    type="button"
+                                    data-bs-target="#relatedProductsCarousel"
+                                    data-bs-slide="prev"
+                                >
+
+                                    <span class="carousel-control-prev-icon"><</span>
+
+                                    <span class="visually-hidden">
+                                        Previous
+                                    </span>
+
+                                </button>
+
+
+                                <button
+                                    class="carousel-control-next related-carousel-control"
+                                    type="button"
+                                    data-bs-target="#relatedProductsCarousel"
+                                    data-bs-slide="next"
+                                >
+
+                                    <span class="carousel-control-next-icon">></span>
+
+                                    <span class="visually-hidden">
+                                        Next
+                                    </span>
+
+                                </button>
+
+                            {% endif %}
+
+                        </div>
+
+                    </section>
+
+                {% endif %}
+
+
             </div>
 
-        <!-- Information -->
+
+            <!-- =========================
+                 RIGHT SIDE
+                 ========================= -->
 
             <div class="product-detail-info">
-            
+
+
                 <span class="product-category">
                     {{ product.category.name }}
                 </span>
-            
+
+
                 <h1>
                     {{ product.name }}
                 </h1>
-            
+
+
                 <p class="product-description">
                     {{ product.description }}
                 </p>
-            
+
+
                 <div class="product-price">
                     ₹{{ product.price }}
                 </div>
-            
-            
+
+
                 {% if product.is_active and product.category.is_active %}
-            
+
+
                     <div class="availability available">
+
                         <span></span>
+
                         Available
+
                     </div>
-                
-                
-                    <!-- Quantity -->
-                
+
+
+                    <!-- QUANTITY -->
+
                     <div class="quantity-section">
-                    
+
                         <label>
                             QUANTITY
                         </label>
-                    
+
+
                         <div class="quantity-controls">
-                        
+
                             <button
                                 type="button"
                                 id="decreaseQuantity"
                             >
                                 −
                             </button>
-                        
+
+
                             <span id="quantity">
                                 1
                             </span>
-                        
+
+
                             <button
                                 type="button"
                                 id="increaseQuantity"
                             >
                                 +
                             </button>
-                        
+
                         </div>
-                    
+
                     </div>
-                
-                
-                    <!-- Special Instructions - Dummy -->
-                
+
+
+                    <!-- SPECIAL INSTRUCTIONS -->
+
                     <div class="instructions-section">
-                    
+
                         <label>
                             SPECIAL INSTRUCTIONS
                         </label>
-                    
+
+
                         <div class="instruction-options">
-                        
+
                             <button type="button">
                                 Less spicy
                             </button>
-                        
+
                             <button type="button">
                                 No onions
                             </button>
-                        
+
                             <button type="button">
                                 Extra sauce
                             </button>
-                        
+
                             <button type="button">
                                 Less sugar
                             </button>
-                        
+
                             <button type="button">
                                 No ice
                             </button>
-                        
+
                             <button type="button">
                                 Extra crispy
                             </button>
-                        
+
                         </div>
-                    
+
+
                         <textarea
                             placeholder="Or type your own instructions..."
                             disabled
                         ></textarea>
-                    
+
                     </div>
-                
-                
-                    <!-- Customer Reviews - Dummy -->
-                
+
+
+                    <!-- REVIEWS -->
+
                     <div class="reviews-section">
-                    
+
                         <label>
                             CUSTOMER REVIEWS
                         </label>
-                    
+
+
                         <div class="dummy-review">
-                        
+
                             <div class="review-header">
-                            
+
                                 <strong>
                                     Priya S.
                                 </strong>
-                            
+
                                 <span>
                                     ★★★★★
                                 </span>
-                            
+
                             </div>
-                        
+
+
                             <p>
                                 Perfect on a hot afternoon. The caramel touch is lovely!
                             </p>
-                        
+
                         </div>
-                    
+
                     </div>
-                
-                
-                    <!-- Add To Order -->
-                
+
+
+                    <!-- ADD TO ORDER -->
+
                     <form
                         method="POST"
                         action="{% url 'add_to_cart' product.id %}"
                         class="add-to-order-form"
                     >
-                
+
                         {% csrf_token %}
-                
+
+
                         <input
                             type="hidden"
                             name="quantity"
                             id="quantityInput"
                             value="1"
                         >
-                
+
+
                         <button
                             type="submit"
                             class="detail-add-button"
                         >
-                
+
                             <span id="addOrderText">
                                 Add 1 to Order
                             </span>
-                        
+
+
                             <strong id="orderTotal">
                                 ₹{{ product.price }}
                             </strong>
-                        
+
                         </button>
-                    
+
                     </form>
-                
-                
+
+
                 {% else %}
-                
+
+
                     <div class="availability unavailable">
+
                         <span></span>
+
                         Currently Unavailable
+
                     </div>
-                
+
+
                     <button
                         type="button"
                         class="detail-add-button disabled"
@@ -316,83 +580,31 @@
                     >
                         Unavailable
                     </button>
-                
+
+
                 {% endif %}
-                
+
+
             </div>
 
         </div>
 
 
-        <!-- Related Products -->
+        <!-- IMAGE ZOOM -->
 
-        {% if related_products %}
+        <div
+            id="imageZoom"
+            class="image-zoom"
+            onclick="closeImageZoom()"
+        >
 
-            <section class="related-section">
+            <img
+                id="zoomedImage"
+                src=""
+                alt=""
+            >
 
-                <div class="section-heading">
-
-                    <h2>
-                        You may also like
-                    </h2>
-
-                </div>
-
-
-                <div class="related-products">
-
-                    {% for related_product in related_products %}
-
-                        {% with related_product.images.all|first as related_image %}
-
-                            <a
-                                href="{% url 'customer_product_detail' related_product.id %}"
-                                class="related-card"
-                            >
-
-                                <div class="related-image">
-
-                                    {% if related_image %}
-
-                                        <img
-                                            src="{{ related_image.image.url }}"
-                                            alt="{{ related_product.name }}"
-                                        >
-
-                                    {% else %}
-
-                                        <div class="related-no-image">
-                                            No image
-                                        </div>
-
-                                    {% endif %}
-
-                                </div>
-
-
-                                <div class="related-info">
-
-                                    <h3>
-                                        {{ related_product.name }}
-                                    </h3>
-
-                                    <strong>
-                                        ₹{{ related_product.price }}
-                                    </strong>
-
-                                </div>
-
-                            </a>
-
-                        {% endwith %}
-
-                    {% endfor %}
-
-                </div>
-
-            </section>
-
-        {% endif %}
+        </div>
 
 
     </div>
@@ -400,73 +612,127 @@
 </div>
 
 
-<!-- Image Zoom -->
+<!-- =========================
+     BOOTSTRAP JS
+     ========================= -->
 
-<div
-    id="imageZoom"
-    class="image-zoom"
-    onclick="closeImageZoom()"
->
-
-    <img
-        id="zoomedImage"
-        src=""
-        alt=""
-    >
-
-</div>
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+></script>
 
 
 <script>
 
-function changeProductImage(imageUrl, button) {
 
-    const mainImage = document.getElementById(
-        'mainProductImage'
+/* =========================
+   THUMBNAIL ACTIVE STATE
+   ========================= */
+
+const productCarousel =
+    document.getElementById(
+        'productImageCarousel'
     );
 
-    if (mainImage) {
 
-        mainImage.src = imageUrl;
-
-    }
-
-    document
-        .querySelectorAll('.thumbnail-button')
-        .forEach(function(item) {
-
-            item.classList.remove('active');
-
-        });
-
-    button.classList.add('active');
-}
+const thumbnails =
+    document.querySelectorAll(
+        '.product-thumbnail'
+    );
 
 
-const mainImage = document.getElementById(
-    'mainProductImage'
-);
+if (productCarousel) {
 
-if (mainImage) {
+    productCarousel.addEventListener(
+        'slid.bs.carousel',
+        function(event) {
 
-    mainImage.addEventListener(
-        'click',
-        function() {
+            thumbnails.forEach(
+                function(thumbnail) {
 
-            const zoomContainer =
-                document.getElementById('imageZoom');
+                    thumbnail.classList.remove(
+                        'active'
+                    );
 
-            const zoomedImage =
-                document.getElementById('zoomedImage');
+                }
+            );
 
-            zoomedImage.src = mainImage.src;
 
-            zoomContainer.classList.add('show');
+            if (thumbnails[event.to]) {
+
+                thumbnails[event.to]
+                    .classList.add('active');
+
+            }
 
         }
     );
 
 }
+
+
+thumbnails.forEach(
+    function(thumbnail) {
+
+        thumbnail.addEventListener(
+            'click',
+            function() {
+
+                thumbnails.forEach(
+                    function(item) {
+
+                        item.classList.remove(
+                            'active'
+                        );
+
+                    }
+                );
+
+
+                thumbnail.classList.add(
+                    'active'
+                );
+
+            }
+        );
+
+    }
+);
+
+
+/* =========================
+   IMAGE ZOOM
+   ========================= */
+
+const productImages =
+    document.querySelectorAll(
+        '.main-product-image'
+    );
+
+
+productImages.forEach(
+    function(image) {
+
+        image.addEventListener(
+            'click',
+            function(event) {
+
+                event.stopPropagation();
+
+
+                document
+                    .getElementById('zoomedImage')
+                    .src = image.src;
+
+
+                document
+                    .getElementById('imageZoom')
+                    .classList.add('show');
+
+            }
+        );
+
+    }
+);
 
 
 function closeImageZoom() {
@@ -483,26 +749,46 @@ function closeImageZoom() {
    ========================= */
 
 const decreaseButton =
-    document.getElementById('decreaseQuantity');
+    document.getElementById(
+        'decreaseQuantity'
+    );
+
 
 const increaseButton =
-    document.getElementById('increaseQuantity');
+    document.getElementById(
+        'increaseQuantity'
+    );
+
 
 const quantityDisplay =
-    document.getElementById('quantity');
+    document.getElementById(
+        'quantity'
+    );
+
 
 const quantityInput =
-    document.getElementById('quantityInput');
+    document.getElementById(
+        'quantityInput'
+    );
+
 
 const addOrderText =
-    document.getElementById('addOrderText');
+    document.getElementById(
+        'addOrderText'
+    );
+
 
 const orderTotal =
-    document.getElementById('orderTotal');
+    document.getElementById(
+        'orderTotal'
+    );
 
 
 const productPrice =
-    Number('{{ product.price }}');
+    Number(
+        '{{ product.price }}'
+    );
+
 
 const maxQuantity = 10;
 
@@ -510,15 +796,23 @@ const maxQuantity = 10;
 function updateQuantity() {
 
     const quantity =
-        Number(quantityDisplay.textContent);
+        Number(
+            quantityDisplay.textContent
+        );
 
-    quantityInput.value = quantity;
+
+    quantityInput.value =
+        quantity;
+
 
     addOrderText.textContent =
         `Add ${quantity} to Order`;
 
+
     orderTotal.textContent =
-        `₹${(productPrice * quantity).toFixed(2)}`;
+        `₹${(
+            productPrice * quantity
+        ).toFixed(2)}`;
 
 }
 
@@ -534,7 +828,10 @@ if (
         function() {
 
             let quantity =
-                Number(quantityDisplay.textContent);
+                Number(
+                    quantityDisplay.textContent
+                );
+
 
             if (quantity > 1) {
 
@@ -556,7 +853,10 @@ if (
         function() {
 
             let quantity =
-                Number(quantityDisplay.textContent);
+                Number(
+                    quantityDisplay.textContent
+                );
+
 
             if (quantity < maxQuantity) {
 
@@ -573,6 +873,7 @@ if (
     );
 
 }
+
 
 </script>
 

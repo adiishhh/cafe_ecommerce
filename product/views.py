@@ -162,7 +162,7 @@ def customer_product_detail(request, product_id):
         id=product.id
     ).order_by(
         '-created_at'
-    )[:4]
+    )[:12]
 
     return render(
         request,
