@@ -463,6 +463,17 @@ a {
     font-size: 12px;
 }
 
+.field-error {
+    display: block;
+
+    margin-top: 7px;
+
+    color: #dc2626;
+
+    font-size: 12px;
+    line-height: 1.4;
+}
+
 
 /* Actions */
 
