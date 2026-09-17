@@ -59,7 +59,7 @@
         
             <div class="header-actions">
             
-                <a href="{% url 'cart' %}" class="review-order-button">
+                {% comment %} <a href="{% url 'cart' %}" class="review-order-button">
                 
                     <span>
                         🛒
@@ -73,7 +73,7 @@
                         </span>
                     {% endif %}
                     
-                </a>
+                </a> {% endcomment %}
             
             
                 {% if user.is_authenticated %}
@@ -361,6 +361,26 @@
         </form>
 
         {% include "users_panel/users_products.html" %}
+
+            {% if cart_count > 0 %}
+                
+                <a href="{% url 'cart' %}" class="review-order-bar">
+                
+                    <span class="review-order-count">
+                        {{ cart_count }}
+                    </span>
+                
+                    <span class="review-order-text">
+                        Review Order
+                    </span>
+                
+                    <strong>
+                        ₹{{ cart_total|floatformat:0 }}
+                    </strong>
+                
+                </a>
+            
+            {% endif %}
 
     </div>
 </main>
