@@ -113,6 +113,7 @@ def verify_signup_otp(request):
         'resend_available_in': resend_available_in,
     })
 
+@require_POST
 def resend_signup_otp(request):
     signup_id = request.session.get('signup_id')
 
@@ -308,6 +309,7 @@ def verify_change_email(request):
     )
 
 @login_required
+@require_POST
 def  resend_change_email_otp(request):
     change_email_id = request.session.get('change_email_id')
 

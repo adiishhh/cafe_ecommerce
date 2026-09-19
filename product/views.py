@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.core.paginator import Paginator
 from django.db.models import Q
@@ -173,7 +173,7 @@ def customer_product_detail(request, product_id):
         }
     )
 
-MAX_CART_QUANTITY = 100
+MAX_CART_QUANTITY = 10
 
 @require_POST
 def add_to_cart(request, product_id):
@@ -352,77 +352,33 @@ def cart(request):
         }
     )
 
-    session_cart = request.session.get(
-        'cart',
-        {}
-    )
-
-    if not session_cart:
-
-        return render(
-            request,
-            'users_panel/cart.html',
-            {
-                'cart_items': [],
-                'cart_count': 0,
-                'subtotal': Decimal('0.00'),
-                'gst': Decimal('0.00'),
-                'total': Decimal('0.00'),
-            }
-        )
+def cart_totals(request):
+    session_cart = request.session.get('cart', {})
 
     products = Product.objects.select_related(
         'category'
-    ).prefetch_related(
-        'images'
     ).filter(
         id__in=session_cart.keys()
     )
 
-    valid_cart = {}
-    cart_items = []
-
     subtotal = Decimal('0.00')
     cart_count = 0
+    has_unavailable_items = False
 
     for product in products:
-
-        quantity = session_cart.get(
-            str(product.id),
-            0
-        )
-
-        if (
-            not product.is_active
-            or not product.category.is_active
-        ):
-            continue
+        quantity = session_cart.get(str(product.id), 0)
 
         if quantity < 1:
             continue
 
-        if quantity > MAX_CART_QUANTITY:
-            quantity = MAX_CART_QUANTITY
+        quantity = min(quantity, MAX_CART_QUANTITY)
 
-        valid_cart[str(product.id)] = quantity
-
-        item_total = product.price * quantity
-
-        subtotal += item_total
         cart_count += quantity
 
-        cart_items.append(
-            {
-                'product': product,
-                'quantity': quantity,
-                'item_total': item_total,
-            }
-        )
-
-    if valid_cart != session_cart:
-
-        request.session['cart'] = valid_cart
-        request.session.modified = True
+        if product.is_active and product.category.is_active:
+            subtotal += product.price * quantity
+        else:
+            has_unavailable_items = True
 
     gst = (subtotal * Decimal('0.05')).quantize(
         Decimal('0.01')
@@ -430,29 +386,29 @@ def cart(request):
 
     total = subtotal + gst
 
-    return render(
-        request,
-        'users_panel/cart.html',
-        {
-            'cart_items': cart_items,
-            'cart_count': cart_count,
-            'subtotal': subtotal,
-            'gst': gst,
-            'total': total,
-        }
-    )
+    return {
+        'cart_count': cart_count,
+        'subtotal': str(subtotal),
+        'gst': str(gst),
+        'total': str(total),
+        'has_unavailable_items': has_unavailable_items,
+    }
 
 @require_POST
 def increase_cart_quantity(request, product_id):
-
-    cart = request.session.get(
-        'cart',
-        {}
-    )
-
+    cart = request.session.get('cart', {})
     product_key = str(product_id)
 
     if product_key not in cart:
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse(
+                {
+                    'success': False,
+                    'message': 'This item is not in your order.'
+                },
+                status=404
+            )
+
         return redirect('cart')
 
     product = get_object_or_404(
@@ -461,21 +417,36 @@ def increase_cart_quantity(request, product_id):
     )
 
     if not product.is_active or not product.category.is_active:
+        message = f'"{product.name}" is no longer available.'
 
-        messages.error(
-            request,
-            f'"{product.name}" is no longer available.'
-        )
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse(
+                {
+                    'success': False,
+                    'message': message
+                },
+                status=400
+            )
 
+        messages.error(request, message)
         return redirect('cart')
 
     if cart[product_key] >= MAX_CART_QUANTITY:
-
-        messages.error(
-            request,
-            f'Maximum quantity for "{product.name}" is {MAX_CART_QUANTITY}.'
+        message = (
+            f'Maximum quantity for "{product.name}" '
+            f'is {MAX_CART_QUANTITY}.'
         )
 
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse(
+                {
+                    'success': False,
+                    'message': message
+                },
+                status=400
+            )
+
+        messages.error(request, message)
         return redirect('cart')
 
     cart[product_key] += 1
@@ -483,48 +454,105 @@ def increase_cart_quantity(request, product_id):
     request.session['cart'] = cart
     request.session.modified = True
 
+    totals = cart_totals(request)
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse(
+            {
+                'success': True,
+                'product_id': product.id,
+                'quantity': cart[product_key],
+                'item_total': str(
+                    product.price * cart[product_key]
+                ),
+                **totals,
+            }
+        )
+
     return redirect('cart')
 
 @require_POST
 def decrease_cart_quantity(request, product_id):
-
-    cart = request.session.get(
-        'cart',
-        {}
-    )
-
+    cart = request.session.get('cart', {})
     product_key = str(product_id)
 
     if product_key not in cart:
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse(
+                {
+                    'success': False,
+                    'message': 'This item is not in your order.'
+                },
+                status=404
+            )
+
+        return redirect('cart')
+
+    if cart[product_key] <= 1:
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse(
+                {
+                    'success': False,
+                    'message': 'Quantity cannot be reduced below 1.'
+                },
+                status=400
+            )
+
         return redirect('cart')
 
     cart[product_key] -= 1
 
-    if cart[product_key] <= 0:
-        cart.pop(product_key)
-
     request.session['cart'] = cart
     request.session.modified = True
+
+    product = get_object_or_404(
+        Product.objects.select_related('category'),
+        id=product_id
+    )
+
+    item_total = (
+        product.price * cart[product_key]
+        if product.is_active and product.category.is_active
+        else Decimal('0.00')
+    )
+
+    totals = cart_totals(request)
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse(
+            {
+                'success': True,
+                'product_id': product.id,
+                'quantity': cart[product_key],
+                'item_total': str(item_total),
+                'removed': False,
+                **totals,
+            }
+        )
 
     return redirect('cart')
 
 @require_POST
 def remove_from_cart(request, product_id):
-
-    cart = request.session.get(
-        'cart',
-        {}
-    )
-
+    cart = request.session.get('cart', {})
     product_key = str(product_id)
 
-    cart.pop(
-        product_key,
-        None
-    )
+    cart.pop(product_key, None)
 
     request.session['cart'] = cart
     request.session.modified = True
+
+    totals = cart_totals(request)
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse(
+            {
+                'success': True,
+                'product_id': product_id,
+                'removed': True,
+                **totals,
+            }
+        )
 
     messages.success(
         request,
