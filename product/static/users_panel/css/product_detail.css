@@ -1,21 +1,28 @@
+/* =========================================================
+   GLOBAL
+   ========================================================= */
+
 * {
     box-sizing: border-box;
 }
 
+html {
+    scroll-behavior: smooth;
+}
 
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
-    background: #f7f5f2;
-    color: #1d1d1d;
-}
 
+    font-family: Arial, sans-serif;
+
+    background: #f3eee5;
+    color: #2f2924;
+}
 
 a {
     color: inherit;
     text-decoration: none;
 }
-
 
 button,
 textarea {
@@ -23,93 +30,243 @@ textarea {
 }
 
 
-/* =========================
+/* =========================================================
+   CAFE NAVBAR
+   ========================================================= */
+
+.cafe-navbar {
+    position: relative;
+    z-index: 100;
+
+    height: 58px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 22px;
+
+    background: #fffdf9;
+
+    border-bottom: 1px solid #e2d9ce;
+
+    box-shadow:
+        0 2px 10px rgba(68, 48, 35, 0.06);
+}
+
+
+/* Brand */
+
+.cafe-brand {
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+
+    color: #30271f;
+
+    font-family: Georgia, serif;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.cafe-brand:hover {
+    color: #8b3f16;
+}
+
+.cafe-brand-icon {
+    width: 30px;
+    height: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+
+    background: #8b3f16;
+    color: #fffaf3;
+
+    font-family: Georgia, serif;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+
+/* Navigation */
+
+.cafe-nav {
+    position: absolute;
+
+    left: 50%;
+
+    display: flex;
+    align-items: center;
+
+    gap: 28px;
+
+    transform: translateX(-50%);
+}
+
+.cafe-nav a {
+    position: relative;
+
+    color: #4f453d;
+
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.cafe-nav a:hover {
+    color: #8b3f16;
+}
+
+
+/* Active Menu */
+
+.cafe-nav a:first-child {
+    color: #8b3f16;
+}
+
+.cafe-nav a:first-child::after {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    right: 0;
+    bottom: -8px;
+
+    height: 1px;
+
+    background: #8b3f16;
+}
+
+
+/* Profile */
+
+.cafe-profile {
+    width: 30px;
+    height: 30px;
+
+    margin-left: auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    border-radius: 50%;
+
+    background: #f1dfc9;
+
+    color: #8b3f16;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.cafe-profile img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+
+/* =========================================================
    MESSAGES
-   ========================= */
+   ========================================================= */
 
 .messages {
     margin: 15px 56px 0;
 }
 
-
 .message {
     padding: 11px 14px;
+
     border-radius: 8px;
+
     font-size: 13px;
     font-weight: 500;
 }
 
-
 .message.success {
-    background: #e8f7ed;
-    color: #18733b;
+    background: #edf7ef;
+    color: #397148;
 }
-
 
 .message.error {
-    background: #fdecec;
-    color: #b42318;
+    background: #fff0ed;
+    color: #a43b2a;
 }
-
 
 .message.warning {
-    background: #fff4df;
-    color: #9a6700;
+    background: #f8f0df;
+    color: #8b671e;
 }
-
 
 .message.info {
-    background: #eaf2ff;
-    color: #2457a6;
+    background: #eef2ed;
+    color: #4b613e;
 }
 
 
-/* =========================
+/* =========================================================
    PAGE
-   ========================= */
+   ========================================================= */
 
 .product-detail-page {
     min-height: 100vh;
-    padding: 35px 56px 60px;
-}
 
+    padding: 24px 56px 60px;
+
+    background:
+        radial-gradient(
+            circle at 85% 15%,
+            rgba(139, 63, 22, 0.035),
+            transparent 30%
+        );
+}
 
 .product-detail-container {
     width: 100%;
 }
 
 
-/* =========================
+/* =========================================================
    BREADCRUMB
-   ========================= */
+   ========================================================= */
 
 .breadcrumb {
     display: flex;
     align-items: center;
+
     gap: 8px;
 
     margin-bottom: 18px;
 
     color: #8a8179;
+
     font-size: 12px;
 }
 
-
 .breadcrumb a {
-    color: #d93600;
+    color: #8b3f16;
+
     font-weight: 600;
 }
-
 
 .breadcrumb .current {
-    color: #514b46;
+    color: #51463d;
+
     font-weight: 600;
 }
 
 
-/* =========================
+/* =========================================================
    MAIN PRODUCT CARD
-   ========================= */
+   ========================================================= */
 
 .product-detail-card {
     display: grid;
@@ -122,16 +279,19 @@ textarea {
 
     padding: 28px;
 
-    border: 1px solid #e5e1dd;
+    border: 1px solid #ded5c8;
     border-radius: 16px;
 
-    background: #ffffff;
+    background: #fffdf9;
+
+    box-shadow:
+        0 6px 20px rgba(68, 48, 35, 0.06);
 }
 
 
-/* =========================
+/* =========================================================
    LEFT GALLERY
-   ========================= */
+   ========================================================= */
 
 .product-gallery {
     min-width: 0;
@@ -139,32 +299,29 @@ textarea {
 
 
 /* =========================================================
-   CURRENT PRODUCT IMAGE - BOOTSTRAP CAROUSEL
+   MAIN IMAGE CAROUSEL
    ========================================================= */
 
 .product-image-carousel {
     position: relative;
+
     width: 100%;
 }
-
 
 .product-image-carousel .carousel-inner {
     width: 100%;
+
     overflow: hidden;
+
     border-radius: 14px;
 }
-
-
-/*
-   IMPORTANT:
-   Do NOT set display:flex/block on .carousel-item.
-   Bootstrap controls its display state.
-*/
 
 .product-image-carousel .carousel-item {
     width: 100%;
 }
 
+
+/* Main Image */
 
 .main-image-container {
     width: 100%;
@@ -174,9 +331,8 @@ textarea {
 
     border-radius: 14px;
 
-    background: #f2f2f2;
+    background: #eee7dc;
 }
-
 
 .main-product-image {
     display: block;
@@ -189,7 +345,6 @@ textarea {
     cursor: zoom-in;
 }
 
-
 .main-no-image {
     width: 100%;
     height: 100%;
@@ -198,52 +353,83 @@ textarea {
     align-items: center;
     justify-content: center;
 
-    color: #999;
+    color: #91877d;
+
     font-size: 14px;
 }
 
 
-/* =========================
+/* =========================================================
    MAIN IMAGE CONTROLS
-   ========================= */
+   ========================================================= */
 
 .product-carousel-control {
-    width: 55px;
+    width: 52px;
 
     opacity: 1;
 }
-
-
-.product-carousel-control .carousel-control-prev-icon,
-.product-carousel-control .carousel-control-next-icon {
-    width: 34px;
-    height: 34px;
-
-    padding: 8px;
-
-    border-radius: 50%;
-
-    color: black;
-
-    background-color: rgba(255, 255, 255, 0.95);
-
-    background-size: 45% 45%;
-
-    filter: invert(35%);
-
-    box-shadow:
-        0 2px 8px rgba(0, 0, 0, 0.12);
-}
-
 
 .product-carousel-control:hover {
     opacity: 1;
 }
 
+.product-carousel-control .carousel-control-prev-icon,
+.product-carousel-control .carousel-control-next-icon {
+    width: 36px;
+    height: 36px;
 
-/* =========================
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #fffdf9;
+
+    background-image: none;
+
+    filter: none;
+
+    box-shadow:
+        0 2px 8px rgba(55, 42, 32, 0.16);
+}
+
+.product-carousel-control
+.carousel-control-prev-icon::before,
+.product-carousel-control
+.carousel-control-next-icon::before {
+    content: "";
+
+    width: 8px;
+    height: 8px;
+
+    border-top: 2px solid #493c33;
+    border-left: 2px solid #493c33;
+}
+
+.product-carousel-control
+.carousel-control-prev-icon::before {
+    transform: rotate(-45deg);
+}
+
+.product-carousel-control
+.carousel-control-next-icon::before {
+    transform: rotate(135deg);
+}
+
+.product-carousel-control:hover
+.carousel-control-prev-icon,
+.product-carousel-control:hover
+.carousel-control-next-icon {
+    background: #f5ede2;
+}
+
+
+/* =========================================================
    PRODUCT IMAGE THUMBNAILS
-   ========================= */
+   ========================================================= */
 
 .product-thumbnails {
     display: flex;
@@ -259,11 +445,9 @@ textarea {
     scrollbar-width: none;
 }
 
-
 .product-thumbnails::-webkit-scrollbar {
     display: none;
 }
-
 
 .product-thumbnail {
     width: 72px;
@@ -278,21 +462,18 @@ textarea {
     border: 2px solid transparent;
     border-radius: 9px;
 
-    background: #f2f2f2;
+    background: #eee7dc;
 
     cursor: pointer;
 }
 
-
 .product-thumbnail:hover {
-    border-color: #cfcfcf;
+    border-color: #bda890;
 }
-
 
 .product-thumbnail.active {
-    border-color: #d93600;
+    border-color: #8b3f16;
 }
-
 
 .product-thumbnail img {
     display: block;
@@ -314,29 +495,25 @@ textarea {
     margin-top: 28px;
     padding-top: 20px;
 
-    border-top: 1px solid #eeeae6;
+    border-top: 1px solid #e8e0d6;
 }
-
 
 .related-products-header {
     margin-bottom: 12px;
 }
-
 
 .related-products-header h2 {
     margin: 0;
 
     font-family: Georgia, serif;
 
-    color: #17202a;
+    color: #3d2619;
 
     font-size: 19px;
 }
 
 
-/* =========================
-   RELATED BOOTSTRAP CAROUSEL
-   ========================= */
+/* Related Carousel */
 
 .related-products-carousel {
     position: relative;
@@ -346,22 +523,14 @@ textarea {
     padding: 0 34px;
 }
 
-
-/*
-   Bootstrap controls the carousel-item.
-   We only provide spacing for our cards.
-*/
-
 .related-products-carousel .carousel-item {
     width: 100%;
 }
-
 
 .related-products-row {
     margin-left: -5px;
     margin-right: -5px;
 }
-
 
 .related-products-row > div {
     padding-left: 5px;
@@ -369,9 +538,9 @@ textarea {
 }
 
 
-/* =========================
+/* =========================================================
    RELATED PRODUCT CARD
-   ========================= */
+   ========================================================= */
 
 .related-product-card {
     display: block;
@@ -380,10 +549,10 @@ textarea {
 
     overflow: hidden;
 
-    border: 1px solid #e5e1dd;
+    border: 1px solid #ded5c8;
     border-radius: 10px;
 
-    background: #ffffff;
+    background: #fffdf9;
 
     transition:
         border-color 0.2s ease,
@@ -391,20 +560,17 @@ textarea {
         transform 0.2s ease;
 }
 
-
 .related-product-card:hover {
-    border-color: #d93600;
+    border-color: #8b3f16;
 
     box-shadow:
-        0 3px 10px rgba(0, 0, 0, 0.08);
+        0 4px 12px rgba(68, 48, 35, 0.09);
 
     transform: translateY(-2px);
 }
 
 
-/* =========================
-   RELATED IMAGE
-   ========================= */
+/* Related Image */
 
 .related-product-image {
     position: relative;
@@ -414,9 +580,8 @@ textarea {
 
     overflow: hidden;
 
-    background: #f2f2f2;
+    background: #eee7dc;
 }
-
 
 .related-product-image img {
     display: block;
@@ -427,7 +592,6 @@ textarea {
     object-fit: cover;
 }
 
-
 .related-product-no-image {
     width: 100%;
     height: 100%;
@@ -436,15 +600,13 @@ textarea {
     align-items: center;
     justify-content: center;
 
-    color: #999;
+    color: #91877d;
 
     font-size: 10px;
 }
 
 
-/* =========================
-   RELATED PRODUCT INFO
-   ========================= */
+/* Related Info */
 
 .related-product-info {
     min-height: 64px;
@@ -452,11 +614,10 @@ textarea {
     padding: 8px;
 }
 
-
 .related-product-info h3 {
     margin: 0 0 5px;
 
-    color: #333;
+    color: #3d332b;
 
     font-size: 12px;
     font-weight: 600;
@@ -471,9 +632,8 @@ textarea {
     overflow: hidden;
 }
 
-
 .related-product-info strong {
-    color: #d94f00;
+    color: #8b3f16;
 
     font-family: Georgia, serif;
 
@@ -481,9 +641,7 @@ textarea {
 }
 
 
-/* =========================
-   RELATED UNAVAILABLE
-   ========================= */
+/* Related Unavailable */
 
 .related-product-unavailable {
     position: absolute;
@@ -494,7 +652,7 @@ textarea {
     align-items: center;
     justify-content: center;
 
-    background: rgba(0, 0, 0, 0.45);
+    background: rgba(47, 41, 36, 0.48);
 
     color: #ffffff;
 
@@ -503,95 +661,120 @@ textarea {
 }
 
 
-/* =========================
+/* =========================================================
    RELATED CAROUSEL CONTROLS
-   ========================= */
+   ========================================================= */
 
 .related-carousel-control {
-    width: 32px;
+    width: 34px;
 
     color: black;
 
     opacity: 1;
 }
 
+.related-carousel-control:hover {
+    opacity: 1;
+}
 
 .related-carousel-control.carousel-control-prev {
     left: 0;
 }
 
-
 .related-carousel-control.carousel-control-next {
     right: 0;
 }
 
-
-.related-carousel-control .carousel-control-prev-icon,
-.related-carousel-control .carousel-control-next-icon {
+.related-carousel-control
+.carousel-control-prev-icon,
+.related-carousel-control
+.carousel-control-next-icon {
     width: 30px;
     height: 30px;
 
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
     border-radius: 50%;
 
-    background-color: #ffffff;
+    background: #fffdf9;
 
-    background-size: 45% 45%;
+    background-image: none;
 
-    filter: invert(35%);
+    filter: none;
 
     box-shadow:
-        0 2px 7px rgba(0, 0, 0, 0.12);
+        0 2px 7px rgba(55, 42, 32, 0.14);
+}
+
+.related-carousel-control
+.carousel-control-prev-icon::before,
+.related-carousel-control
+.carousel-control-next-icon::before {
+    content: "";
+
+    width: 7px;
+    height: 7px;
+
+    border-top: 2px solid #493c33;
+    border-left: 2px solid #493c33;
+}
+
+.related-carousel-control
+.carousel-control-prev-icon::before {
+    transform: rotate(-45deg);
+}
+
+.related-carousel-control
+.carousel-control-next-icon::before {
+    transform: rotate(135deg);
 }
 
 
-.related-carousel-control:hover {
-    opacity: 1;
-}
-
-
-/* =========================
+/* =========================================================
    RIGHT PRODUCT INFORMATION
-   ========================= */
+   ========================================================= */
 
 .product-detail-info {
     min-width: 0;
 }
 
-
 .product-category {
     display: inline-block;
 
     margin-bottom: 10px;
+
     padding: 6px 10px;
 
     border-radius: 15px;
 
-    background: #fff1e9;
+    background: #f1e6d8;
 
-    color: #d93600;
+    color: #8b3f16;
 
     font-size: 11px;
     font-weight: 600;
 }
-
 
 .product-detail-info h1 {
     margin: 0 0 12px;
 
     font-family: Georgia, serif;
 
-    color: #17202a;
+    color: #3d2619;
 
     font-size: 30px;
 
     line-height: 1.25;
 }
 
-
 .product-description {
     margin: 0;
 
-    color: #777;
+    color: #817568;
 
     font-size: 14px;
 
@@ -599,29 +782,28 @@ textarea {
 }
 
 
-/* =========================
+/* =========================================================
    PRICE
-   ========================= */
+   ========================================================= */
 
 .product-price {
     margin-top: 22px;
 
     font-family: Georgia, serif;
 
-    color: #d94f00;
+    color: #8b3f16;
 
     font-size: 25px;
     font-weight: 700;
 }
 
 
-/* =========================
+/* =========================================================
    AVAILABILITY
-   ========================= */
+   ========================================================= */
 
 .availability {
     display: flex;
-
     align-items: center;
 
     gap: 7px;
@@ -632,7 +814,6 @@ textarea {
     font-weight: 600;
 }
 
-
 .availability span {
     width: 8px;
     height: 8px;
@@ -642,35 +823,30 @@ textarea {
     border-radius: 50%;
 }
 
-
 .availability.available {
-    color: #287a3e;
+    color: #4b6a40;
 }
-
 
 .availability.available span {
-    background: #287a3e;
+    background: #4b6a40;
 }
-
 
 .availability.unavailable {
-    color: #999;
+    color: #8f8982;
 }
-
 
 .availability.unavailable span {
-    background: #999;
+    background: #8f8982;
 }
 
 
-/* =========================
+/* =========================================================
    QUANTITY
-   ========================= */
+   ========================================================= */
 
 .quantity-section {
     margin-top: 25px;
 }
-
 
 .quantity-section label,
 .instructions-section > label,
@@ -679,7 +855,7 @@ textarea {
 
     margin-bottom: 10px;
 
-    color: #756d66;
+    color: #74685d;
 
     font-size: 11px;
     font-weight: 700;
@@ -687,38 +863,41 @@ textarea {
     letter-spacing: 0.3px;
 }
 
-
 .quantity-controls {
     display: flex;
-
     align-items: center;
 
     gap: 14px;
 }
 
-
 .quantity-controls button {
     width: 40px;
     height: 40px;
 
-    border: 1px solid #ddd;
+    border: 1px solid #d9d0c5;
     border-radius: 9px;
 
-    background: #ffffff;
+    background: #fffdf9;
 
     color: #514b46;
 
     font-size: 20px;
 
     cursor: pointer;
-}
 
+    transition:
+        border-color 0.15s ease,
+        color 0.15s ease,
+        background 0.15s ease;
+}
 
 .quantity-controls button:hover {
-    border-color: #d93600;
-    color: #d93600;
-}
+    border-color: #8b3f16;
 
+    background: #faf4eb;
+
+    color: #8b3f16;
+}
 
 .quantity-controls span {
     min-width: 25px;
@@ -732,14 +911,13 @@ textarea {
 }
 
 
-/* =========================
-   INSTRUCTIONS
-   ========================= */
+/* =========================================================
+   SPECIAL INSTRUCTIONS
+   ========================================================= */
 
 .instructions-section {
     margin-top: 22px;
 }
-
 
 .instruction-options {
     display: flex;
@@ -751,22 +929,20 @@ textarea {
     margin-bottom: 10px;
 }
 
-
 .instruction-options button {
     padding: 7px 10px;
 
-    border: 1px solid #e0e0e0;
+    border: 1px solid #ddd4ca;
     border-radius: 14px;
 
-    background: #ffffff;
+    background: #fffdf9;
 
-    color: #777;
+    color: #74685d;
 
     font-size: 11px;
 
     cursor: default;
 }
-
 
 .instructions-section textarea {
     width: 100%;
@@ -781,32 +957,30 @@ textarea {
 
     outline: none;
 
-    background: #f6f6f6;
+    background: #f7f2ea;
 
-    color: #999;
+    color: #817568;
 
     font-size: 12px;
 }
 
 
-/* =========================
+/* =========================================================
    REVIEWS
-   ========================= */
+   ========================================================= */
 
 .reviews-section {
     margin-top: 22px;
 }
 
-
 .dummy-review {
     padding: 13px;
 
-    border: 1px solid #eeeeee;
+    border: 1px solid #e3dbd1;
     border-radius: 10px;
 
-    background: #ffffff;
+    background: #fffdf9;
 }
-
 
 .review-header {
     display: flex;
@@ -819,23 +993,22 @@ textarea {
     margin-bottom: 7px;
 }
 
-
 .review-header strong {
+    color: #3d332b;
+
     font-size: 12px;
 }
-
 
 .review-header span {
-    color: #e99500;
+    color: #c58b16;
 
     font-size: 12px;
 }
-
 
 .dummy-review p {
     margin: 0;
 
-    color: #777;
+    color: #756b63;
 
     font-size: 11px;
 
@@ -843,14 +1016,13 @@ textarea {
 }
 
 
-/* =========================
+/* =========================================================
    ADD TO ORDER
-   ========================= */
+   ========================================================= */
 
 .add-to-order-form {
     margin-top: 22px;
 }
-
 
 .detail-add-button {
     display: flex;
@@ -867,39 +1039,49 @@ textarea {
     border: none;
     border-radius: 9px;
 
-    background: #d93600;
+    background: #8b3f16;
 
-    color: #ffffff;
+    color: #fffaf3;
 
     font-size: 13px;
     font-weight: 600;
 
     cursor: pointer;
-}
 
+    box-shadow:
+        0 5px 12px rgba(139, 63, 22, 0.16);
+
+    transition:
+        background 0.15s ease,
+        transform 0.15s ease;
+}
 
 .detail-add-button:hover {
-    background: #c53100;
+    background: #743312;
 }
 
+.detail-add-button:active {
+    transform: translateY(1px);
+}
 
 .detail-add-button strong {
     font-size: 14px;
 }
 
-
 .detail-add-button.disabled {
-    background: #eeeeee;
+    background: #e7e2db;
 
-    color: #999;
+    color: #999189;
 
     cursor: not-allowed;
+
+    box-shadow: none;
 }
 
 
-/* =========================
+/* =========================================================
    IMAGE ZOOM
-   ========================= */
+   ========================================================= */
 
 .image-zoom {
     position: fixed;
@@ -920,11 +1102,9 @@ textarea {
     cursor: zoom-out;
 }
 
-
 .image-zoom.show {
     display: flex;
 }
-
 
 .image-zoom img {
     max-width: 90vw;
@@ -936,9 +1116,9 @@ textarea {
 }
 
 
-/* =========================
-   RESPONSIVE
-   ========================= */
+/* =========================================================
+   RESPONSIVE - TABLET
+   ========================================================= */
 
 @media (max-width: 1000px) {
 
@@ -946,26 +1126,26 @@ textarea {
         padding: 25px 30px 50px;
     }
 
-
     .product-detail-card {
         gap: 30px;
 
         padding: 20px;
     }
 
-
     .main-image-container,
     .main-product-image {
         height: 400px;
     }
 
-
     .related-product-image {
         height: 105px;
     }
-
 }
 
+
+/* =========================================================
+   RESPONSIVE - SMALL TABLET
+   ========================================================= */
 
 @media (max-width: 800px) {
 
@@ -973,33 +1153,83 @@ textarea {
         padding: 20px;
     }
 
-
     .product-detail-card {
         grid-template-columns: 1fr;
 
         gap: 30px;
     }
 
-
     .main-image-container,
     .main-product-image {
         height: 430px;
     }
-
 }
 
 
+/* =========================================================
+   RESPONSIVE - MOBILE
+   ========================================================= */
+
 @media (max-width: 600px) {
+
+    /* Navbar */
+
+    .cafe-navbar {
+        height: 52px;
+
+        padding: 0 12px;
+    }
+
+    .cafe-brand {
+        gap: 7px;
+
+        font-size: 14px;
+    }
+
+    .cafe-brand-icon {
+        width: 27px;
+        height: 27px;
+
+        border-radius: 8px;
+
+        font-size: 13px;
+    }
+
+    .cafe-nav {
+        gap: 18px;
+    }
+
+    .cafe-nav a {
+        font-size: 10px;
+    }
+
+    .cafe-nav a:first-child::after {
+        bottom: -6px;
+    }
+
+    .cafe-profile {
+        width: 27px;
+        height: 27px;
+
+        font-size: 11px;
+    }
+
+
+    /* Messages */
 
     .messages {
         margin: 12px;
     }
 
 
+    /* Page */
+
     .product-detail-page {
         padding: 15px 12px 35px;
     }
 
+
+    /* Main card */
 
     .product-detail-card {
         display: block;
@@ -1009,24 +1239,32 @@ textarea {
         border: none;
 
         background: transparent;
+
+        box-shadow: none;
     }
 
+
+    /* Gallery */
 
     .product-gallery {
         padding: 10px;
 
-        border: 1px solid #e5e1dd;
+        border: 1px solid #ded5c8;
         border-radius: 14px;
 
-        background: #ffffff;
-    }
+        background: #fffdf9;
 
+        box-shadow:
+            0 4px 14px rgba(68, 48, 35, 0.06);
+    }
 
     .main-image-container,
     .main-product-image {
         height: 330px;
     }
 
+
+    /* Thumbnails */
 
     .product-thumbnail {
         width: 62px;
@@ -1036,66 +1274,76 @@ textarea {
     }
 
 
+    /* Related */
+
     .related-products-section {
         margin-top: 22px;
 
         padding-top: 17px;
     }
 
-
     .related-products-carousel {
         padding: 0 30px;
     }
-
 
     .related-product-image {
         height: 105px;
     }
 
-
     .related-product-info h3 {
         font-size: 10px;
     }
-
 
     .related-product-info strong {
         font-size: 12px;
     }
 
 
+    /* Product info */
+
     .product-detail-info {
         margin-top: 15px;
 
         padding: 18px;
 
-        border: 1px solid #e5e1dd;
+        border: 1px solid #ded5c8;
         border-radius: 14px;
 
-        background: #ffffff;
-    }
+        background: #fffdf9;
 
+        box-shadow:
+            0 4px 14px rgba(68, 48, 35, 0.06);
+    }
 
     .product-detail-info h1 {
         font-size: 25px;
     }
-
 }
 
 
+/* =========================================================
+   RESPONSIVE - VERY SMALL MOBILE
+   ========================================================= */
+
 @media (max-width: 380px) {
+
+    .cafe-nav {
+        gap: 13px;
+    }
+
+    .cafe-nav a {
+        font-size: 9px;
+    }
 
     .product-detail-info {
         padding: 14px;
     }
 
-
     .related-products-carousel {
         padding: 0 27px;
     }
 
-
     .related-product-image {
         height: 90px;
     }
-
 }

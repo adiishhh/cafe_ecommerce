@@ -36,6 +36,61 @@
 
 <body>
 
+<!-- =========================================================
+     NAVBAR
+     ========================================================= -->
+
+<header class="cafe-navbar">
+
+    <a href="{% url 'home' %}" class="cafe-brand">
+
+        <span class="cafe-brand-icon">
+            C
+        </span>
+
+        <span>CAFE</span>
+
+    </a>
+
+
+    <nav class="cafe-nav">
+
+        <a href="{% url 'home' %}">
+            Menu
+        </a>
+
+        <a href="#">
+            Orders
+        </a>
+
+        <a href="{% url 'profile' %}">
+            Profile
+        </a>
+
+    </nav>
+
+
+    <a href="{% url 'profile' %}" class="cafe-profile">
+
+        {% if request.user.profile_image %}
+
+            <img
+                src="{{ request.user.profile_image.url }}"
+                alt="Profile"
+            >
+
+        {% else %}
+
+            <span>
+                {{ request.user.name|first|upper }}
+            </span>
+
+        {% endif %}
+
+    </a>
+
+</header>
+
 
 {% if messages %}
 
@@ -147,41 +202,30 @@
                     </div>
 
 
-                    {% if product.images.all|length > 1 %}
+                        {% if product.images.all|length > 1 %}
 
-                        <button
-                            class="carousel-control-prev product-carousel-control"
-                            type="button"
-                            data-bs-target="#productImageCarousel"
-                            data-bs-slide="prev"
-                        >
-
-                            <span class="carousel-control-prev-icon"><</span>
-
-                            <span class="visually-hidden">
-                                Previous
-                            </span>
-
-                        </button>
-
-
-                        <button
-                            class="carousel-control-next product-carousel-control"
-                            type="button"
-                            data-bs-target="#productImageCarousel"
-                            data-bs-slide="next"
-                        >
-
-                            <span class="carousel-control-next-icon">></span>
-
-                            <span class="visually-hidden">
-                                Next
-                            </span>
-
-                        </button>
-
-                    {% endif %}
-
+                            <button
+                                class="carousel-control-prev product-carousel-control"
+                                type="button"
+                                data-bs-target="#productImageCarousel"
+                                data-bs-slide="prev"
+                                aria-label="Previous image"
+                            >
+                                <span class="carousel-control-prev-icon"></span>
+                            </button>
+                        
+                        
+                            <button
+                                class="carousel-control-next product-carousel-control"
+                                type="button"
+                                data-bs-target="#productImageCarousel"
+                                data-bs-slide="next"
+                                aria-label="Next image"
+                            >
+                                <span class="carousel-control-next-icon"></span>
+                            </button>
+                        
+                        {% endif %}
                 </div>
 
 
@@ -325,38 +369,28 @@
 
 
                             {% if related_products|length > 4 %}
-
+                                                    
                                 <button
                                     class="carousel-control-prev related-carousel-control"
                                     type="button"
                                     data-bs-target="#relatedProductsCarousel"
                                     data-bs-slide="prev"
+                                    aria-label="Previous related products"
                                 >
-
-                                    <span class="carousel-control-prev-icon"><</span>
-
-                                    <span class="visually-hidden">
-                                        Previous
-                                    </span>
-
+                                    <span class="carousel-control-prev-icon"></span>
                                 </button>
-
-
+                            
+                            
                                 <button
                                     class="carousel-control-next related-carousel-control"
                                     type="button"
                                     data-bs-target="#relatedProductsCarousel"
                                     data-bs-slide="next"
+                                    aria-label="Next related products"
                                 >
-
-                                    <span class="carousel-control-next-icon">></span>
-
-                                    <span class="visually-hidden">
-                                        Next
-                                    </span>
-
+                                    <span class="carousel-control-next-icon"></span>
                                 </button>
-
+                            
                             {% endif %}
 
                         </div>
