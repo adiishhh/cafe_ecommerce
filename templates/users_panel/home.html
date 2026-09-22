@@ -7,20 +7,33 @@
 
     <meta charset="UTF-8">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <title>SmartCafe</title>
+    <title>CAFE</title>
 
-    <link rel="icon"
-          type="image/png"
-          href="{% static 'common/images/favicon.png' %}">
+    <link
+        rel="icon"
+        type="image/png"
+        href="{% static 'common/images/favicon.png' %}"
+    >
 
-    <link rel="stylesheet" href="{% static 'users_panel/css/home.css' %}">
+    <link
+        rel="stylesheet"
+        href="{% static 'users_panel/css/home.css' %}"
+    >
 
-    <link rel="stylesheet" href="{% static 'users_panel/css/users_products.css' %}">
+    <link
+        rel="stylesheet"
+        href="{% static 'users_panel/css/users_products.css' %}"
+    >
 
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet">
+    <link
+        href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"
+        rel="stylesheet"
+    >
 
 </head>
 
@@ -28,308 +41,194 @@
 <body>
 
 {% if messages %}
+
     <div class="messages">
+
         {% for message in messages %}
+
             <div class="message {{ message.tags }}">
                 {{ message }}
             </div>
+
         {% endfor %}
+
     </div>
+
 {% endif %}
+
 
 <main class="home-page">
 
     <div class="home-container">
 
 
-        <!-- Header -->
+        <!-- =========================
+             HEADER
+        ========================== -->
 
         <header class="home-header">
-        
-            <a href="{% url 'home' %}" class="brand">
-            
-                <span class="brand-icon">☕</span>
-            
-                <span class="brand-name">
-                    SmartCafe
+
+            <a
+                href="{% url 'home' %}"
+                class="brand"
+            >
+
+                <span class="brand-icon">
+                    ☕
                 </span>
-            
+
+                <span class="brand-name">
+                    CAFE
+                </span>
+
             </a>
-        
-        
-            <div class="header-actions">
-            
-                {% comment %} <a href="{% url 'cart' %}" class="review-order-button">
-                
-                    <span>
-                        🛒
-                    </span>
-                
-                    Review Order
-                
-                    {% if cart_count > 0 %}
-                        <span class="cart-count">
-                            {{ cart_count }}
-                        </span>
-                    {% endif %}
-                    
-                </a> {% endcomment %}
-            
-            
+
+
+            <nav class="main-navigation">
+
+                <a
+                    href="{% url 'home' %}"
+                    class="main-nav-item active"
+                >
+                    Menu
+                </a>
+
+                <a
+                    href="#"
+                    class="main-nav-item"
+                >
+                    Orders
+                </a>
+
                 {% if user.is_authenticated %}
-            
-                    <a href="{% url 'profile' %}" class="profile-avatar">
-                    
-                        {% if user.profile_image %}
-                            <img src="{{ user.profile_image.url }}"
-                                 alt="Profile image">
-                        {% else %}
-                            {{ user.name|first|upper }}
-                        {% endif %}
-                    
+
+                    <a
+                        href="{% url 'profile' %}"
+                        class="main-nav-item"
+                    >
+                        Profile
                     </a>
-                
+
                 {% else %}
-                
-                    <a href="{% url 'login' %}"
-                       class="sign-in-button">
-                
-                        Sign In
-                
+
+                    <a
+                        href="{% url 'login' %}"
+                        class="main-nav-item"
+                    >
+                        Profile
                     </a>
-                
+
                 {% endif %}
-                
+
+            </nav>
+
+
+            <div class="header-actions">
+
+                {% if user.is_authenticated %}
+
+                    <a
+                        href="{% url 'profile' %}"
+                        class="profile-avatar"
+                    >
+
+                        {% if user.profile_image %}
+
+                            <img
+                                src="{{ user.profile_image.url }}"
+                                alt="Profile image"
+                            >
+
+                        {% else %}
+
+                            {{ user.name|first|upper }}
+
+                        {% endif %}
+
+                    </a>
+
+                {% else %}
+
+                    <a
+                        href="{% url 'login' %}"
+                        class="sign-in-button"
+                    >
+                        Sign In
+                    </a>
+
+                {% endif %}
+
             </div>
-        
+
         </header>
 
 
-        <!-- Greeting -->
+        <!-- =========================
+             HERO
+        ========================== -->
 
-        <section class="greeting">
-            {% if user.is_authenticated %}
+        <section class="hero-section">
 
-                <h1>
-                    Hello, {{ user.name }} 👋
-                </h1>
+            <div class="hero-placeholder">
 
-            {% else %}
+                <div class="hero-overlay"></div>
 
-                <h1>
-                    Hello there 👋
-                </h1>
+                <div class="hero-content">
 
-            {% endif %}
+                    <span class="hero-eyebrow">
+                        SIP. SLOW. STAY.
+                    </span>
+
+                    <h1>
+                        Good Food<br>
+                        Slower Moments
+                    </h1>
+
+                    <p>
+                        From familiar flavours to new favourites.<br>
+                        Made with care, served with warmth.
+                    </p>
+
+                    <a
+                        href="#menu"
+                        class="hero-button"
+                    >
+                        Explore Menu
+                        <span>→</span>
+                    </a>
+
+                </div>
+
+                {% comment %} <div class="hero-placeholder-label">
+                    CAFE AMBIENCE
+                </div> {% endcomment %}
+
+            </div>
 
         </section>
 
 
-        <!-- Navigation -->
+        <!-- =========================
+             SEARCH
+        ========================== -->
 
-        <nav class="home-navigation">
+        <form
+            method="GET"
+            class="search-box"
+            id="menu"
+        >
 
-            <a href="#" class="nav-item active">
-                ☆
-                My Usuals
-            </a>
-
-            <a href="#" class="nav-item">
-                ◷
-                Current Orders
-            </a>
-
-            {% if user.is_authenticated %}
-
-                <a href="{% url 'profile' %}"
-                   class="nav-item">
-
-                    <i class="fa fa-user"></i>
-                    Profile
-
-                </a>
-
-            {% else %}
-
-                <a href="{% url 'login' %}"
-                   class="nav-item">
-
-                    <i class="fa fa-user"></i>
-                    Profile
-
-                </a>
-
-            {% endif %}
-
-        </nav>
-
-        <form method="GET" class="search-box">
-        
             <span class="search-icon">
-                <i class="fa-solid fa-magnifying-glass"></i>
+                <i class="fa fa-search"></i>
             </span>
-        
+
             <input
                 type="text"
                 name="q"
                 value="{{ query }}"
                 placeholder="Search food & drinks..."
             >
-        
-            {% if category_id %}
-                <input type="hidden" name="category" value="{{ category_id }}">
-            {% endif %}
-        
-            {% if sort %}
-                <input type="hidden" name="sort" value="{{ sort }}">
-            {% endif %}
-        
-            {% if min_price %}
-                <input type="hidden" name="min_price" value="{{ min_price }}">
-            {% endif %}
-        
-            {% if max_price %}
-                <input type="hidden" name="max_price" value="{{ max_price }}">
-            {% endif %}
-        
-            <button type="submit" class="search-button">
-                Search
-            </button>
-        
-            {% if query %}
-                <a
-                    href="?{% if category_id %}category={{ category_id }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}{% if min_price %}min_price={{ min_price }}&{% endif %}{% if max_price %}max_price={{ max_price }}{% endif %}"
-                    class="clear-button"
-                >
-                    Clear Search
-                </a>
-            {% endif %}
-            
-        </form>
-        
-        
-        <!-- Categories -->
-        
-        <div class="categories">
-        
-            <a
-                href="?q={{ query|urlencode }}&sort={{ sort }}&min_price={{ min_price }}&max_price={{ max_price }}"
-                class="category {% if not category_id %}active{% endif %}"
-            >
-                All
-            </a>
-        
-        
-            {% for category in categories %}
-        
-                <a
-                    href="?q={{ query|urlencode }}&category={{ category.id }}&sort={{ sort }}&min_price={{ min_price }}&max_price={{ max_price }}"
-                    class="category {% if category_id == category.id|stringformat:'s' %}active{% endif %}"
-                >
-                    {{ category.name }}
-                </a>
-            
-            {% endfor %}
-            
-        </div>
 
-
-        <!-- Product Filters -->
-
-        <form method="GET" class="product-filters">
-        
-            <input
-                type="hidden"
-                name="q"
-                value="{{ query }}"
-            >
-        
-            <div class="filter-group">
-            
-                <label for="sort">
-                    Sort
-                </label>
-            
-                <select name="sort" id="sort">
-                
-                    <option
-                        value=""
-                        {% if not sort %}selected{% endif %}
-                    >
-                        Default
-                    </option>
-                
-                    <option
-                        value="price_low"
-                        {% if sort == 'price_low' %}selected{% endif %}
-                    >
-                        Price: Low to High
-                    </option>
-                
-                    <option
-                        value="price_high"
-                        {% if sort == 'price_high' %}selected{% endif %}
-                    >
-                        Price: High to Low
-                    </option>
-                
-                    <option
-                        value="name_az"
-                        {% if sort == 'name_az' %}selected{% endif %}
-                    >
-                        Name: A-Z
-                    </option>
-                
-                    <option
-                        value="name_za"
-                        {% if sort == 'name_za' %}selected{% endif %}
-                    >
-                        Name: Z-A
-                    </option>
-                
-                </select>
-            
-            </div>
-        
-        
-            <div class="filter-group">
-            
-                <label for="min_price">
-                    Min Price
-                </label>
-            
-                <input
-                    type="number"
-                    name="min_price"
-                    id="min_price"
-                    value="{{ min_price }}"
-                    placeholder="₹ Min"
-                    min="0"
-                    step="10.00"
-                >
-            
-            </div>
-        
-        
-            <div class="filter-group">
-            
-                <label for="max_price">
-                    Max Price
-                </label>
-            
-                <input
-                    type="number"
-                    name="max_price"
-                    id="max_price"
-                    value="{{ max_price }}"
-                    placeholder="₹ Max"
-                    min="0"
-                    step="10.00"
-                >
-            
-            </div>
-        
-        
             {% if category_id %}
                 <input
                     type="hidden"
@@ -337,59 +236,325 @@
                     value="{{ category_id }}"
                 >
             {% endif %}
-        
-        
+
+            {% if sort %}
+                <input
+                    type="hidden"
+                    name="sort"
+                    value="{{ sort }}"
+                >
+            {% endif %}
+
+            {% if min_price %}
+                <input
+                    type="hidden"
+                    name="min_price"
+                    value="{{ min_price }}"
+                >
+            {% endif %}
+
+            {% if max_price %}
+                <input
+                    type="hidden"
+                    name="max_price"
+                    value="{{ max_price }}"
+                >
+            {% endif %}
+
             <button
                 type="submit"
-                class="apply-filter-button"
+                class="search-submit"
             >
-                Apply
+                Search
             </button>
-        
-        
-            {% if sort or min_price or max_price %}
-        
-                <a
-                    href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if category_id %}category={{ category_id }}{% endif %}"
-                    class="clear-filter-button"
-                >
-                    Clear Filters
-                </a>
-            
-            {% endif %}
-            
+
         </form>
+
+
+        <!-- =========================
+             CATEGORIES
+        ========================== -->
+
+        <div class="categories">
+
+            <a
+                href="?q={{ query|urlencode }}&sort={{ sort }}&min_price={{ min_price }}&max_price={{ max_price }}"
+                class="category {% if not category_id %}active{% endif %}"
+            >
+                All
+            </a>
+
+            {% for category in categories %}
+
+                <a
+                    href="?q={{ query|urlencode }}&category={{ category.id }}&sort={{ sort }}&min_price={{ min_price }}&max_price={{ max_price }}"
+                    class="category {% if category_id == category.id|stringformat:'s' %}active{% endif %}"
+                >
+                    {{ category.name }}
+                </a>
+
+            {% endfor %}
+
+        </div>
+
+
+        <!-- =========================
+             FILTERS
+        ========================== -->
+
+        <details class="filter-panel">
+
+            <summary>
+                <span>
+                    <i class="fa fa-sliders"></i>
+                    Filters & Sorting
+                </span>
+
+                <span class="filter-arrow">
+                    ↓
+                </span>
+            </summary>
+
+
+            <form
+                method="GET"
+                class="product-filters"
+            >
+
+                <input
+                    type="hidden"
+                    name="q"
+                    value="{{ query }}"
+                >
+
+                {% if category_id %}
+
+                    <input
+                        type="hidden"
+                        name="category"
+                        value="{{ category_id }}"
+                    >
+
+                {% endif %}
+
+
+                <div class="filter-group">
+
+                    <label for="sort">
+                        Sort
+                    </label>
+
+                    <select
+                        name="sort"
+                        id="sort"
+                    >
+
+                        <option
+                            value=""
+                            {% if not sort %}selected{% endif %}
+                        >
+                            Default
+                        </option>
+
+                        <option
+                            value="price_low"
+                            {% if sort == 'price_low' %}selected{% endif %}
+                        >
+                            Price: Low to High
+                        </option>
+
+                        <option
+                            value="price_high"
+                            {% if sort == 'price_high' %}selected{% endif %}
+                        >
+                            Price: High to Low
+                        </option>
+
+                        <option
+                            value="name_az"
+                            {% if sort == 'name_az' %}selected{% endif %}
+                        >
+                            Name: A-Z
+                        </option>
+
+                        <option
+                            value="name_za"
+                            {% if sort == 'name_za' %}selected{% endif %}
+                        >
+                            Name: Z-A
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="filter-group">
+
+                    <label for="min_price">
+                        Min Price
+                    </label>
+
+                    <input
+                        type="number"
+                        name="min_price"
+                        id="min_price"
+                        value="{{ min_price }}"
+                        placeholder="₹ Min"
+                        min="0"
+                        step="10.00"
+                    >
+
+                </div>
+
+
+                <div class="filter-group">
+
+                    <label for="max_price">
+                        Max Price
+                    </label>
+
+                    <input
+                        type="number"
+                        name="max_price"
+                        id="max_price"
+                        value="{{ max_price }}"
+                        placeholder="₹ Max"
+                        min="0"
+                        step="10.00"
+                    >
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="apply-filter-button"
+                >
+                    Apply
+                </button>
+
+
+                {% if sort or min_price or max_price %}
+
+                    <a
+                        href="?{% if query %}q={{ query|urlencode }}&{% endif %}{% if category_id %}category={{ category_id }}{% endif %}"
+                        class="clear-filter-button"
+                    >
+                        Clear
+                    </a>
+
+                {% endif %}
+
+            </form>
+
+        </details>
+
+
+        <!-- =========================
+             MENU
+        ========================== -->
+
+        <section class="menu-heading">
+
+            <div>
+
+                <span class="section-eyebrow">
+                    OUR MENU
+                </span>
+
+                <h2>
+                    Popular Picks
+                </h2>
+
+            </div>
+
+            {% if page_obj.paginator.count %}
+
+                <span class="menu-count">
+                    {{ page_obj.paginator.count }} items
+                </span>
+
+            {% endif %}
+
+        </section>
+
 
         {% include "users_panel/users_products.html" %}
 
-            {% if cart_count > 0 %}
-                
-                <a href="{% url 'cart' %}" class="review-order-bar">
-                
-                    <span class="review-order-count">
-                        {{ cart_count }}
-                    </span>
-                
-                    <span class="review-order-text">
-                        Review Order
-                    </span>
-                
-                    <strong>
-                        ₹{{ cart_total|floatformat:0 }}
-                    </strong>
-                
-                </a>
-            
-            {% endif %}
+
+        <!-- =========================
+             STICKY REVIEW ORDER
+        ========================== -->
+
+        {% if cart_count > 0 %}
+
+            <a
+                href="{% url 'cart' %}"
+                class="review-order-bar"
+            >
+
+                <span class="review-order-icon">
+                    <i class="fa fa-cutlery"></i>
+                </span>
+
+                <span class="review-order-text">
+                    Review Order
+                </span>
+
+                <span class="review-order-summary">
+                    {{ cart_count }} item{{ cart_count|pluralize }}
+                    · ₹{{ cart_total|floatformat:0 }}
+                </span>
+
+                <span class="review-order-arrow">
+                    →
+                </span>
+
+            </a>
+
+        {% endif %}
+
 
     </div>
+
 </main>
+
+
+<!-- =========================
+     FOOTER
+========================== -->
+
 <footer class="home-footer">
 
     <div class="footer-content">
+
+        <div class="footer-brand">
+
+            <div class="brand">
+
+                <span class="brand-icon">
+                    ☕
+                </span>
+
+                <span class="brand-name">
+                    CAFE
+                </span>
+
+            </div>
+
+            <p>
+                Good food, warm moments.
+            </p>
+
+        </div>
+
+
         <div class="contact-section">
 
-            <h2>Contact Us</h2>
+            <h2>
+                Contact Us
+            </h2>
 
             <div class="contact-links">
 
@@ -403,8 +568,17 @@
                     support@smartcafe.local
                 </a>
 
-                <a href="https://instagram.com/smartcafe" target="_blank" rel="noopener noreferrer">
-                    <span><i class="fa fa-instagram"></i></span>Instagram</a>
+                <a
+                    href="https://instagram.com/smartcafe"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    <span>
+                        <i class="fa fa-instagram"></i>
+                    </span>
+                    Instagram
+                </a>
+
             </div>
 
         </div>
@@ -413,9 +587,16 @@
 
 
     <div class="footer-bottom">
-        <p>© 2026 SmartCafe. All rights reserved.</p>
+
+        <p>
+            © 2026 CAFE. All rights reserved.
+        </p>
+
     </div>
 
 </footer>
+
+
 </body>
+
 </html>

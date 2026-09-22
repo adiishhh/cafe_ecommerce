@@ -34,6 +34,7 @@
 
                             </div>
 
+
                             <div class="product-info">
 
                                 <h3>
@@ -41,22 +42,29 @@
                                 </h3>
 
                                 <p>
-                                    {{ product.description|truncatechars:85 }}
+                                    {{ product.description|truncatechars:70 }}
                                 </p>
 
-                                <strong>
-                                    ₹{{ product.price }}
-                                </strong>
 
-                                <span class="add-button">
-                                    Add +
-                                </span>
+                                <div class="product-bottom">
+
+                                    <strong>
+                                        ₹{{ product.price }}
+                                    </strong>
+
+                                    <span class="add-button">
+                                        Add +
+                                    </span>
+
+                                </div>
 
                             </div>
 
                         </a>
 
+
                     {% else %}
+
 
                         <div class="product-card unavailable">
 
@@ -83,6 +91,7 @@
 
                             </div>
 
+
                             <div class="product-info">
 
                                 <h3>
@@ -90,16 +99,21 @@
                                 </h3>
 
                                 <p>
-                                    {{ product.description|truncatechars:85 }}
+                                    {{ product.description|truncatechars:70 }}
                                 </p>
 
-                                <strong>
-                                    ₹{{ product.price }}
-                                </strong>
 
-                                <span class="unavailable-price">
-                                    N/A
-                                </span>
+                                <div class="product-bottom">
+
+                                    <strong>
+                                        ₹{{ product.price }}
+                                    </strong>
+
+                                    <span class="unavailable-price">
+                                        N/A
+                                    </span>
+
+                                </div>
 
                             </div>
 
@@ -114,7 +128,9 @@
         </div>
 
 
-        <!-- Pagination -->
+        <!-- =========================
+             PAGINATION
+        ========================== -->
 
         {% if page_obj.paginator.num_pages > 1 %}
 
@@ -125,22 +141,24 @@
                     <a
                         href="?q={{ query|urlencode }}&category={{ category_id }}&sort={{ sort }}&min_price={{ min_price }}&max_price={{ max_price }}&page={{ page_obj.previous_page_number }}"
                     >
-                        Previous
+                        ← Previous
                     </a>
 
                 {% endif %}
+
 
                 <span>
                     Page {{ page_obj.number }}
                     of {{ page_obj.paginator.num_pages }}
                 </span>
 
+
                 {% if page_obj.has_next %}
 
                     <a
                         href="?q={{ query|urlencode }}&category={{ category_id }}&sort={{ sort }}&min_price={{ min_price }}&max_price={{ max_price }}&page={{ page_obj.next_page_number }}"
                     >
-                        Next
+                        Next →
                     </a>
 
                 {% endif %}
@@ -149,17 +167,26 @@
 
         {% endif %}
 
+
     {% else %}
+
 
         <div class="no-products">
 
-            <h3>No products found</h3>
+            <div class="no-products-icon">
+                ☕
+            </div>
+
+            <h3>
+                Nothing on the menu
+            </h3>
 
             <p>
                 Try changing your search or filters.
             </p>
 
         </div>
+
 
     {% endif %}
 

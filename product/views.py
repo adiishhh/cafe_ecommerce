@@ -90,7 +90,7 @@ def customer_home(request):
 
     paginator = Paginator(
         products,
-        6
+        15
     )
 
     page_number = request.GET.get('page')
