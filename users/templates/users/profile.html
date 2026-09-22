@@ -2,185 +2,318 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Profile | SmartCafe</title>
-    <link rel="icon" type="image/png" href="{% static 'common/images/favicon.png' %}">
-    <link rel="stylesheet" href="{% static 'users/css/profile.css' %}">
+
+    <link rel="icon"
+          type="image/png"
+          href="{% static 'common/images/favicon.png' %}">
+
+    <link rel="stylesheet"
+          href="{% static 'users/css/profile.css' %}">
 </head>
+
 
 <body>
 
-    <main class="profile-page">
+<main class="profile-page">
 
-        <div class="profile-container">
+    <div class="profile-container">
 
-            <!-- Header -->
+        <!-- Header -->
 
-            <header class="profile-header">
+        <header class="profile-header">
 
-                <a href="/" class="back-button">←</a>
+            <a href="/" class="back-button">←</a>
 
-                <div>
-                    <h1>Profile</h1>
-                    <p>Manage your account</p>
+            <div>
+                <h1>Profile</h1>
+                <p>Manage your account</p>
+            </div>
+
+        </header>
+
+
+        <div class="profile-layout">
+
+
+            <!-- Sidebar -->
+
+            <aside class="profile-sidebar">
+
+                <div class="sidebar-title">
+                    <span>ACCOUNT</span>
                 </div>
 
-            </header>
 
+                <nav class="profile-nav">
 
-            <!-- User Summary -->
-
-            <section class="profile-summary">
-
-                <div class="avatar">
-                    {% if request.user.profile_image %}
-                        <img src="{{ request.user.profile_image.url }}" alt="Profile image">
-                    {% else %}
-                        <span>{{ request.user.name|first|upper }}</span>
-                    {% endif %}
-                </div>
-
-                <div class="summary-details">
-                    <h2>{{ request.user.name }}</h2>
-                    <p>{{ request.user.email }}</p>
-                </div>
-
-            </section>
-
-
-            <!-- Personal Information -->
-
-            <section class="profile-section">
-
-                <div class="section-title">
-                    <h2>Personal Information</h2>
-
-                    <a href="{% url "edit_profile" %}" class="edit-link">Edit</a>
-                </div>
-
-                <div class="information-list">
-
-                    <div class="information-item">
-                        <span class="information-label">Name</span>
-                        <span class="information-value">
-                            {{ request.user.name }}
-                        </span>
-                    </div>
-
-                    <div class="information-item">
-                        <span class="information-label">Email</span>
-                        <span class="information-value">
-                            {{ request.user.email }}
-                        </span>
-                    </div>
-
-                    <div class="information-item">
-                        <span class="information-label">Phone</span>
-                        <span class="information-value">
-                            {{ request.user.phone }}
-                        </span>
-                    </div>
-
-                </div>
-
-            </section>
-
-
-            <!-- Delivery Address -->
-                    
-            <section class="profile-section address-section">
-            
-                <div class="section-title address-title">
-                
-                    <h2>Delivery Address</h2>
-                
-                    <a href="{% url 'addresses' %}"
-                       class="edit-link"
-                       aria-label="Manage delivery addresses">
-                        →
+                    <a href="#personal-information"
+                       class="profile-nav-link">
+                        <span>Personal Information</span>
                     </a>
-                
-                </div>
-            
-            
-                {% if default_address %}
-            
-                    <div class="address-content">
-                    
-                        <p class="recipient-name">
-                            {{ default_address.name }}
-                        </p>
-                    
-                        <p class="address-text">
-                            {{ default_address.flat_house }}<br>
-                            {{ default_address.area_street }}<br>
-                            {{ default_address.city }},
-                            {{ default_address.state }} -
-                            {{ default_address.pincode }}
-                        </p>
-                    
-                        <p class="address-contact">
-                            {{ default_address.contact_number }}
-                        </p>
-                    
+
+
+                    <a href="#delivery-address"
+                       class="profile-nav-link">
+                        <span>Delivery Address</span>
+                    </a>
+
+
+                    <a href="#security"
+                       class="profile-nav-link">
+                        <span>Security</span>
+                    </a>
+
+                </nav>
+
+
+                <!-- Logout -->
+
+                <form method="POST"
+                      action="{% url 'logout' %}"
+                      class="sidebar-logout-form">
+
+                    {% csrf_token %}
+
+                    <button type="submit"
+                            class="sidebar-logout">
+
+                        <span>Log out</span>
+
+                        <span class="logout-icon">
+                            ↪
+                        </span>
+
+                    </button>
+
+                </form>
+
+            </aside>
+
+
+
+            <!-- Main Content -->
+
+            <div class="profile-content">
+
+
+                <!-- User Summary -->
+
+                <section class="profile-summary">
+
+                    <div class="avatar">
+
+                        {% if request.user.profile_image %}
+
+                            <img src="{{ request.user.profile_image.url }}"
+                                 alt="Profile image">
+
+                        {% else %}
+
+                            <span>
+                                {{ request.user.name|first|upper }}
+                            </span>
+
+                        {% endif %}
+
                     </div>
-                
-                
-                {% else %}
-                
-                    <div class="empty-address">
-                    
+
+
+                    <div class="summary-details">
+
+                        <h2>
+                            {{ request.user.name }}
+                        </h2>
+
                         <p>
-                            No delivery address added.
+                            {{ request.user.email }}
                         </p>
-                    
-                        <a href="{% url 'add_address' %}"
-                           class="add-address">
-                            Add Address
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- Personal Information -->
+
+                <section class="profile-section"
+                         id="personal-information">
+
+                    <div class="section-title">
+
+                        <h2>
+                            Personal Information
+                        </h2>
+
+                        <a href="{% url 'edit_profile' %}"
+                           class="edit-link">
+                            Edit
                         </a>
-                    
+
                     </div>
-                
-                {% endif %}
-                
-            </section>
 
-            <!-- Security -->
 
-            <section class="profile-section security-section">
-            
-                <a href="{% url 'security' %}" class="security-link">
-                
-                    <div class="security-content">
-                    
-                        <h2>Security</h2>
-                    
+                    <div class="information-list">
+
+
+                        <div class="information-item">
+
+                            <span class="information-label">
+                                Name
+                            </span>
+
+                            <span class="information-value">
+                                {{ request.user.name }}
+                            </span>
+
+                        </div>
+
+
+                        <div class="information-item">
+
+                            <span class="information-label">
+                                Email
+                            </span>
+
+                            <span class="information-value">
+                                {{ request.user.email }}
+                            </span>
+
+                        </div>
+
+
+                        <div class="information-item">
+
+                            <span class="information-label">
+                                Phone
+                            </span>
+
+                            <span class="information-value">
+                                {{ request.user.phone }}
+                            </span>
+
+                        </div>
+
+
                     </div>
-                
-                    <span class="security-arrow">→</span>
-                
-                </a>
-            
-            </section>            
+
+                </section>
 
 
-            <!-- Logout -->
 
-        <form method="POST" action="{% url 'logout' %}">
-            {% csrf_token %}
-        
-            <button type="submit" class="logout-button">
-                <span>Log out</span>
-                <span class="logout-icon">↪</span>
-            </button>
-        </form>
+                <!-- Delivery Address -->
+
+                <section class="profile-section address-section"
+                         id="delivery-address">
+
+
+                    <div class="section-title address-title">
+
+                        <h2>
+                            Delivery Address
+                        </h2>
+
+                        <a href="{% url 'addresses' %}"
+                           class="edit-link"
+                           aria-label="Manage delivery addresses">
+                            →
+                        </a>
+
+                    </div>
+
+
+                    {% if default_address %}
+
+                        <div class="address-content">
+
+                            <p class="recipient-name">
+                                {{ default_address.name }}
+                            </p>
+
+                            <p class="address-text">
+
+                                {{ default_address.flat_house }}<br>
+
+                                {{ default_address.area_street }}<br>
+
+                                {{ default_address.city }},
+                                {{ default_address.state }} -
+                                {{ default_address.pincode }}
+
+                            </p>
+
+                            <p class="address-contact">
+                                {{ default_address.contact_number }}
+                            </p>
+
+                        </div>
+
+
+                    {% else %}
+
+                        <div class="empty-address">
+
+                            <p>
+                                No delivery address added.
+                            </p>
+
+                            <a href="{% url 'add_address' %}"
+                               class="add-address">
+                                Add Address
+                            </a>
+
+                        </div>
+
+                    {% endif %}
+
+
+                </section>
+
+
+
+                <!-- Security -->
+
+                <section class="profile-section security-section"
+                         id="security">
+
+                    <a href="{% url 'security' %}"
+                       class="security-link">
+
+                        <div class="security-content">
+
+                            <h2>
+                                Security
+                            </h2>
+
+                            <p>
+                                Manage your email and password
+                            </p>
+
+                        </div>
+
+                        <span class="security-arrow">
+                            →
+                        </span>
+
+                    </a>
+
+                </section>
+
+
+            </div>
 
         </div>
 
-    </main>
+    </div>
+
+</main>
 
 </body>
+
 </html>
