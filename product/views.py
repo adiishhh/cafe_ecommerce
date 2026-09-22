@@ -561,6 +561,15 @@ def remove_from_cart(request, product_id):
 
     return redirect('cart')
 
+@require_POST
+def cancel_cart(request):
+    request.session.pop('cart', None)
+    request.session.modified = True
+
+    messages.success(request, 'Your order has been cancelled.')
+
+    return redirect('home')
+
 @login_required(login_url='login')
 def product_list(request):
 

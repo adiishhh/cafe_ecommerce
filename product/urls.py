@@ -26,11 +26,8 @@ urlpatterns = [
         views.customer_product_detail,
         name='customer_product_detail'
     ),
-        path(
-        'cart/',
-        views.cart,
-        name='cart'
-    ),
+    
+    path('cart/', views.cart, name='cart'),
 
     path(
         'cart/add/<int:product_id>/',
@@ -55,5 +52,7 @@ urlpatterns = [
         views.remove_from_cart,
         name='remove_from_cart'
     ),
+
+    path('cart/cancel/', views.cancel_cart, name='cancel_cart'),
 
 ]

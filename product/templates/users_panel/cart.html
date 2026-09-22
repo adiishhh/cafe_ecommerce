@@ -12,7 +12,7 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Review Order - SmartCafe</title>
+    <title>Review Order - CAFE</title>
 
     <link
         rel="icon"
@@ -27,107 +27,219 @@
 
 </head>
 
+
 <body>
 
+
+<!-- =========================================================
+     NAVBAR
+     ========================================================= -->
+
+<header class="cafe-navbar">
+
+    <a href="{% url 'home' %}" class="cafe-brand">
+
+        <span class="cafe-brand-icon">
+            C
+        </span>
+
+        <span>CAFE</span>
+
+    </a>
+
+
+    <nav class="cafe-nav">
+
+        <a href="{% url 'home' %}">
+            Menu
+        </a>
+
+        <a href="#">
+            Orders
+        </a>
+
+        <a href="{% url 'profile' %}">
+            Profile
+        </a>
+
+    </nav>
+
+
+    <a href="{% url 'profile' %}" class="cafe-profile">
+
+        {% if request.user.profile_image %}
+
+            <img
+                src="{{ request.user.profile_image.url }}"
+                alt="Profile"
+            >
+
+        {% else %}
+
+            <span>
+                {{ request.user.name|first|upper }}
+            </span>
+
+        {% endif %}
+
+    </a>
+
+</header>
+
+
+
+<!-- =========================================================
+     MESSAGES
+     ========================================================= -->
+
 {% if messages %}
+
     <div class="messages">
+
         {% for message in messages %}
+
             <div class="message {{ message.tags }}">
                 {{ message }}
             </div>
+
         {% endfor %}
+
     </div>
+
 {% endif %}
+
+
 
 <div class="cart-page">
 
     <div class="cart-container">
 
+
+        <!-- =================================================
+             HEADER
+             ================================================= -->
+
         <div class="cart-header">
 
             <div>
-                <a href="{% url 'home' %}" class="back-link">
+
+                <a
+                    href="{% url 'home' %}"
+                    class="back-link"
+                >
                     ←
                 </a>
 
+
                 <div>
-                    <h1>Review Order</h1>
+
+                    <h1>
+                        Review Order
+                    </h1>
 
                     <p>
-                        {{ cart_items|length }} item{{ cart_items|length|pluralize }}
+                        {{ cart_items|length }}
+                        item{{ cart_items|length|pluralize }}
                     </p>
+
                 </div>
+
             </div>
 
         </div>
 
 
+
         {% if cart_items %}
+
+
+            <!-- =============================================
+                 CART ITEMS
+                 ============================================= -->
 
             <section class="cart-section">
 
-                <h2>Your Items</h2>
+                <h2>
+                    Your Items
+                </h2>
 
 
                 <div class="cart-items">
+
 
                     {% for item in cart_items %}
 
                         {% with item.product.images.all|first as product_image %}
 
-                            <div class="cart-item {% if not item.is_available %}cart-item-unavailable{% endif %}" data-cart-item="{{ item.product.id }}">
+
+                            <div
+                                class="cart-item {% if not item.is_available %}cart-item-unavailable{% endif %}"
+                                data-cart-item="{{ item.product.id }}"
+                            >
+
+
+                                <!-- Product Image -->
 
                                 <div class="cart-item-image">
-                                
+
                                     {% if product_image %}
-                                
+
                                         <img
                                             src="{{ product_image.image.url }}"
                                             alt="{{ item.product.name }}"
                                         >
-                                
+
                                     {% else %}
-                                
+
                                         <div class="no-image">
                                             No image
                                         </div>
-                                    
+
                                     {% endif %}
-                                    
+
+
                                     {% if not item.is_available %}
-                                    
+
                                         <div class="cart-unavailable-label">
                                             Unavailable
                                         </div>
-                                    
+
                                     {% endif %}
-                                    
+
                                 </div>
-                            
-                            
+
+
+
+                                <!-- Product Information -->
+
                                 <div class="cart-item-info">
-                                
+
                                     <h3>
                                         {{ item.product.name }}
                                     </h3>
-                                
+
                                     <p>
                                         ₹{{ item.product.price }} each
                                     </p>
-                                
-                                
+
+
                                     {% if item.is_available %}
+
 
                                         <div
                                             class="quantity-row"
                                             data-cart-item="{{ item.product.id }}"
                                         >
 
+
+                                            <!-- Decrease -->
+
                                             <form
                                                 method="POST"
                                                 action="{% url 'decrease_cart_quantity' item.product.id %}"
                                                 class="cart-quantity-form"
                                             >
+
                                                 {% csrf_token %}
 
                                                 <button
@@ -137,22 +249,30 @@
                                                 >
                                                     −
                                                 </button>
+
                                             </form>
-                                        
+
+
+                                            <!-- Quantity -->
+
                                             <span
                                                 class="quantity-value"
                                                 id="quantity-{{ item.product.id }}"
                                             >
                                                 {{ item.quantity }}
                                             </span>
-                                        
+
+
+                                            <!-- Increase -->
+
                                             <form
                                                 method="POST"
                                                 action="{% url 'increase_cart_quantity' item.product.id %}"
                                                 class="cart-quantity-form"
                                             >
+
                                                 {% csrf_token %}
-                                        
+
                                                 <button
                                                     type="submit"
                                                     class="quantity-button increase-button"
@@ -160,78 +280,101 @@
                                                 >
                                                     +
                                                 </button>
+
                                             </form>
-                                        
+
+
+                                            <!-- Remove -->
+
                                             <form
                                                 method="POST"
                                                 action="{% url 'remove_from_cart' item.product.id %}"
                                                 class="cart-remove-form"
                                             >
+
                                                 {% csrf_token %}
-                                        
+
                                                 <button
                                                     type="submit"
                                                     class="remove-button"
                                                 >
                                                     Remove
                                                 </button>
+
                                             </form>
-                                        
+
                                         </div>
-                                    
+
+
                                     {% else %}
-                                    
+
+
                                         <div class="unavailable-cart-info">
-                                        
+
                                             <span>
                                                 Currently unavailable
                                             </span>
-                                        
+
+
                                             <form
                                                 method="POST"
                                                 action="{% url 'remove_from_cart' item.product.id %}"
                                                 class="cart-remove-form"
                                             >
+
                                                 {% csrf_token %}
-                                        
+
                                                 <button
                                                     type="submit"
                                                     class="remove-button"
                                                 >
                                                     Remove
                                                 </button>
-                                            
+
                                             </form>
-                                        
+
                                         </div>
-                                    
+
+
                                     {% endif %}
-                                    
+
                                 </div>
-                            
-                            
-                                <strong class="item-subtotal" id="item-subtotal-{{ item.product.id }}">
-                                
+
+
+
+                                <!-- Item Subtotal -->
+
+                                <strong
+                                    class="item-subtotal"
+                                    id="item-subtotal-{{ item.product.id }}"
+                                >
+
                                     {% if item.is_available %}
-                                
+
                                         ₹{{ item.item_total }}
-                                
+
                                     {% else %}
-                                
+
                                         —
-                                
+
                                     {% endif %}
-                                
+
                                 </strong>
-                            
+
+
                             </div>
+
 
                         {% endwith %}
 
                     {% endfor %}
 
+
                 </div>
 
+
+
+                <!-- Add More -->
 
                 <a
                     href="{% url 'home' %}"
@@ -243,46 +386,61 @@
             </section>
 
 
-            <!-- Bill summary is only a prototype for now -->
+
+            <!-- =============================================
+                 BILL SUMMARY
+                 ============================================= -->
 
             <section class="bill-summary">
 
-                <h2>Bill Summary</h2>
+                <h2>
+                    Bill Summary
+                </h2>
 
 
                 {% for item in cart_items %}
-                            
+
                     {% if item.is_available %}
-                            
+
                         <div
                             class="summary-row"
                             data-summary-item="{{ item.product.id }}"
                         >
-                            
+
                             <span>
+
                                 {{ item.product.name }} ×
-                                <span id="summary-quantity-{{ item.product.id }}">
+
+                                <span
+                                    id="summary-quantity-{{ item.product.id }}"
+                                >
                                     {{ item.quantity }}
                                 </span>
+
                             </span>
-                        
-                            <span id="summary-total-{{ item.product.id }}">
+
+
+                            <span
+                                id="summary-total-{{ item.product.id }}"
+                            >
                                 ₹{{ item.item_total }}
                             </span>
-                        
+
                         </div>
-                    
+
                     {% endif %}
-                    
+
                 {% endfor %}
-                    
-                    
+
+
                 <div class="summary-divider"></div>
 
 
                 <div class="summary-row">
 
-                    <span>Subtotal</span>
+                    <span>
+                        Subtotal
+                    </span>
 
                     <span id="cart-subtotal">
                         ₹{{ subtotal }}
@@ -293,7 +451,9 @@
 
                 <div class="summary-row">
 
-                    <span>GST (5%)</span>
+                    <span>
+                        GST (5%)
+                    </span>
 
                     <span id="cart-gst">
                         ₹{{ gst|floatformat:2 }}
@@ -319,24 +479,64 @@
 
 
                 <div class="prototype-note">
-                    ✓ Final tax-inclusive amount — no hidden charges
+                    ✓ Final tax-inclusive amount 
                 </div>
 
             </section>
 
 
+
+            <!-- =============================================
+                 CONTINUE
+                 ============================================= -->
+
             <button
                 type="button"
                 class="continue-button"
+                {% if has_unavailable_items %}disabled{% endif %}
             >
+
                 Continue · ₹<span id="continue-total">{{ total|floatformat:2 }}</span>
+
             </button>
+
+
+
+            <!-- =============================================
+                 CANCEL ORDER
+                 ============================================= -->
+
+            <form
+                method="POST"
+                action="{% url 'cancel_cart' %}"
+                class="cancel-cart-form"
+            >
+
+                {% csrf_token %}
+
+                <button
+                    type="submit"
+                    class="cancel-cart-button"
+                >
+                    Cancel Order
+                </button>
+
+            </form>
+
+
 
         {% else %}
 
+
+            <!-- =============================================
+                 EMPTY CART
+                 ============================================= -->
+
             <div class="empty-cart">
 
-                <h2>Your order is empty</h2>
+                <h2>
+                    Your order is empty
+                </h2>
 
                 <p>
                     Add some items from the menu to review your order.
@@ -351,20 +551,29 @@
 
             </div>
 
+
         {% endif %}
+
 
     </div>
 
 </div>
 
+
+
 <script>
+
 document.addEventListener('DOMContentLoaded', function () {
 
+
     function getCSRFToken(form) {
+
         return form.querySelector(
             '[name=csrfmiddlewaretoken]'
         ).value;
+
     }
+
 
 
     function updateCartUI(data) {
@@ -373,9 +582,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
         /*
-         * If the product was removed, remove its
-         * entire cart item and summary row.
+         * If the product was removed,
+         * remove its entire cart item
+         * and summary row.
          */
+
         if (data.removed) {
 
             const cartItem = document.querySelector(
@@ -386,6 +597,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 cartItem.remove();
             }
 
+
             const summaryItem = document.querySelector(
                 `.summary-row[data-summary-item="${productId}"]`
             );
@@ -394,36 +606,46 @@ document.addEventListener('DOMContentLoaded', function () {
                 summaryItem.remove();
             }
 
+
         } else {
 
+
             /*
-             * Update quantity beside + / -
+             * Update quantity.
              */
+
             const quantityElement = document.getElementById(
                 `quantity-${productId}`
             );
 
             if (quantityElement) {
-                quantityElement.textContent = data.quantity;
+
+                quantityElement.textContent =
+                    data.quantity;
+
             }
 
 
             /*
-             * Update item subtotal on the cart item.
+             * Update item subtotal.
              */
+
             const subtotalElement = document.getElementById(
                 `item-subtotal-${productId}`
             );
 
             if (subtotalElement) {
+
                 subtotalElement.textContent =
                     `₹${parseFloat(data.item_total).toFixed(2)}`;
+
             }
 
 
             /*
              * Update + and - button states.
              */
+
             const itemContainer = document.querySelector(
                 `.quantity-row[data-cart-item="${productId}"]`
             );
@@ -440,43 +662,63 @@ document.addEventListener('DOMContentLoaded', function () {
                         '.increase-button'
                     );
 
+
                 if (decreaseButton) {
+
                     decreaseButton.disabled =
                         data.quantity <= 1;
+
                 }
 
+
                 if (increaseButton) {
+
                     increaseButton.disabled =
                         data.quantity >= 10;
+
                 }
+
             }
 
 
             /*
-             * Update item in Bill Summary.
+             * Update Bill Summary quantity.
              */
+
             const summaryQuantity = document.getElementById(
                 `summary-quantity-${productId}`
             );
 
             if (summaryQuantity) {
-                summaryQuantity.textContent = data.quantity;
+
+                summaryQuantity.textContent =
+                    data.quantity;
+
             }
+
+
+            /*
+             * Update Bill Summary item total.
+             */
 
             const summaryTotal = document.getElementById(
                 `summary-total-${productId}`
             );
 
             if (summaryTotal) {
+
                 summaryTotal.textContent =
                     `₹${parseFloat(data.item_total).toFixed(2)}`;
+
             }
+
         }
 
 
         /*
-         * Update overall cart totals.
+         * Update overall totals.
          */
+
         const subtotalElement =
             document.getElementById('cart-subtotal');
 
@@ -491,103 +733,130 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
         if (subtotalElement) {
+
             subtotalElement.textContent =
                 `₹${parseFloat(data.subtotal).toFixed(2)}`;
+
         }
+
 
         if (gstElement) {
+
             gstElement.textContent =
                 `₹${parseFloat(data.gst).toFixed(2)}`;
+
         }
+
 
         if (totalElement) {
+
             totalElement.textContent =
                 `₹${parseFloat(data.total).toFixed(2)}`;
+
         }
 
+
         if (continueTotalElement) {
+
             continueTotalElement.textContent =
                 parseFloat(data.total).toFixed(2);
+
         }
 
 
         /*
-         * If the cart becomes completely empty,
-         * let the existing empty-cart template render.
+         * If cart becomes completely empty,
+         * reload so the empty-cart template appears.
          */
+
         if (data.cart_count === 0) {
+
             window.location.reload();
+
         }
+
     }
 
+
+
     async function handleCartFormSubmit(event) {
-    
+
         event.preventDefault();
-    
+
         const form = event.currentTarget;
-    
+
         const button = form.querySelector(
             'button[type="submit"]'
         );
-    
+
+
         if (button) {
             button.disabled = true;
         }
-    
+
+
         try {
-        
+
             const response = await fetch(
                 form.action,
                 {
                     method: 'POST',
+
                     headers: {
                         'X-CSRFToken': getCSRFToken(form),
                         'X-Requested-With': 'XMLHttpRequest',
                         'Accept': 'application/json'
                     },
+
                     body: new FormData(form)
                 }
             );
-            
+
+
             const data = await response.json();
-            
+
+
             if (!response.ok || !data.success) {
-            
+
                 alert(
                     data.message ||
                     'Unable to update your order.'
                 );
-            
-                /*
-                 * Re-enable only after an error,
-                 * because the request did not change
-                 * the cart state.
-                 */
+
+
                 if (button) {
                     button.disabled = false;
                 }
-            
+
                 return;
+
             }
-        
+
+
             updateCartUI(data);
-        
+
+
         } catch (error) {
-        
+
             console.error(
                 'Cart update failed:',
                 error
             );
-        
+
+
             alert(
                 'Something went wrong. Please try again.'
             );
-        
+
+
             if (button) {
                 button.disabled = false;
             }
+
         }
+
     }
+
 
 
     document.querySelectorAll(
@@ -602,7 +871,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 });
+
 </script>
+
 
 </body>
 
