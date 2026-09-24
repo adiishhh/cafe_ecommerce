@@ -4,5 +4,6 @@ pillow==12.3.0
 psycopg==3.3.4
 psycopg-binary==3.3.4
 python-dotenv==1.2.3
+django-allauth==65.19.1
 sqlparse==0.6.0
 tzdata==2026.3
