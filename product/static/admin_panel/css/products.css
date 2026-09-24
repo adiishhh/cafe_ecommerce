@@ -616,3 +616,135 @@
     }
 
 }
+/* =========================================================
+   SMARTCAFE PRODUCT THEME
+   ========================================================= */
+
+.products-header h1 {
+    color: #2b241f;
+}
+
+.products-header p {
+    color: #8a8179;
+}
+
+.add-product-button {
+    background: #8b431c;
+}
+
+.add-product-button:hover {
+    background: #703515;
+}
+
+.search-box {
+    background: #fffdf9;
+    border-color: #ddd4c9;
+}
+
+.search-box i {
+    color: #9b8f83;
+}
+
+.category-filter {
+    background: #fffdf9;
+    border-color: #ddd4c9;
+    color: #5f564e;
+}
+
+.category-filter:focus {
+    border-color: #8b431c;
+}
+
+.search-button {
+    background: #8b431c;
+}
+
+.search-button:hover {
+    background: #703515;
+}
+
+.clear-button {
+    background: #fffdf9;
+    border-color: #ddd4c9;
+    color: #5f564e;
+}
+
+.clear-button:hover {
+    background: #f0e9df;
+}
+
+.products-table-card {
+    background: #fffdf9;
+    border-color: #e1d8cd;
+}
+
+.products-table th {
+    background: #f3eee6;
+    border-bottom-color: #e6ded5;
+    color: #766c62;
+}
+
+.products-table td {
+    border-bottom-color: #eee7de;
+}
+
+.product-name {
+    color: #2b241f;
+}
+
+.product-description {
+    color: #958b81;
+}
+
+.category-badge {
+    background: #eee7dc;
+    color: #655b52;
+}
+
+.product-price {
+    color: #8b431c;
+}
+
+.availability-toggle {
+    background: #5c7350;
+}
+
+.availability-toggle.inactive {
+    background: #cfc9c1;
+}
+
+.availability-text.available {
+    color: #557048;
+}
+
+.availability-text.unavailable {
+    color: #8d857d;
+}
+
+.view-button {
+    border-color: #b9a48f;
+    color: #70513a;
+}
+
+.view-button:hover {
+    background: #f3ebe2;
+}
+
+.edit-button {
+    border-color: #c9a17e;
+    color: #8b431c;
+}
+
+.edit-button:hover {
+    background: #f7ede3;
+}
+
+.pagination-button {
+    border-color: #d9cfc3;
+    background: #fffdf9;
+    color: #51483f;
+}
+
+.pagination-button:hover {
+    background: #f0e9df;
+}

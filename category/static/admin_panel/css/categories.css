@@ -148,11 +148,13 @@
     .category-grid {
         display: grid;
 
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
 
-        gap: 14px;
+        gap: 16px;
+
+        align-items: start;
     }
-
+    
 
     /* =========================
        CATEGORY CARD
@@ -443,17 +445,163 @@
         color: #9a6700;
     }
 
+    /* =========================================================
+       SMARTCAFE CATEGORY THEME
+       ========================================================= */
+
+    .page-title {
+        color: #2b241f;
+    }
+
+    .page-subtitle {
+        color: #8a8179;
+    }
+
+    .add-category-button {
+        background: #8b431c;
+    }
+
+    .add-category-button:hover {
+        background: #703515;
+    }
+
+    .search-input {
+        background: #fffdf9;
+        border-color: #ddd4c9;
+    }
+
+    .search-input:focus {
+        border-color: #8b431c;
+    }
+
+    .search-button {
+        background: #8b431c;
+    }
+
+    .search-button:hover {
+        background: #703515;
+    }
+
+    .clear-button {
+        background: #fffdf9;
+        border-color: #ddd4c9;
+        color: #5f564e;
+    }
+
+    .clear-button:hover {
+        background: #f0e9df;
+    }
+
+    .category-card {
+        background: #fffdf9;
+        border-color: #e2d9ce;
+    }
+
+    .category-card:hover {
+        box-shadow: 0 5px 18px rgba(73, 54, 37, 0.08);
+    }
+
+    .category-name {
+        color: #2b241f;
+    }
+
+    .category-count {
+        color: #978c81;
+    }
+
+    .category-description {
+        color: #6f665e;
+    }
+
+    .status-badge.active {
+        background: #e3ecdf;
+        color: #4d6844;
+    }
+
+    .status-badge.inactive {
+        background: #eeeae4;
+        color: #8d857d;
+    }
+
+    .status-toggle.active {
+        background: #5c7350;
+    }
+
+    .status-toggle.inactive {
+        background: #cec8c0;
+    }
+
+    .category-actions {
+        border-top-color: #ebe3da;
+    }
+
+    .edit-button {
+        border-color: #c9a17e;
+        background: #fffdf9;
+        color: #8b431c;
+    }
+
+    .edit-button:hover {
+        background: #f6ebe0;
+    }
+
+    .toggle-button {
+        border-color: #d9cfc3;
+        background: #fffdf9;
+        color: #5c544c;
+    }
+
+    .toggle-button:hover {
+        background: #f1ebe2;
+    }
+
+    .empty-state {
+        background: #fffdf9;
+        border-color: #e2d9ce;
+    }
+
+    .page-link {
+        border-color: #d9cfc3;
+        background: #fffdf9;
+        color: #51483f;
+    }
+
+    .page-link:hover {
+        background: #f0e9df;
+    }
+
+    .page-link.current {
+        border-color: #8b431c;
+        background: #8b431c;
+    }
+
 
     /* =========================
        RESPONSIVE
     ========================= */
 
-    @media (max-width: 850px) {
-
+    @media (max-width: 1200px) {
+    
+        .category-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    
+    }
+    
+    @media (max-width: 900px) {
+    
+        .category-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    
+    }
+    
+    @media (max-width: 600px) {
+    
         .category-grid {
             grid-template-columns: 1fr;
         }
-
+    
     }
 
     @media (max-width: 600px) {

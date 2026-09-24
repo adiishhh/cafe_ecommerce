@@ -28,7 +28,7 @@ def category_list(request):
             Q(description__icontains=query)
         )
 
-    paginator = Paginator(categories, 6)
+    paginator = Paginator(categories, 8)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 

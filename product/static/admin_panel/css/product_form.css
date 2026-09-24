@@ -400,6 +400,97 @@ textarea.form-input {
     color: #c62828;
 }
 
+/* =========================================================
+   SMARTCAFE PRODUCT FORM THEME
+   ========================================================= */
+
+.form-header h1 {
+    color: #2b241f;
+}
+
+.form-card {
+    background: #fffdf9;
+    border-color: #e2d9ce;
+    box-shadow: 0 5px 18px rgba(73, 54, 37, 0.05);
+}
+
+.form-group label {
+    color: #40372f;
+}
+
+.form-input {
+    border-color: #d9cfc3;
+    background: #faf7f2;
+    color: #2b241f;
+}
+
+.form-input:focus {
+    border-color: #8b431c;
+    box-shadow: 0 0 0 2px rgba(139, 67, 28, 0.08);
+}
+
+.form-checkbox {
+    accent-color: #8b431c;
+}
+
+.image-section {
+    border-top-color: #ebe3da;
+}
+
+.form-help {
+    color: #8a8179;
+}
+
+.image-upload input[type="file"] {
+    border-color: #cfc3b7;
+    background: #faf7f2;
+}
+
+.image-upload input[type="file"]:hover {
+    border-color: #8b431c;
+}
+
+.existing-image {
+    border-color: #e2d9ce;
+    background: #f8f4ee;
+}
+
+.crop-modal-content {
+    background: #fffdf9;
+}
+
+.crop-container {
+    background: #f0ebe3;
+}
+
+.crop-confirm {
+    border-color: #8b431c;
+    background: #8b431c;
+}
+
+.crop-confirm:hover {
+    background: #703515;
+}
+
+.cancel-button {
+    border-color: #d8cec3;
+    background: #fffdf9;
+    color: #5d554d;
+}
+
+.cancel-button:hover {
+    background: #f1ebe3;
+}
+
+.submit-button {
+    border-color: #8b431c;
+    background: #8b431c;
+}
+
+.submit-button:hover {
+    background: #703515;
+}
+
 
 /* Responsive */
 

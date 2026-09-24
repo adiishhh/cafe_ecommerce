@@ -1,6 +1,7 @@
 {% extends "admin_panel/base.html" %}
 {% load static %}
 
+
 {% block extra_css %}
 
 <link
@@ -18,11 +19,12 @@
 
 {% block content %}
 
-
-
-
 <div class="form-page">
 
+
+    <!-- =========================
+         HEADER
+    ========================= -->
 
     <div class="form-header">
 
@@ -31,25 +33,47 @@
         </h1>
 
         <p class="form-subtitle">
+
             {% if category %}
                 Update the category details below.
             {% else %}
                 Create a new category for your menu.
             {% endif %}
+
         </p>
 
     </div>
 
 
-    <div class="form-card">
+    <!-- =========================
+         FORM CARD
+    ========================= -->
 
+    <div class="form-card">
 
         <form method="POST">
 
             {% csrf_token %}
 
 
-            <!-- NAME -->
+            {% if form.non_field_errors %}
+
+                <div class="form-error">
+
+                    {% for error in form.non_field_errors %}
+
+                        {{ error }}
+
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+
+            <!-- =========================
+                 CATEGORY NAME
+            ========================= -->
 
             <div class="form-group">
 
@@ -60,7 +84,15 @@
                     Category Name
                 </label>
 
-                {{ form.name }}
+                <input
+                    type="text"
+                    name="{{ form.name.html_name }}"
+                    id="{{ form.name.id_for_label }}"
+                    value="{{ form.name.value|default:'' }}"
+                    class="form-input"
+                    placeholder="Enter category name"
+                    {% if form.name.field.required %}required{% endif %}
+                >
 
                 {% for error in form.name.errors %}
 
@@ -73,7 +105,9 @@
             </div>
 
 
-            <!-- DESCRIPTION -->
+            <!-- =========================
+                 DESCRIPTION
+            ========================= -->
 
             <div class="form-group">
 
@@ -84,7 +118,13 @@
                     Description
                 </label>
 
-                {{ form.description }}
+                <textarea
+                    name="{{ form.description.html_name }}"
+                    id="{{ form.description.id_for_label }}"
+                    class="form-textarea"
+                    placeholder="Enter category description"
+                    {% if form.description.field.required %}required{% endif %}
+                >{{ form.description.value|default:'' }}</textarea>
 
                 {% for error in form.description.errors %}
 
@@ -97,7 +137,9 @@
             </div>
 
 
-            <!-- ACTIONS -->
+            <!-- =========================
+                 ACTIONS
+            ========================= -->
 
             <div class="form-actions">
 
@@ -119,7 +161,6 @@
 
 
         </form>
-
 
     </div>
 

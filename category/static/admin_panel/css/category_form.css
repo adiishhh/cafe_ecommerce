@@ -1,148 +1,349 @@
+/* =========================================================
+   CATEGORY FORM
+   SmartCafe Admin Theme
+   ========================================================= */
+
+
+/* =========================
+   PAGE
+   ========================= */
+
+.form-page {
+    width: 100%;
+
+    max-width: 900px;
+
+    margin: 0 auto;
+}
+
+
+/* =========================
+   HEADER
+   ========================= */
+
+.form-header {
+    margin-bottom: 27px;
+}
+
+.form-title {
+    margin: 0;
+
+    font-size: 32px;
+    font-weight: 700;
+
+    color: #2b241f;
+}
+
+.form-subtitle {
+    margin: 6px 0 0;
+
+    color: #8a8179;
+
+    font-size: 14px;
+}
+
+
+/* =========================
+   FORM CARD
+   ========================= */
+
+.form-card {
+    width: 100%;
+
+    padding: 30px 38px;
+
+    background: #fffdf9;
+
+    border: 1px solid #e2d9ce;
+    border-radius: 12px;
+
+    box-shadow:
+        0 4px 16px rgba(73, 54, 37, 0.05);
+}
+
+
+/* =========================
+   FORM GROUP
+   ========================= */
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-label {
+    display: block;
+
+    margin-bottom: 9px;
+
+    color: #2b241f;
+
+    font-size: 15px;
+    font-weight: 600;
+}
+
+
+/* =========================
+   INPUTS
+   ========================= */
+
+.form-input,
+.form-textarea {
+    display: block;
+
+    width: 100%;
+
+    border: 1px solid #d9cfc3;
+    border-radius: 9px;
+
+    background: #faf7f2;
+
+    color: #2b241f;
+
+    font-family: inherit;
+    font-size: 14px;
+
+    outline: none;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        background 0.15s ease;
+}
+
+
+/* Category name */
+
+.form-input {
+    height: 52px;
+
+    padding: 0 16px;
+}
+
+
+/* Description */
+
+.form-textarea {
+    min-height: 145px;
+
+    padding: 14px 16px;
+
+    resize: vertical;
+
+    line-height: 1.5;
+}
+
+
+/* Placeholder */
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+    color: #9d958c;
+}
+
+
+/* Focus */
+
+.form-input:focus,
+.form-textarea:focus {
+    border-color: #8b431c;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 0 0 3px rgba(139, 67, 28, 0.08);
+}
+
+
+/* =========================
+   FORM ERROR
+   ========================= */
+
+.form-error {
+    margin-bottom: 22px;
+
+    padding: 12px 14px;
+
+    border-radius: 8px;
+
+    background: #fbeceb;
+
+    color: #b42318;
+
+    font-size: 13px;
+}
+
+
+/* Field errors */
+
+.field-error {
+    margin-top: 7px;
+
+    color: #b42318;
+
+    font-size: 12px;
+
+    line-height: 1.4;
+}
+
+
+/* =========================
+   ACTIONS
+   ========================= */
+
+.form-actions {
+    display: flex;
+
+    justify-content: flex-end;
+    align-items: center;
+
+    gap: 10px;
+
+    margin-top: 30px;
+    padding-top: 22px;
+
+    border-top: 1px solid #ebe3da;
+}
+
+
+.cancel-button,
+.submit-button {
+    min-width: 120px;
+
+    height: 42px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 20px;
+
+    border-radius: 8px;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease;
+}
+
+
+/* Cancel */
+
+.cancel-button {
+    border: 1px solid #d8cec3;
+
+    background: #ffffff;
+
+    color: #5d554d;
+}
+
+.cancel-button:hover {
+    background: #f2ece4;
+}
+
+
+/* Submit */
+
+.submit-button {
+    border: 1px solid #8b431c;
+
+    background: #8b431c;
+
+    color: #ffffff;
+}
+
+.submit-button:hover {
+    background: #703515;
+
+    border-color: #703515;
+}
+
+
+/* =========================
+   MESSAGES
+   ========================= */
+
+.messages {
+    margin-bottom: 20px;
+}
+
+.message {
+    padding: 13px 16px;
+
+    border-radius: 8px;
+
+    font-size: 13px;
+}
+
+.message.success {
+    background: #e7efe3;
+
+    color: #4d6844;
+}
+
+.message.error {
+    background: #fbeceb;
+
+    color: #b42318;
+}
+
+.message.warning {
+    background: #f8f0df;
+
+    color: #8b641c;
+}
+
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 900px) {
 
     .form-page {
-        max-width: 650px;
+        max-width: 100%;
     }
 
-    .form-header {
-        margin-bottom: 22px;
+}
+
+
+@media (max-width: 700px) {
+
+    .main-content {
+        padding: 20px 15px;
+    }
+
+    .form-card {
+        padding: 24px 20px;
+
+        border-radius: 11px;
     }
 
     .form-title {
-        margin: 0;
-
-        font-size: 26px;
-        font-weight: 600;
-
-        color: #171717;
-    }
-
-    .form-subtitle {
-        margin: 5px 0 0;
-
-        font-size: 13px;
-        color: #777;
-    }
-
-
-    .form-card {
-        padding: 24px;
-
-        background: white;
-
-        border: 1px solid #e4e4e4;
-        border-radius: 12px;
-    }
-
-
-    .form-group {
-        margin-bottom: 19px;
-    }
-
-    .form-label {
-        display: block;
-
-        margin-bottom: 7px;
-
-        font-size: 12px;
-        font-weight: 600;
-
-        color: #333;
-    }
-
-
-    .form-input,
-    .form-textarea {
-        width: 100%;
-
-        padding: 10px 12px;
-
-        border: 1px solid #d9d9d9;
-        border-radius: 7px;
-
-        background: white;
-
-        font-family: inherit;
-        font-size: 13px;
-
-        outline: none;
+        font-size: 28px;
     }
 
     .form-input {
-        height: 42px;
+        height: 48px;
     }
 
     .form-textarea {
-        resize: vertical;
-
-        min-height: 105px;
+        min-height: 125px;
     }
-
-    .form-input:focus,
-    .form-textarea:focus {
-        border-color: #d94000;
-    }
-
-
-    .field-error {
-        margin-top: 6px;
-
-        color: #d93025;
-
-        font-size: 11px;
-    }
-
 
     .form-actions {
-        display: flex;
-
-        justify-content: flex-end;
-
-        gap: 8px;
-
-        margin-top: 25px;
-
-        padding-top: 18px;
-
-        border-top: 1px solid #eee;
+        flex-direction: column-reverse;
     }
 
     .cancel-button,
     .submit-button {
-        height: 38px;
-
-        padding: 0 17px;
-
-        border-radius: 7px;
-
-        font-size: 12px;
-        font-weight: 600;
-
-        cursor: pointer;
-
-        text-decoration: none;
+        width: 100%;
     }
 
-    .cancel-button {
-        display: flex;
-        align-items: center;
-
-        border: 1px solid #ddd;
-
-        background: white;
-        color: #555;
-    }
-
-    .cancel-button:hover {
-        background: #f5f5f5;
-    }
-
-    .submit-button {
-        border: none;
-
-        background: #d94000;
-        color: white;
-    }
-
-    .submit-button:hover {
-        background: #bd3900;
-    }
+}
