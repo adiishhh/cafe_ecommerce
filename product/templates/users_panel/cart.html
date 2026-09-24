@@ -58,6 +58,10 @@
             Orders
         </a>
 
+        <a href="{% url 'my_usuals' %}">
+            My Usuals
+        </a>
+
         <a href="{% url 'profile' %}">
             Profile
         </a>
@@ -223,6 +227,19 @@
                                     </p>
 
 
+                                    {% if item.instructions %}
+
+                                        <p class="cart-item-instructions">
+                                            <strong>
+                                                Instructions:
+                                            </strong>
+
+                                            {{ item.instructions }}
+                                        </p>
+
+                                    {% endif %}
+
+
                                     {% if item.is_available %}
 
 
@@ -253,6 +270,7 @@
                                             </form>
 
 
+
                                             <!-- Quantity -->
 
                                             <span
@@ -261,6 +279,7 @@
                                             >
                                                 {{ item.quantity }}
                                             </span>
+
 
 
                                             <!-- Increase -->
@@ -282,6 +301,7 @@
                                                 </button>
 
                                             </form>
+
 
 
                                             <!-- Remove -->
@@ -479,7 +499,7 @@
 
 
                 <div class="prototype-note">
-                    ✓ Final tax-inclusive amount 
+                    ✓ Final tax-inclusive amount
                 </div>
 
             </section>
@@ -488,18 +508,43 @@
 
             <!-- =============================================
                  CONTINUE
-                 ============================================= -->
+            ============================================= -->
 
-            <button
-                type="button"
-                class="continue-button"
-                {% if has_unavailable_items %}disabled{% endif %}
-            >
+            {% if save_order_mode %}
 
-                Continue · ₹<span id="continue-total">{{ total|floatformat:2 }}</span>
+                <button
+                    type="button"
+                    class="continue-button save-order-button"
+                    id="saveOrderButton"
+                    {% if has_unavailable_items %}disabled{% endif %}
+                >
 
-            </button>
+                    {% if saved_order_edit_id %}
 
+                        Update Usual · ₹<span id="continue-total">{{ total|floatformat:2 }}</span>
+
+                    {% else %}
+
+                        Save Order · ₹<span id="continue-total">{{ total|floatformat:2 }}</span>
+
+                    {% endif %}
+
+                </button>
+
+
+            {% else %}
+
+                <button
+                    type="button"
+                    class="continue-button"
+                    {% if has_unavailable_items %}disabled{% endif %}
+                >
+
+                    Continue · ₹<span id="continue-total">{{ total|floatformat:2 }}</span>
+
+                </button>
+
+            {% endif %}
 
 
             <!-- =============================================
@@ -518,7 +563,7 @@
                     type="submit"
                     class="cancel-cart-button"
                 >
-                    Cancel Order
+                    Cancel
                 </button>
 
             </form>
@@ -555,10 +600,147 @@
         {% endif %}
 
 
+
+        {% if save_order_mode and cart_items %}
+
+            <div
+                class="save-order-modal"
+                id="saveOrderModal"
+                aria-hidden="true"
+            >
+
+                <div
+                    class="save-order-modal-backdrop"
+                    data-close-save-modal
+                ></div>
+
+
+                <div
+                    class="save-order-modal-card"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="saveOrderModalTitle"
+                >
+
+
+                    <button
+                        type="button"
+                        class="save-order-modal-close"
+                        id="closeSaveOrderModal"
+                        aria-label="Close"
+                    >
+                        ×
+                    </button>
+
+
+                    <h2 id="saveOrderModalTitle">
+
+                        {% if saved_order_edit_id %}
+
+                            Update Your Usual
+
+                        {% else %}
+
+                            Save Your Usual
+
+                        {% endif %}
+
+                    </h2>
+
+
+                    <p>
+
+                        {% if saved_order_edit_id %}
+
+                            Update the name for this saved order.
+
+                        {% else %}
+
+                            Give this order a name.
+
+                        {% endif %}
+
+                    </p>
+
+
+                    <form
+                        method="POST"
+                        action="{% url 'save_usual' %}"
+                        id="saveOrderForm"
+                    >
+
+                        {% csrf_token %}
+
+
+                        <label
+                            for="savedOrderName"
+                            class="save-order-label"
+                        >
+                            Name
+
+                            <span>
+                                Optional
+                            </span>
+
+                        </label>
+
+
+                        <input
+                            type="text"
+                            id="savedOrderName"
+                            name="name"
+                            maxlength="100"
+                            placeholder="e.g. Breakfast"
+                            autocomplete="off"
+                        >
+
+
+                        <div class="save-order-modal-actions">
+
+
+                            <button
+                                type="button"
+                                class="save-order-cancel"
+                                data-close-save-modal
+                            >
+                                Cancel
+                            </button>
+
+
+                            <button
+                                type="submit"
+                                class="save-order-confirm"
+                            >
+
+                                {% if saved_order_edit_id %}
+
+                                    Update Usual
+
+                                {% else %}
+
+                                    Save Order
+
+                                {% endif %}
+
+                            </button>
+
+
+                        </div>
+
+
+                    </form>
+
+
+                </div>
+
+            </div>
+
+        {% endif %}
+
+
     </div>
 
 </div>
-
 
 
 <script>
@@ -648,7 +830,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const itemContainer = document.querySelector(
                 `.quantity-row[data-cart-item="${productId}"]`
-            );
+            )
 
             if (itemContainer) {
 
@@ -870,7 +1052,140 @@ document.addEventListener('DOMContentLoaded', function () {
 
     });
 
+
+
+    /* =====================================================
+       SAVE ORDER MODAL
+       ===================================================== */
+
+    const saveOrderButton =
+        document.getElementById(
+            'saveOrderButton'
+        );
+
+
+    const saveOrderModal =
+        document.getElementById(
+            'saveOrderModal'
+        );
+
+
+    const closeSaveOrderModal =
+        document.getElementById(
+            'closeSaveOrderModal'
+        );
+
+
+    const savedOrderName =
+        document.getElementById(
+            'savedOrderName'
+        );
+
+
+
+    function openSaveOrderModal() {
+
+        if (!saveOrderModal) {
+            return;
+        }
+
+
+        saveOrderModal.classList.add(
+            'show'
+        );
+
+
+        saveOrderModal.setAttribute(
+            'aria-hidden',
+            'false'
+        );
+
+
+        if (savedOrderName) {
+            savedOrderName.focus();
+        }
+
+    }
+
+
+
+    function closeSaveOrderModalFunction() {
+
+        if (!saveOrderModal) {
+            return;
+        }
+
+
+        saveOrderModal.classList.remove(
+            'show'
+        );
+
+
+        saveOrderModal.setAttribute(
+            'aria-hidden',
+            'true'
+        );
+
+    }
+
+
+
+    if (saveOrderButton) {
+
+        saveOrderButton.addEventListener(
+            'click',
+            openSaveOrderModal
+        );
+
+    }
+
+
+
+    if (closeSaveOrderModal) {
+
+        closeSaveOrderModal.addEventListener(
+            'click',
+            closeSaveOrderModalFunction
+        );
+
+    }
+
+
+
+    document
+        .querySelectorAll(
+            '[data-close-save-modal]'
+        )
+        .forEach(function(element) {
+
+            element.addEventListener(
+                'click',
+                closeSaveOrderModalFunction
+            );
+
+        });
+
+
+
+    document.addEventListener(
+        'keydown',
+        function(event) {
+
+            if (
+                event.key === 'Escape'
+                && saveOrderModal
+                && saveOrderModal.classList.contains('show')
+            ) {
+
+                closeSaveOrderModalFunction();
+
+            }
+
+        }
+    );
+
 });
+
 
 </script>
 

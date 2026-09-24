@@ -19,15 +19,17 @@
 
     --border: #ddd5c8;
 
-    --accent: #a84a18;
+    /* SmartCafe dark-brown theme */
+    --accent: #8b3f16;
 
-    --accent-dark: #8d3d12;
+    --accent-dark: #743312;
 
-    --accent-soft: #fff1e5;
+    --accent-soft: #f1e6d8;
 
-    --green: #2d4328;
+    /* Kept as brown aliases so existing structure stays intact */
+    --green: #8b3f16;
 
-    --green-dark: #23361f;
+    --green-dark: #743312;
 
     --danger: #c94b45;
 }
@@ -38,6 +40,7 @@
 ========================================================= */
 
 .usuals-page {
+
     min-height: 100vh;
 }
 
@@ -136,7 +139,7 @@
 
     border-radius: 10px;
 
-    background: var(--green);
+    background: var(--accent);
 
     color: #ffffff;
 
@@ -154,7 +157,7 @@
 
 .create-usual-button:hover {
 
-    background: var(--green-dark);
+    background: var(--accent-dark);
 
     transform: translateY(-1px);
 }
@@ -505,7 +508,7 @@
 
     border-radius: 9px;
 
-    background: var(--green);
+    background: var(--accent);
 
     color: #ffffff;
 
@@ -523,9 +526,16 @@
 
 .empty-create-button:hover {
 
-    background: var(--green-dark);
+    background: var(--accent-dark);
 
     transform: translateY(-1px);
+}
+
+
+.create-usual-button,
+.empty-create-button {
+
+    text-decoration: none;
 }
 
 

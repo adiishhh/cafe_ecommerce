@@ -42,6 +42,22 @@
 
 <body>
 
+{% if messages %}
+
+    <div class="messages">
+
+        {% for message in messages %}
+
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+{% endif %}
+
 
 <main class="home-page usuals-page">
 
@@ -50,9 +66,7 @@
     <div class="home-container">
 
 
-        <!-- =====================================================
-             HEADER / NAVBAR
-        ====================================================== -->
+        <!-- HEADER / NAVBAR -->
 
         <header class="home-header">
 
@@ -136,14 +150,10 @@
 
 
 
-        <!-- =====================================================
-             MY USUALS CONTENT
-        ====================================================== -->
+        <!-- MY USUALS CONTENT -->
 
         <div class="usuals-content">
 
-
-            <!-- Page Heading -->
 
             <section class="usuals-heading">
 
@@ -161,8 +171,8 @@
 
             <div class="create-usual-wrapper">
 
-                <button
-                    type="button"
+                <a
+                    href="{% url 'create_usual' %}"
                     class="create-usual-button"
                 >
 
@@ -172,7 +182,7 @@
 
                     Create Usual
 
-                </button>
+                </a>
 
             </div>
 
@@ -260,6 +270,22 @@
 
                                     </div>
 
+
+                                    {% if item.instructions %}
+
+                                        <div class="usual-item-instructions">
+
+                                            <strong>
+                                                Instructions:
+                                            </strong>
+
+                                            {{ item.instructions }}
+
+                                        </div>
+
+                                    {% endif %}
+
+
                                 {% endfor %}
 
 
@@ -269,32 +295,77 @@
 
                             <div class="usual-actions">
 
-                                <button
-                                    type="button"
-                                    class="order-again-button"
+
+                                <!-- ORDER AGAIN -->
+
+                                <form
+                                    method="POST"
+                                    action="{% url 'order_again' saved_order.id %}"
+                                    style="display: contents;"
                                 >
-                                    Order Again
-                                </button>
+
+                                    {% csrf_token %}
+
+                                    <button
+                                        type="submit"
+                                        class="order-again-button"
+                                    >
+                                        Order Again
+                                    </button>
+
+                                </form>
 
 
-                                <button
-                                    type="button"
-                                    class="icon-action edit-action"
-                                    title="Edit Usual"
-                                    aria-label="Edit Usual"
+
+                                <!-- EDIT -->
+
+                                <form
+                                    method="POST"
+                                    action="{% url 'edit_usual' saved_order.id %}"
+                                    style="display: contents;"
                                 >
-                                    <i class="fa fa-pencil"></i>
-                                </button>
+
+                                    {% csrf_token %}
+
+                                    <button
+                                        type="submit"
+                                        class="icon-action edit-action"
+                                        title="Edit Usual"
+                                        aria-label="Edit Usual"
+                                    >
+
+                                        <i class="fa fa-pencil"></i>
+
+                                    </button>
+
+                                </form>
 
 
-                                <button
-                                    type="button"
-                                    class="icon-action delete-action"
-                                    title="Delete Usual"
-                                    aria-label="Delete Usual"
+
+                                <!-- DELETE -->
+
+                                <form
+                                    method="POST"
+                                    action="{% url 'delete_usual' saved_order.id %}"
+                                    style="display: contents;"
+                                    onsubmit="return confirm('Delete this usual?');"
                                 >
-                                    <i class="fa fa-trash-o"></i>
-                                </button>
+
+                                    {% csrf_token %}
+
+                                    <button
+                                        type="submit"
+                                        class="icon-action delete-action"
+                                        title="Delete Usual"
+                                        aria-label="Delete Usual"
+                                    >
+
+                                        <i class="fa fa-trash-o"></i>
+
+                                    </button>
+
+                                </form>
+
 
                             </div>
 
@@ -328,12 +399,13 @@
                         </p>
 
 
-                        <button
-                            type="button"
+                        <a
+                            href="{% url 'create_usual' %}"
                             class="empty-create-button"
                         >
                             Create Usual
-                        </button>
+                        </a>
+
 
                     </section>
 
