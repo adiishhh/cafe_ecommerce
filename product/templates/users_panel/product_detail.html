@@ -28,6 +28,11 @@
 
     <link
         rel="stylesheet"
+        href="{% static 'users_panel/css/home.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
         href="{% static 'users_panel/css/product_detail.css' %}"
     >
 
@@ -36,60 +41,119 @@
 
 <body>
 
-<!-- =========================================================
-     NAVBAR
-     ========================================================= -->
+    <div class='home-container'>
+        <header class="home-header">
 
-<header class="cafe-navbar">
-
-    <a href="{% url 'home' %}" class="cafe-brand">
-
-        <span class="cafe-brand-icon">
-            C
-        </span>
-
-        <span>CAFE</span>
-
-    </a>
-
-
-    <nav class="cafe-nav">
-
-        <a href="{% url 'home' %}">
-            Menu
-        </a>
-
-        <a href="#">
-            Orders
-        </a>
-
-        <a href="{% url 'profile' %}">
-            Profile
-        </a>
-
-    </nav>
-
-
-    <a href="{% url 'profile' %}" class="cafe-profile">
-
-        {% if request.user.profile_image %}
-
-            <img
-                src="{{ request.user.profile_image.url }}"
-                alt="Profile"
+            <a
+                href="{% url 'home' %}"
+                class="brand"
             >
 
-        {% else %}
+                <span class="brand-icon">
+                    ☕
+                </span>
 
-            <span>
-                {{ request.user.name|first|upper }}
-            </span>
+                <span class="brand-name">
+                    CAFE
+                </span>
 
-        {% endif %}
+            </a>
 
-    </a>
+            <nav class="main-navigation">
+            
+                <a
+                    href="{% url 'home' %}"
+                    class="main-nav-item active"
+                >
+                    Menu
+                </a>
+            
+            
+                <a
+                    href="#"
+                    class="main-nav-item"
+                >
+                    Orders
+                </a>
+            
+            
+                {% if user.is_authenticated %}
+            
+                    <a
+                        href="{% url 'my_usuals' %}"
+                        class="main-nav-item"
+                    >
+                        My Usuals
+                    </a>
+                
+                
+                    <a
+                        href="{% url 'profile' %}"
+                        class="main-nav-item"
+                    >
+                        Profile
+                    </a>
+                
+                {% else %}
+                
+                    <a
+                        href="{% url 'login' %}"
+                        class="main-nav-item"
+                    >
+                        My Usuals
+                    </a>
+                
+                
+                    <a
+                        href="{% url 'login' %}"
+                        class="main-nav-item"
+                    >
+                        Profile
+                    </a>
+                
+                {% endif %}
+                
+            </nav>
 
-</header>
+
+            <div class="header-actions">
+
+                {% if user.is_authenticated %}
+
+                    <a
+                        href="{% url 'profile' %}"
+                        class="profile-avatar"
+                    >
+
+                        {% if user.profile_image %}
+
+                            <img
+                                src="{{ user.profile_image.url }}"
+                                alt="Profile image"
+                            >
+
+                        {% else %}
+
+                            {{ user.name|first|upper }}
+
+                        {% endif %}
+
+                    </a>
+
+                {% else %}
+
+                    <a
+                        href="{% url 'login' %}"
+                        class="sign-in-button"
+                    >
+                        Sign In
+                    </a>
+
+                {% endif %}
+
+            </div>
+
+        </header>
 
 
 {% if messages %}
@@ -202,30 +266,35 @@
                     </div>
 
 
-                        {% if product.images.all|length > 1 %}
+                    {% if product.images.all|length > 1 %}
 
-                            <button
-                                class="carousel-control-prev product-carousel-control"
-                                type="button"
-                                data-bs-target="#productImageCarousel"
-                                data-bs-slide="prev"
-                                aria-label="Previous image"
-                            >
-                                <span class="carousel-control-prev-icon"></span>
-                            </button>
-                        
-                        
-                            <button
-                                class="carousel-control-next product-carousel-control"
-                                type="button"
-                                data-bs-target="#productImageCarousel"
-                                data-bs-slide="next"
-                                aria-label="Next image"
-                            >
-                                <span class="carousel-control-next-icon"></span>
-                            </button>
-                        
-                        {% endif %}
+                        <button
+                            class="carousel-control-prev product-carousel-control"
+                            type="button"
+                            data-bs-target="#productImageCarousel"
+                            data-bs-slide="prev"
+                            aria-label="Previous image"
+                        >
+
+                            <span class="carousel-control-prev-icon"></span>
+
+                        </button>
+
+
+                        <button
+                            class="carousel-control-next product-carousel-control"
+                            type="button"
+                            data-bs-target="#productImageCarousel"
+                            data-bs-slide="next"
+                            aria-label="Next image"
+                        >
+
+                            <span class="carousel-control-next-icon"></span>
+
+                        </button>
+
+                    {% endif %}
+
                 </div>
 
 
@@ -266,139 +335,89 @@
 
                 {% if related_products %}
 
-                    <section class="related-products-section">
-
-                        <div class="related-products-header">
-
-                            <h2>
-                                Related Products
-                            </h2>
-
-                        </div>
-
-
-                        <div
-                            id="relatedProductsCarousel"
-                            class="carousel slide related-products-carousel"
-                        >
-
-                            <div class="carousel-inner">
-
-
-                                {% for related_product in related_products %}
-
-                                    {% if forloop.first or forloop.counter0|divisibleby:4 %}
-
-                                        <div
-                                            class="carousel-item {% if forloop.first %}active{% endif %}"
-                                        >
-
-                                            <div class="row related-products-row">
-
-                                    {% endif %}
-
-
-                                        <div class="col-6 col-md-3">
-
-                                            <a
-                                                href="{% url 'customer_product_detail' related_product.id %}"
-                                                class="related-product-card"
+                <section class="related-products-section">
+                
+                
+                    <div class="related-products-header">
+                    
+                        <h2>
+                            Related Products
+                        </h2>
+                    
+                    </div>
+                
+                
+                    <div class="related-products-grid">
+                    
+                    
+                        {% for related_product in related_products %}
+                    
+                            <a
+                                href="{% url 'customer_product_detail' related_product.id %}"
+                                class="related-product-card"
+                            >
+                    
+                                {% with related_image=related_product.images.all|first %}
+                    
+                    
+                                    <div class="related-product-image">
+                                    
+                                    
+                                        {% if related_image %}
+                                    
+                                            <img
+                                                src="{{ related_image.image.url }}"
+                                                alt="{{ related_product.name }}"
                                             >
-
-                                                {% with related_image=related_product.images.all|first %}
-
-                                                    <div class="related-product-image">
-
-                                                        {% if related_image %}
-
-                                                            <img
-                                                                src="{{ related_image.image.url }}"
-                                                                alt="{{ related_product.name }}"
-                                                            >
-
-                                                        {% else %}
-
-                                                            <div class="related-product-no-image">
-                                                                No image
-                                                            </div>
-
-                                                        {% endif %}
-
-
-                                                        {% if not related_product.is_active or not related_product.category.is_active %}
-
-                                                            <div class="related-product-unavailable">
-                                                                Unavailable
-                                                            </div>
-
-                                                        {% endif %}
-
-                                                    </div>
-
-
-                                                    <div class="related-product-info">
-
-                                                        <h3>
-                                                            {{ related_product.name }}
-                                                        </h3>
-
-                                                        <strong>
-                                                            ₹{{ related_product.price }}
-                                                        </strong>
-
-                                                    </div>
-
-                                                {% endwith %}
-
-                                            </a>
-
-                                        </div>
-
-
-                                    {% if forloop.counter|divisibleby:4 or forloop.last %}
-
+                                    
+                                        {% else %}
+                                    
+                                            <div class="related-product-no-image">
+                                                No image
                                             </div>
-
-                                        </div>
-
-                                    {% endif %}
-
-                                {% endfor %}
-
-                            </div>
-
-
-                            {% if related_products|length > 4 %}
-                                                    
-                                <button
-                                    class="carousel-control-prev related-carousel-control"
-                                    type="button"
-                                    data-bs-target="#relatedProductsCarousel"
-                                    data-bs-slide="prev"
-                                    aria-label="Previous related products"
-                                >
-                                    <span class="carousel-control-prev-icon"></span>
-                                </button>
-                            
-                            
-                                <button
-                                    class="carousel-control-next related-carousel-control"
-                                    type="button"
-                                    data-bs-target="#relatedProductsCarousel"
-                                    data-bs-slide="next"
-                                    aria-label="Next related products"
-                                >
-                                    <span class="carousel-control-next-icon"></span>
-                                </button>
-                            
-                            {% endif %}
-
-                        </div>
-
-                    </section>
-
-                {% endif %}
-
+                                        
+                                        {% endif %}
+                                        
+                                        
+                                        {% if not related_product.is_active or not related_product.category.is_active %}
+                                        
+                                            <div class="related-product-unavailable">
+                                                Unavailable
+                                            </div>
+                                        
+                                        {% endif %}
+                                        
+                                        
+                                    </div>
+                                
+                                
+                                    <div class="related-product-info">
+                                    
+                                        <h3>
+                                            {{ related_product.name }}
+                                        </h3>
+                                    
+                                        <strong>
+                                            ₹{{ related_product.price }}
+                                        </strong>
+                                    
+                                    </div>
+                                
+                                
+                                {% endwith %}
+                                
+                            </a>
+                        
+                        {% endfor %}
+                        
+                        
+                    </div>
+                
+                
+                </section>
+            
+            {% endif %}
+            
 
             </div>
 
@@ -442,123 +461,6 @@
                     </div>
 
 
-                    <!-- QUANTITY -->
-
-                    <div class="quantity-section">
-
-                        <label>
-                            QUANTITY
-                        </label>
-
-
-                        <div class="quantity-controls">
-
-                            <button
-                                type="button"
-                                id="decreaseQuantity"
-                            >
-                                −
-                            </button>
-
-
-                            <span id="quantity">
-                                1
-                            </span>
-
-
-                            <button
-                                type="button"
-                                id="increaseQuantity"
-                            >
-                                +
-                            </button>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- SPECIAL INSTRUCTIONS -->
-
-                    <div class="instructions-section">
-
-                        <label>
-                            SPECIAL INSTRUCTIONS
-                        </label>
-
-
-                        <div class="instruction-options">
-
-                            <button type="button">
-                                Less spicy
-                            </button>
-
-                            <button type="button">
-                                No onions
-                            </button>
-
-                            <button type="button">
-                                Extra sauce
-                            </button>
-
-                            <button type="button">
-                                Less sugar
-                            </button>
-
-                            <button type="button">
-                                No ice
-                            </button>
-
-                            <button type="button">
-                                Extra crispy
-                            </button>
-
-                        </div>
-
-
-                        <textarea
-                            placeholder="Or type your own instructions..."
-                            disabled
-                        ></textarea>
-
-                    </div>
-
-
-                    <!-- REVIEWS -->
-
-                    <div class="reviews-section">
-
-                        <label>
-                            CUSTOMER REVIEWS
-                        </label>
-
-
-                        <div class="dummy-review">
-
-                            <div class="review-header">
-
-                                <strong>
-                                    Priya S.
-                                </strong>
-
-                                <span>
-                                    ★★★★★
-                                </span>
-
-                            </div>
-
-
-                            <p>
-                                Perfect on a hot afternoon. The caramel touch is lovely!
-                            </p>
-
-                        </div>
-
-                    </div>
-
-
-                    <!-- ADD TO ORDER -->
-
                     <form
                         method="POST"
                         action="{% url 'add_to_cart' product.id %}"
@@ -567,6 +469,155 @@
 
                         {% csrf_token %}
 
+
+                        <!-- QUANTITY -->
+
+                        <div class="quantity-section">
+
+                            <label>
+                                QUANTITY
+                            </label>
+
+
+                            <div class="quantity-controls">
+
+                                <button
+                                    type="button"
+                                    id="decreaseQuantity"
+                                >
+                                    −
+                                </button>
+
+
+                                <span id="quantity">
+                                    1
+                                </span>
+
+
+                                <button
+                                    type="button"
+                                    id="increaseQuantity"
+                                >
+                                    +
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- SPECIAL INSTRUCTIONS -->
+
+                        <div class="instructions-section">
+
+                            <label>
+                                SPECIAL INSTRUCTIONS
+                            </label>
+
+
+                            <div class="instruction-options">
+
+                                <button
+                                    type="button"
+                                    class="instruction-option"
+                                    data-instruction="Less spicy"
+                                >
+                                    Less spicy
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    class="instruction-option"
+                                    data-instruction="No onions"
+                                >
+                                    No onions
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    class="instruction-option"
+                                    data-instruction="Extra sauce"
+                                >
+                                    Extra sauce
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    class="instruction-option"
+                                    data-instruction="Less sugar"
+                                >
+                                    Less sugar
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    class="instruction-option"
+                                    data-instruction="No ice"
+                                >
+                                    No ice
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    class="instruction-option"
+                                    data-instruction="Extra crispy"
+                                >
+                                    Extra crispy
+                                </button>
+
+                            </div>
+
+
+                            <textarea
+                                name="instructions"
+                                id="instructionsInput"
+                                placeholder="Or type your own instructions..."
+                                maxlength="500"
+                            ></textarea>
+
+                        </div>
+
+
+                        <!-- REVIEWS -->
+
+                        <div class="reviews-section">
+
+                            <label>
+                                CUSTOMER REVIEWS
+                            </label>
+
+
+                            <div class="dummy-review">
+
+                                <div class="review-header">
+
+                                    <strong>
+                                        Priya S.
+                                    </strong>
+
+                                    <span>
+                                        ★★★★★
+                                    </span>
+
+                                </div>
+
+
+                                <p>
+                                    Perfect on a hot afternoon. The caramel touch is lovely!
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- ADD TO ORDER / USUAL -->
 
                         <input
                             type="hidden"
@@ -582,7 +633,7 @@
                         >
 
                             <span id="addOrderText">
-                                Add 1 to Order
+                                    Add 1 to Order
                             </span>
 
 
@@ -644,6 +695,8 @@
     </div>
 
 </div>
+</div>
+
 
 
 <!-- =========================
@@ -733,6 +786,7 @@ thumbnails.forEach(
 );
 
 
+
 /* =========================
    IMAGE ZOOM
    ========================= */
@@ -776,6 +830,7 @@ function closeImageZoom() {
         .classList.remove('show');
 
 }
+
 
 
 /* =========================
@@ -840,7 +895,7 @@ function updateQuantity() {
 
 
     addOrderText.textContent =
-        `Add ${quantity} to Order`;
+        `Add ${quantity} to {% if save_order_mode %}Usual{% else %}Order{% endif %}`;
 
 
     orderTotal.textContent =
@@ -907,6 +962,93 @@ if (
     );
 
 }
+
+
+
+/* =========================
+   SPECIAL INSTRUCTIONS
+   ========================= */
+
+const instructionButtons =
+    document.querySelectorAll(
+        '.instruction-option'
+    );
+
+
+const instructionsInput =
+    document.getElementById(
+        'instructionsInput'
+    );
+
+
+instructionButtons.forEach(
+    function(button) {
+
+        button.addEventListener(
+            'click',
+            function() {
+
+                const instruction =
+                    button.dataset.instruction;
+
+
+                const currentInstructions =
+                    instructionsInput.value
+                        .split(',')
+                        .map(
+                            function(item) {
+                                return item.trim();
+                            }
+                        )
+                        .filter(
+                            function(item) {
+                                return item.length > 0;
+                            }
+                        );
+
+
+                const existingIndex =
+                    currentInstructions.indexOf(
+                        instruction
+                    );
+
+
+                if (existingIndex >= 0) {
+
+                    currentInstructions.splice(
+                        existingIndex,
+                        1
+                    );
+
+
+                    button.classList.remove(
+                        'selected'
+                    );
+
+                } else {
+
+                    currentInstructions.push(
+                        instruction
+                    );
+
+
+                    button.classList.add(
+                        'selected'
+                    );
+
+                }
+
+
+                instructionsInput.value =
+                    currentInstructions.join(
+                        ', '
+                    );
+
+            }
+        );
+
+    }
+);
 
 
 </script>
