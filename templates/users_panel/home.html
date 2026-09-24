@@ -83,43 +83,60 @@
 
             </a>
 
-
             <nav class="main-navigation">
-
+            
                 <a
                     href="{% url 'home' %}"
                     class="main-nav-item active"
                 >
                     Menu
                 </a>
-
+            
+            
                 <a
                     href="#"
                     class="main-nav-item"
                 >
                     Orders
                 </a>
-
+            
+            
                 {% if user.is_authenticated %}
-
+            
+                    <a
+                        href="{% url 'my_usuals' %}"
+                        class="main-nav-item"
+                    >
+                        My Usuals
+                    </a>
+                
+                
                     <a
                         href="{% url 'profile' %}"
                         class="main-nav-item"
                     >
                         Profile
                     </a>
-
+                
                 {% else %}
-
+                
+                    <a
+                        href="{% url 'login' %}"
+                        class="main-nav-item"
+                    >
+                        My Usuals
+                    </a>
+                
+                
                     <a
                         href="{% url 'login' %}"
                         class="main-nav-item"
                     >
                         Profile
                     </a>
-
+                
                 {% endif %}
-
+                
             </nav>
 
 

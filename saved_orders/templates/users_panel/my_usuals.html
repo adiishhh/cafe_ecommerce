@@ -1,0 +1,357 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>My Usuals | SmartCafe</title>
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="{% static 'common/images/favicon.png' %}"
+    >
+
+    <!-- Existing SmartCafe header/navbar -->
+    <link
+        rel="stylesheet"
+        href="{% static 'users_panel/css/home.css' %}"
+    >
+
+    <!-- My Usuals -->
+    <link
+        rel="stylesheet"
+        href="{% static 'users_panel/css/my_usuals.css' %}"
+    >
+
+    <link
+        href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"
+        rel="stylesheet"
+    >
+
+</head>
+
+
+<body>
+
+
+<main class="home-page usuals-page">
+
+    <!-- EXACT SAME CONTAINER STRUCTURE AS HOME -->
+
+    <div class="home-container">
+
+
+        <!-- =====================================================
+             HEADER / NAVBAR
+        ====================================================== -->
+
+        <header class="home-header">
+
+            <a
+                href="{% url 'home' %}"
+                class="brand"
+            >
+
+                <span class="brand-icon">
+                    ☕
+                </span>
+
+                <span class="brand-name">
+                    CAFE
+                </span>
+
+            </a>
+
+
+            <nav class="main-navigation">
+
+                <a
+                    href="{% url 'home' %}"
+                    class="main-nav-item"
+                >
+                    Menu
+                </a>
+
+
+                <a
+                    href="#"
+                    class="main-nav-item"
+                >
+                    Orders
+                </a>
+
+
+                <a
+                    href="{% url 'my_usuals' %}"
+                    class="main-nav-item active"
+                >
+                    My Usuals
+                </a>
+
+
+                <a
+                    href="{% url 'profile' %}"
+                    class="main-nav-item"
+                >
+                    Profile
+                </a>
+
+            </nav>
+
+
+            <div class="header-actions">
+
+                <a
+                    href="{% url 'profile' %}"
+                    class="profile-avatar"
+                >
+
+                    {% if user.profile_image %}
+
+                        <img
+                            src="{{ user.profile_image.url }}"
+                            alt="Profile image"
+                        >
+
+                    {% else %}
+
+                        {{ user.name|first|upper }}
+
+                    {% endif %}
+
+                </a>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- =====================================================
+             MY USUALS CONTENT
+        ====================================================== -->
+
+        <div class="usuals-content">
+
+
+            <!-- Page Heading -->
+
+            <section class="usuals-heading">
+
+                <h1>
+                    My Usuals
+                </h1>
+
+                <p>
+                    Saved combinations for quick reordering
+                </p>
+
+            </section>
+
+            <!-- Create Usual -->
+
+            <div class="create-usual-wrapper">
+
+                <button
+                    type="button"
+                    class="create-usual-button"
+                >
+
+                    <span class="create-icon">
+                        +
+                    </span>
+
+                    Create Usual
+
+                </button>
+
+            </div>
+
+
+
+            <!-- Saved Usuals -->
+
+            <section class="saved-usuals">
+
+
+                {% if saved_orders %}
+
+
+                    {% for saved_order in saved_orders %}
+
+
+                        <article class="usual-card">
+
+
+                            <div class="usual-card-header">
+
+                                <div class="usual-title-area">
+
+                                    <h2>
+
+                                        {% if saved_order.name %}
+
+                                            {{ saved_order.name }}
+
+                                        {% else %}
+
+                                            My Usual
+
+                                        {% endif %}
+
+                                    </h2>
+
+
+                                    <p class="usual-date">
+
+                                        Saved
+                                        {{ saved_order.updated_at|timesince }}
+                                        ago
+
+                                    </p>
+
+                                </div>
+
+
+                                <div class="usual-total">
+
+                                    ₹{{ saved_order.total_amount|floatformat:2 }}
+
+                                </div>
+
+                            </div>
+
+
+
+                            <div class="usual-items">
+
+
+                                {% for item in saved_order.items.all %}
+
+                                    <div class="usual-item">
+
+                                        <div class="usual-item-info">
+
+                                            <span class="item-quantity">
+                                                {{ item.quantity }}×
+                                            </span>
+
+                                            <span class="item-name">
+                                                {{ item.product.name }}
+                                            </span>
+
+                                        </div>
+
+
+                                        <span class="item-price">
+
+                                            ₹{{ item.item_total|floatformat:2 }}
+
+                                        </span>
+
+                                    </div>
+
+                                {% endfor %}
+
+
+                            </div>
+
+
+
+                            <div class="usual-actions">
+
+                                <button
+                                    type="button"
+                                    class="order-again-button"
+                                >
+                                    Order Again
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    class="icon-action edit-action"
+                                    title="Edit Usual"
+                                    aria-label="Edit Usual"
+                                >
+                                    <i class="fa fa-pencil"></i>
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    class="icon-action delete-action"
+                                    title="Delete Usual"
+                                    aria-label="Delete Usual"
+                                >
+                                    <i class="fa fa-trash-o"></i>
+                                </button>
+
+                            </div>
+
+
+                        </article>
+
+
+                    {% endfor %}
+
+
+                {% else %}
+
+
+                    <!-- Empty State -->
+
+                    <section class="empty-state">
+
+                        <div class="empty-icon">
+                            ☆
+                        </div>
+
+
+                        <h2>
+                            No Usuals Yet
+                        </h2>
+
+
+                        <p>
+                            Save your favourite food combinations here
+                            for quick reordering.
+                        </p>
+
+
+                        <button
+                            type="button"
+                            class="empty-create-button"
+                        >
+                            Create Usual
+                        </button>
+
+                    </section>
+
+
+                {% endif %}
+
+
+            </section>
+
+
+        </div>
+
+
+    </div>
+
+</main>
+
+
+</body>
+
+</html>

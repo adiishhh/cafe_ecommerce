@@ -440,6 +440,48 @@ a {
     font-weight: 600;
 }
 
+/* =========================================================
+   MY_USUALS
+   ========================================================= */
+
+.my-usuals-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 20px;
+
+    color: inherit;
+
+    transition: background 0.15s ease;
+}
+
+.my-usuals-link:hover {
+    background: #faf6ef;
+}
+
+.my-usuals-content h2 {
+    margin: 0 0 5px;
+
+    color: #30271f;
+
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.my-usuals-content p {
+    margin: 0;
+
+    color: #817568;
+
+    font-size: 13px;
+}
+
+.my-usuals-arrow {
+    color: #8b3f16;
+
+    font-size: 21px;
+}
 
 /* =========================================================
    SECURITY

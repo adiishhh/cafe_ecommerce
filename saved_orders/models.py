@@ -15,6 +15,10 @@ class SavedOrder(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    @property
+    def total_amount(self):
+        return sum(item.item_total for item in self.items.all())
+
     def __str__(self):
         return self.name
 
@@ -32,6 +36,10 @@ class SavedOrderItem(models.Model):
     )
     quantity = models.PositiveIntegerField()
     instructions = models.TextField(blank=True)
+
+    @property
+    def item_total(self):
+        return self.product.price * self.quantity
 
     def __str__(self):
         return f"{self.saved_order.name} - {self.product.name}"

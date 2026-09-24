@@ -51,24 +51,38 @@
 
 
                 <nav class="profile-nav">
-
-                    <a href="#personal-information"
-                       class="profile-nav-link">
+                
+                    <a
+                        href="#personal-information"
+                        class="profile-nav-link"
+                    >
                         <span>Personal Information</span>
                     </a>
-
-
-                    <a href="#delivery-address"
-                       class="profile-nav-link">
+                
+                
+                    <a
+                        href="#delivery-address"
+                        class="profile-nav-link"
+                    >
                         <span>Delivery Address</span>
                     </a>
-
-
-                    <a href="#security"
-                       class="profile-nav-link">
+                
+                
+                    <a
+                        href="#my-usuals"
+                        class="profile-nav-link"
+                    >
+                        <span>My Usuals</span>
+                    </a>
+                
+                
+                    <a
+                        href="#security"
+                        class="profile-nav-link"
+                    >
                         <span>Security</span>
                     </a>
-
+                
                 </nav>
 
 
@@ -276,6 +290,31 @@
                 </section>
 
 
+                <section class="profile-section my-usuals-section"
+                         id="my-usuals">
+
+                    <a href="{% url 'my_usuals' %}"
+                       class="my-usuals-link">
+
+                        <div class="my-usuals-content">
+
+                            <h2>
+                                My Usuals
+                            </h2>
+
+                            <p>
+                                Manage Saved Orders
+                            </p>
+
+                        </div>
+
+                        <span class="my-usuals-arrow">
+                            →
+                        </span>
+
+                    </a>
+
+                </section>
 
                 <!-- Security -->
 

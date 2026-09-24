@@ -24,8 +24,8 @@ urlpatterns = [
     path('', include('users.urls')),
     path('', include('category.urls')),
     path('', include('product.urls')),
-    path("accounts/", include("allauth.urls")
-),
+    path('', include("saved_orders.urls")),
+    path("accounts/", include("allauth.urls")),
 ]
 if settings.DEBUG:
     urlpatterns += static(

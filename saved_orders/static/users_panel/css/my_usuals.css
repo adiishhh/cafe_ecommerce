@@ -1,0 +1,625 @@
+/* =========================================================
+   MY USUALS
+========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+
+:root {
+
+    --surface: #fffdf9;
+
+    --surface-soft: #faf7f1;
+
+    --text: #20251d;
+
+    --muted: #77746d;
+
+    --border: #ddd5c8;
+
+    --accent: #a84a18;
+
+    --accent-dark: #8d3d12;
+
+    --accent-soft: #fff1e5;
+
+    --green: #2d4328;
+
+    --green-dark: #23361f;
+
+    --danger: #c94b45;
+}
+
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+.usuals-page {
+    min-height: 100vh;
+}
+
+
+/*
+   home.css already supplies:
+
+   - page background
+   - page padding
+   - 1380px max-width
+   - centered container
+   - navbar positioning
+
+   So we deliberately DO NOT override those here.
+*/
+
+
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.usuals-content {
+
+    width: min(760px, 100%);
+
+    margin: 0 auto;
+
+    padding: 42px 20px 60px;
+}
+
+
+/* =========================================================
+   PAGE HEADING
+========================================================= */
+
+.usuals-heading {
+
+    margin-bottom: 28px;
+}
+
+
+.usuals-heading h1 {
+
+    margin: 0;
+
+    color: var(--text);
+
+    font-family:
+        Georgia,
+        "Times New Roman",
+        serif;
+
+    font-size: 32px;
+
+    line-height: 1.15;
+}
+
+
+.usuals-heading p {
+
+    margin: 7px 0 0;
+
+    color: var(--muted);
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   CREATE USUAL
+========================================================= */
+
+.create-usual-wrapper {
+
+    margin-bottom: 20px;
+}
+
+
+.create-usual-button {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 10px;
+
+    width: 100%;
+
+    min-height: 52px;
+
+    padding: 13px 20px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background: var(--green);
+
+    color: #ffffff;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+.create-usual-button:hover {
+
+    background: var(--green-dark);
+
+    transform: translateY(-1px);
+}
+
+
+.create-icon {
+
+    font-size: 20px;
+
+    line-height: 1;
+}
+
+
+/* =========================================================
+   SAVED USUALS
+========================================================= */
+
+.saved-usuals {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 16px;
+}
+
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.usual-card {
+
+    overflow: hidden;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+
+    border-radius: 14px;
+
+    box-shadow:
+        0 2px 8px rgba(40, 32, 20, 0.05);
+}
+
+
+.usual-card-header {
+
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 20px 20px 15px;
+}
+
+
+.usual-title-area {
+
+    min-width: 0;
+}
+
+
+.usual-card-header h2 {
+
+    margin: 0;
+
+    color: var(--text);
+
+    font-size: 17px;
+
+    font-weight: 700;
+}
+
+
+.usual-date {
+
+    margin: 6px 0 0;
+
+    color: var(--muted);
+
+    font-size: 12px;
+}
+
+
+.usual-total {
+
+    flex-shrink: 0;
+
+    color: var(--accent);
+
+    font-size: 18px;
+
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   ITEMS
+========================================================= */
+
+.usual-items {
+
+    padding: 0 20px 16px;
+}
+
+
+.usual-item {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    padding: 6px 0;
+}
+
+
+.usual-item-info {
+
+    display: flex;
+
+    align-items: center;
+
+    min-width: 0;
+
+    gap: 7px;
+}
+
+
+.item-quantity {
+
+    flex-shrink: 0;
+
+    color: var(--muted);
+
+    font-size: 13px;
+}
+
+
+.item-name {
+
+    overflow: hidden;
+
+    color: var(--text);
+
+    font-size: 14px;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+.item-price {
+
+    flex-shrink: 0;
+
+    color: var(--muted);
+
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.usual-actions {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    padding: 12px 20px;
+
+    border-top: 1px solid #ece6dc;
+
+    background: var(--surface-soft);
+}
+
+
+.order-again-button {
+
+    flex: 1;
+
+    min-height: 40px;
+
+    padding: 10px 16px;
+
+    border: none;
+
+    border-radius: 9px;
+
+    background: var(--accent);
+
+    color: #ffffff;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+.order-again-button:hover {
+
+    background: var(--accent-dark);
+
+    transform: translateY(-1px);
+}
+
+
+.icon-action {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    width: 40px;
+
+    height: 40px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 9px;
+
+    background: var(--surface);
+
+    color: var(--text);
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+
+.edit-action:hover {
+
+    background: #f0eee8;
+
+    border-color: #c7c0b4;
+}
+
+
+.delete-action {
+
+    color: var(--danger);
+}
+
+
+.delete-action:hover {
+
+    background: #fff0ef;
+
+    border-color: #e5b5b2;
+}
+
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.empty-state {
+
+    padding: 55px 25px;
+
+    text-align: center;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+
+    border-radius: 14px;
+}
+
+
+.empty-icon {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    width: 68px;
+
+    height: 68px;
+
+    margin: 0 auto 20px;
+
+    border-radius: 50%;
+
+    background: var(--accent-soft);
+
+    color: var(--accent);
+
+    font-size: 30px;
+}
+
+
+.empty-state h2 {
+
+    margin: 0;
+
+    color: var(--text);
+
+    font-size: 21px;
+}
+
+
+.empty-state p {
+
+    max-width: 430px;
+
+    margin: 10px auto 23px;
+
+    color: var(--muted);
+
+    font-size: 14px;
+
+    line-height: 1.55;
+}
+
+
+.empty-create-button {
+
+    padding: 11px 23px;
+
+    border: none;
+
+    border-radius: 9px;
+
+    background: var(--green);
+
+    color: #ffffff;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+.empty-create-button:hover {
+
+    background: var(--green-dark);
+
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 700px) {
+
+    .usuals-content {
+
+        padding: 30px 16px 45px;
+    }
+
+
+    .usuals-heading h1 {
+
+        font-size: 28px;
+    }
+
+
+    .usual-card-header {
+
+        padding: 17px 16px 13px;
+    }
+
+
+    .usual-items {
+
+        padding: 0 16px 13px;
+    }
+
+
+    .usual-actions {
+
+        padding: 10px 16px;
+    }
+
+
+    .order-again-button {
+
+        min-height: 38px;
+    }
+
+
+    .icon-action {
+
+        width: 38px;
+
+        height: 38px;
+    }
+
+}
+
+
+@media (max-width: 480px) {
+
+    .usuals-content {
+
+        padding: 25px 13px 40px;
+    }
+
+
+    .usual-card-header {
+
+        gap: 12px;
+    }
+
+
+    .usual-total {
+
+        font-size: 16px;
+    }
+
+
+    .usual-actions {
+
+        gap: 7px;
+    }
+
+
+    .order-again-button {
+
+        padding: 9px 10px;
+
+        font-size: 13px;
+    }
+
+
+    .icon-action {
+
+        width: 36px;
+
+        height: 36px;
+    }
+
+}
