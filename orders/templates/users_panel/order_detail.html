@@ -1,0 +1,1213 @@
+{% extends "users_panel/users_base.html" %}
+{% load static %}
+
+
+{% block title %}
+    Order {{ order.order_no }} | CAFE
+{% endblock %}
+
+
+{% block extra_head %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'users_panel/css/order_detail.css' %}"
+>
+
+{% endblock %}
+
+
+{% block content %}
+
+
+
+    <!-- =====================================================
+         ORDER DETAIL PAGE
+         ===================================================== -->
+
+    <main class="order-detail-page">
+
+        <div class="order-detail-container">
+
+
+            <!-- =================================================
+                 PAGE HEADER
+                 ================================================= -->
+
+            <div class="order-detail-header">
+
+                <a
+                    href="{% url 'placed_orders' %}"
+                    class="order-detail-back"
+                    aria-label="Back to Orders"
+                >
+                    ←
+                </a>
+
+
+                <div>
+
+                    <h1>
+                        Order Detail
+                    </h1>
+
+                    <p>
+                        {{ order.order_no }}
+                    </p>
+
+                </div>
+
+
+                <!-- Small invoice action -->
+
+                <a
+                    href="{% url 'download_invoice' order.id %}"
+                    class="invoice-button invoice-top-button"
+                >
+                    Download Invoice
+                </a>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 ORDER STATUS / RESULT
+                 ================================================= -->
+
+            {% if order.status == 'cancelled' %}
+
+                <section class="order-success-card">
+
+                    <div class="success-icon">
+                        ×
+                    </div>
+
+
+                    <h2>
+                        Order Cancelled
+                    </h2>
+
+
+                    <p>
+                        This order has been cancelled.
+                    </p>
+
+
+                    {% if order.cancelled_at %}
+
+                        <span>
+                            {{ order.cancelled_at|date:"d M Y, H:i" }}
+                        </span>
+
+                    {% endif %}
+
+                </section>
+
+            {% else %}
+
+                <section class="order-success-card">
+
+                    <div class="success-icon">
+                        ✓
+                    </div>
+
+
+                    <h2>
+                        Order Placed Successfully
+                    </h2>
+
+
+                    <p>
+                        We've received your order and will keep you updated.
+                    </p>
+
+
+                    <span>
+                        {{ order.created_at|date:"d M Y, H:i" }}
+                    </span>
+
+                </section>
+
+            {% endif %}
+
+
+
+            <!-- =================================================
+                 ORDER STATUS
+                 ================================================= -->
+
+            <section class="order-detail-card">
+
+                <div class="detail-card-title">
+                    Order Status
+                </div>
+
+
+                {% if order.status == 'cancelled' %}
+
+                    <div class="cancelled-order-status">
+
+                        <div class="cancelled-status-icon">
+                            ×
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Cancelled
+                            </strong>
+
+                            <small>
+                                This order has been cancelled.
+                            </small>
+
+                            {% if order.cancellation_reason %}
+
+                                <small>
+                                    Reason:
+                                    {{ order.cancellation_reason }}
+                                </small>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                {% else %}
+
+                    <div class="status-tracker">
+
+
+                        <!-- CONFIRMED -->
+
+                        <div
+                            class="status-step
+                            {% if order.status == 'confirmed' or order.status == 'preparing' or order.status == 'ready' or order.status == 'delivered' %}
+                                active
+                            {% endif %}"
+                        >
+
+                            <span class="status-dot">
+                                1
+                            </span>
+
+
+                            <div>
+
+                                <strong>
+                                    Confirmed
+                                </strong>
+
+                                <small>
+                                    Your order has been confirmed.
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- PREPARING -->
+
+                        <div
+                            class="status-step
+                            {% if order.status == 'preparing' or order.status == 'ready' or order.status == 'delivered' %}
+                                active
+                            {% endif %}"
+                        >
+
+                            <span class="status-dot">
+                                2
+                            </span>
+
+
+                            <div>
+
+                                <strong>
+                                    Preparing
+                                </strong>
+
+                                <small>
+                                    Your order is being prepared.
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- READY -->
+
+                        <div
+                            class="status-step
+                            {% if order.status == 'ready' or order.status == 'delivered' %}
+                                active
+                            {% endif %}"
+                        >
+
+                            <span class="status-dot">
+                                3
+                            </span>
+
+
+                            <div>
+
+                                <strong>
+                                    Ready
+                                </strong>
+
+                                <small>
+                                    Your order is ready.
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- DELIVERED -->
+
+                        <div
+                            class="status-step
+                            {% if order.status == 'delivered' %}
+                                active
+                            {% endif %}"
+                        >
+
+                            <span class="status-dot">
+                                4
+                            </span>
+
+
+                            <div>
+
+                                <strong>
+                                    Delivered
+                                </strong>
+
+                                <small>
+                                    Order completed.
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+                {% endif %}
+
+            </section>
+
+
+
+            <!-- =================================================
+                 ORDER ITEMS
+                 ================================================= -->
+
+            <section class="order-detail-card">
+
+
+                <div class="detail-card-heading">
+
+                    <div class="detail-card-title">
+                        Order Items
+                    </div>
+
+
+                    <span class="order-number">
+                        #{{ order.order_no }}
+                    </span>
+
+                </div>
+
+
+
+                <div class="order-items">
+
+
+                    {% for item in order.items.all %}
+
+                        <div
+                            class="
+                                order-item-card
+                                {% if item.is_cancelled %}
+                                    item-cancelled
+                                {% endif %}
+                            "
+                        >
+
+
+                            <!-- PRODUCT IMAGE -->
+
+                            <div class="order-item-image">
+
+                                {% with image=item.product.images.first %}
+
+                                    {% if image %}
+
+                                        <img
+                                            src="{{ image.image.url }}"
+                                            alt="{{ item.product.name }}"
+                                        >
+
+                                    {% else %}
+
+                                        <div class="no-item-image">
+                                            ☕
+                                        </div>
+
+                                    {% endif %}
+
+                                {% endwith %}
+
+                            </div>
+
+
+
+                            <!-- PRODUCT DETAILS -->
+
+                            <div class="order-item-content">
+
+
+                                <div class="order-item-main">
+
+                                    <div>
+
+                                        <h3>
+                                            {{ item.product.name }}
+                                        </h3>
+
+
+                                        <p class="item-quantity">
+                                            Quantity:
+                                            {{ item.quantity }}
+                                        </p>
+
+
+                                        {% if item.instructions %}
+
+                                            <p class="item-instructions">
+
+                                                <strong>
+                                                    Special instructions:
+                                                </strong>
+
+                                                {{ item.instructions }}
+
+                                            </p>
+
+                                        {% endif %}
+
+                                    </div>
+
+
+                                    <strong class="item-total">
+                                        ₹{{ item.subtotal|floatformat:2 }}
+                                    </strong>
+
+                                </div>
+
+
+
+                                <!-- CANCELLED ITEM -->
+
+                                {% if item.is_cancelled %}
+
+                                    <div class="cancelled-item-info">
+
+                                        <span class="cancelled-item-badge">
+                                            Cancelled
+                                        </span>
+
+
+                                        {% if item.cancellation_reason %}
+
+                                            <span>
+                                                {{ item.cancellation_reason }}
+                                            </span>
+
+                                        {% endif %}
+
+                                    </div>
+
+
+
+                                <!-- ACTIVE ITEM THAT CAN BE REMOVED -->
+
+                                {% elif can_cancel %}
+
+                                    <button
+                                        type="button"
+                                        class="remove-item-button"
+                                        data-item-id="{{ item.id }}"
+                                        data-item-name="{{ item.product.name|escapejs }}"
+                                    >
+                                        Remove Item
+                                    </button>
+
+                                {% endif %}
+
+
+                            </div>
+
+                        </div>
+
+                    {% empty %}
+
+                        <div class="empty-order-items">
+
+                            <p>
+                                No items are available for this order.
+                            </p>
+
+                        </div>
+
+                    {% endfor %}
+
+
+                </div>
+
+
+
+                <!-- =================================================
+                     PRICE SUMMARY
+                     ================================================= -->
+
+                <div class="order-price-summary">
+
+
+                    <div>
+
+                        <span>
+                            Subtotal
+                        </span>
+
+                        <span>
+                            ₹{{ order.subtotal|floatformat:2 }}
+                        </span>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            GST (5%)
+                        </span>
+
+                        <span>
+                            ₹{{ order.tax_amount|floatformat:2 }}
+                        </span>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Shipping
+                        </span>
+
+                        <span>
+                            ₹0.00
+                        </span>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            Discount
+                        </span>
+
+                        <span>
+                            ₹0.00
+                        </span>
+
+                    </div>
+
+
+                    <div class="order-total-row">
+
+                        <strong>
+                            Total
+                        </strong>
+
+                        <strong>
+                            ₹{{ order.total_amount|floatformat:2 }}
+                        </strong>
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =================================================
+                 ORDER INFORMATION
+                 ================================================= -->
+
+            <section class="order-detail-card">
+
+
+                <div class="detail-card-title">
+                    Order Information
+                </div>
+
+
+                <div class="order-information-grid">
+
+
+                    <!-- ORDER NUMBER -->
+
+                    <div class="information-item">
+
+                        <span>
+                            Order Number
+                        </span>
+
+                        <strong>
+                            {{ order.order_no }}
+                        </strong>
+
+                    </div>
+
+
+
+                    <!-- ORDER TYPE -->
+
+                    <div class="information-item">
+
+                        <span>
+                            Order Type
+                        </span>
+
+                        <strong>
+
+                            {% if order.order_type == 'pickup' %}
+
+                                Pickup
+
+                            {% elif order.order_type == 'delivery' %}
+
+                                Delivery
+
+                            {% else %}
+
+                                Table
+
+                            {% endif %}
+
+                        </strong>
+
+                    </div>
+
+
+
+                    <!-- PAYMENT -->
+
+                    <div class="information-item">
+
+                        <span>
+                            Payment Method
+                        </span>
+
+                        <strong>
+                            {{ payment_method }}
+                        </strong>
+
+                    </div>
+
+
+
+                    <!-- STATUS -->
+
+                    <div class="information-item">
+
+                        <span>
+                            Status
+                        </span>
+
+                        <strong>
+                            {{ order.get_status_display }}
+                        </strong>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- DELIVERY ADDRESS -->
+
+                {% if order.order_type == 'delivery' and order.address %}
+
+                    <div class="order-delivery-address">
+
+                        <span>
+                            Delivery Address
+                        </span>
+
+
+                        <strong>
+                            {{ order.address.name }}
+                        </strong>
+
+
+                        <p>
+                            {{ order.address.flat_house }},
+                            {{ order.address.area_street }}
+                        </p>
+
+
+                        <p>
+                            {{ order.address.city }},
+                            {{ order.address.state }}
+                            - {{ order.address.pincode }}
+                        </p>
+
+
+                        <p>
+                            {{ order.address.contact_number }}
+                        </p>
+
+                    </div>
+
+                {% endif %}
+
+
+
+                <!-- CANCELLATION INFORMATION -->
+
+                {% if order.status == 'cancelled' and order.cancellation_reason %}
+
+                    <div class="order-delivery-address">
+
+                        <span>
+                            Cancellation Reason
+                        </span>
+
+                        <p>
+                            {{ order.cancellation_reason }}
+                        </p>
+
+                    </div>
+
+                {% endif %}
+
+
+            </section>
+
+
+
+            <!-- =================================================
+                 BOTTOM ACTIONS
+                 ================================================= -->
+
+            <section class="order-detail-actions">
+
+
+                <!-- BACK TO HOME -->
+
+                <a
+                    href="{% url 'home' %}"
+                    class="continue-ordering-button"
+                >
+                    Back to Home
+                </a>
+
+
+
+                <!-- =================================================
+                     CANCELLATION
+                     ================================================= -->
+
+                {% if can_cancel %}
+
+                    <div class="cancellation-section">
+
+                    <button
+                        type="button"
+                        class="cancel-order-button"
+                        id="open-cancel-order"
+                        >
+                        Cancel Order
+                    </button>
+                    
+                    <div class="cancellation-warning">
+
+                        <span class="warning-icon">
+                            ⚠
+                        </span>
+
+
+                        <div>
+
+                            <strong>
+                                Important
+                            </strong>
+
+                            <p>
+                                You can cancel this order or remove
+                                items only until the order
+                                status is 'Ready.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    </div>
+
+                {% endif %}
+
+
+            </section>
+
+
+        </div>
+
+    </main>
+
+
+
+    <!-- =========================================================
+         CANCEL ENTIRE ORDER MODAL
+         ========================================================= -->
+
+    {% if can_cancel %}
+
+        <div
+            class="modal-overlay"
+            id="cancel-order-modal"
+        >
+
+            <div class="cancel-modal">
+
+
+                <button
+                    type="button"
+                    class="modal-close"
+                    data-close-modal
+                    aria-label="Close"
+                >
+                    ×
+                </button>
+
+
+                <div class="modal-icon">
+                    ⚠
+                </div>
+
+
+                <h2>
+                    Cancel Order
+                </h2>
+
+
+                <p class="modal-description">
+
+                    Are you sure you want to cancel
+                    <strong>{{ order.order_no }}</strong>?
+
+                    This action cannot be undone.
+
+                </p>
+
+
+                <form
+                    method="POST"
+                    action="{% url 'cancel_order' order.id %}"
+                >
+
+                    {% csrf_token %}
+
+
+                    <label for="order-cancel-reason">
+
+                        Reason
+
+                        <span>
+                            Optional
+                        </span>
+
+                    </label>
+
+
+                    <textarea
+                        id="order-cancel-reason"
+                        name="reason"
+                        rows="4"
+                        placeholder="Tell us why you're cancelling..."
+                    ></textarea>
+
+
+                    <div class="modal-actions">
+
+
+                        <button
+                            type="button"
+                            class="keep-button"
+                            data-close-modal
+                        >
+                            Keep Order
+                        </button>
+
+
+                        <button
+                            type="submit"
+                            class="confirm-cancel-button"
+                        >
+                            Cancel Order
+                        </button>
+
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =====================================================
+             CANCEL INDIVIDUAL ITEM MODAL
+             ===================================================== -->
+
+        <div
+            class="modal-overlay"
+            id="cancel-item-modal"
+        >
+
+            <div class="cancel-modal">
+
+
+                <button
+                    type="button"
+                    class="modal-close"
+                    data-close-modal
+                    aria-label="Close"
+                >
+                    ×
+                </button>
+
+
+                <div class="modal-icon">
+                    −
+                </div>
+
+
+                <h2>
+                    Remove Item
+                </h2>
+
+
+                <p class="modal-description">
+
+                    Remove
+                    <strong id="cancel-item-name"></strong>
+                    from this order?
+
+                </p>
+
+
+                <form
+                    method="POST"
+                    id="cancel-item-form"
+                >
+
+                    {% csrf_token %}
+
+
+                    <label for="item-cancel-reason">
+
+                        Reason
+
+                        <span>
+                            Optional
+                        </span>
+
+                    </label>
+
+
+                    <textarea
+                        id="item-cancel-reason"
+                        name="reason"
+                        rows="4"
+                        placeholder="Tell us why you're removing this item..."
+                    ></textarea>
+
+
+                    <div class="modal-actions">
+
+
+                        <button
+                            type="button"
+                            class="keep-button"
+                            data-close-modal
+                        >
+                            Keep Item
+                        </button>
+
+
+                        <button
+                            type="submit"
+                            class="confirm-cancel-button"
+                        >
+                            Remove Item
+                        </button>
+
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    {% endif %}
+
+
+
+    <!-- =========================================================
+         CANCELLATION JAVASCRIPT
+         ========================================================= -->
+
+    <script>
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+                const cancelOrderButton =
+                    document.getElementById(
+                        "open-cancel-order"
+                    );
+
+                const cancelOrderModal =
+                    document.getElementById(
+                        "cancel-order-modal"
+                    );
+
+                const cancelItemModal =
+                    document.getElementById(
+                        "cancel-item-modal"
+                    );
+
+                const cancelItemForm =
+                    document.getElementById(
+                        "cancel-item-form"
+                    );
+
+                const cancelItemName =
+                    document.getElementById(
+                        "cancel-item-name"
+                    );
+
+
+                /*
+                 * Open whole-order cancellation modal
+                 */
+
+                if (
+                    cancelOrderButton &&
+                    cancelOrderModal
+                ) {
+
+                    cancelOrderButton.addEventListener(
+                        "click",
+                        function () {
+
+                            cancelOrderModal.classList.add(
+                                "is-open"
+                            );
+
+                        }
+                    );
+
+                }
+
+
+
+                /*
+                 * Open individual-item cancellation modal
+                 */
+
+                document
+                    .querySelectorAll(
+                        ".remove-item-button"
+                    )
+                    .forEach(
+                        function (button) {
+
+                            button.addEventListener(
+                                "click",
+                                function () {
+
+                                    const itemId =
+                                        button.dataset.itemId;
+
+                                    const itemName =
+                                        button.dataset.itemName;
+
+
+                                    if (cancelItemName) {
+
+                                        cancelItemName.textContent =
+                                            itemName;
+
+                                    }
+
+
+                                    if (cancelItemForm) {
+
+                                        cancelItemForm.action =
+                                            "{% url 'cancel_order_item' 0 %}"
+                                            .replace(
+                                                "/0/",
+                                                "/" + itemId + "/"
+                                            );
+
+                                    }
+
+
+                                    if (cancelItemModal) {
+
+                                        cancelItemModal.classList.add(
+                                            "is-open"
+                                        );
+
+                                    }
+
+                                }
+                            );
+
+                        }
+                    );
+
+
+
+                /*
+                 * Close modals
+                 */
+
+                document
+                    .querySelectorAll(
+                        "[data-close-modal]"
+                    )
+                    .forEach(
+                        function (button) {
+
+                            button.addEventListener(
+                                "click",
+                                function () {
+
+                                    document
+                                        .querySelectorAll(
+                                            ".modal-overlay"
+                                        )
+                                        .forEach(
+                                            function (modal) {
+
+                                                modal.classList.remove(
+                                                    "is-open"
+                                                );
+
+                                            }
+                                        );
+
+                                }
+                            );
+
+                        }
+                    );
+
+
+
+                /*
+                 * Close when clicking outside modal
+                 */
+
+                document
+                    .querySelectorAll(
+                        ".modal-overlay"
+                    )
+                    .forEach(
+                        function (overlay) {
+
+                            overlay.addEventListener(
+                                "click",
+                                function (event) {
+
+                                    if (
+                                        event.target === overlay
+                                    ) {
+
+                                        overlay.classList.remove(
+                                            "is-open"
+                                        );
+
+                                    }
+
+                                }
+                            );
+
+                        }
+                    );
+
+
+
+                /*
+                 * Close with Escape
+                 */
+
+                document.addEventListener(
+                    "keydown",
+                    function (event) {
+
+                        if (event.key === "Escape") {
+
+                            document
+                                .querySelectorAll(
+                                    ".modal-overlay"
+                                )
+                                .forEach(
+                                    function (modal) {
+
+                                        modal.classList.remove(
+                                            "is-open"
+                                        );
+
+                                    }
+                                );
+
+                        }
+
+                    }
+                );
+
+            }
+        );
+
+    </script>
+
+
+</body>
+{% endblock %}
+
+</html>

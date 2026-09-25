@@ -652,36 +652,46 @@ button {
    ========================================================= */
 
 .continue-button {
+    display: block;
     width: 100%;
 
     margin-top: 15px;
-
     padding: 13px;
 
     border: none;
-
     border-radius: 9px;
 
     background: #304028;
-
     color: #fffaf3;
 
     font-size: 14px;
-
     font-weight: 600;
+    text-align: center;
+    text-decoration: none;
 
     cursor: pointer;
+
+    box-sizing: border-box;
 
     box-shadow:
         0 5px 12px rgba(48, 64, 40, 0.14);
 
     transition:
         background 0.15s ease,
-        opacity 0.15s ease;
+        opacity 0.15s ease,
+        transform 0.15s ease;
 }
 
-.continue-button:hover:not(:disabled) {
+.continue-button:hover {
     background: #26331f;
+    color: #fffaf3;
+    text-decoration: none;
+
+    transform: translateY(-1px);
+}
+
+.continue-button:active {
+    transform: translateY(0);
 }
 
 .continue-button:disabled {

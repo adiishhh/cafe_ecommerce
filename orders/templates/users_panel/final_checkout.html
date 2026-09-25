@@ -1,0 +1,559 @@
+{% extends "users_panel/users_base.html" %}
+{% load static %}
+
+
+
+{% block title %}
+    Checkout | CAFE
+{% endblock %}
+
+
+{% block extra_head %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'users_panel/css/final_checkout.css' %}"
+>
+
+{% endblock %}
+
+
+
+{% block content %}
+
+
+<main class="final-checkout-page">
+
+    <div class="final-checkout-container">
+
+
+        <div class="checkout-page-header">
+
+            <a
+                href="{% url 'order_type' %}"
+                class="checkout-back-button"
+            >
+                ←
+            </a>
+
+
+            <div>
+
+                <h1>
+                    Final Checkout
+                </h1>
+
+                <p>
+                    Review your order before placing it.
+                </p>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="checkout-layout">
+
+
+            <!-- =================================================
+                 LEFT COLUMN
+                 ================================================= -->
+
+            <div class="checkout-main">
+
+
+                <!-- =================================================
+                     ORDER TYPE
+                     ================================================= -->
+
+                <section class="checkout-card">
+
+                    <div class="checkout-card-header">
+
+                        <div>
+
+                            <h2>
+                                Order Type
+                            </h2>
+
+                            <p>
+                                How you'll receive your order
+                            </p>
+
+                        </div>
+
+
+                        <a
+                            href="{% url 'order_type' %}"
+                            class="change-link"
+                        >
+                            Change
+                        </a>
+
+                    </div>
+
+
+
+                    <div class="checkout-type-display">
+
+                        {% if order_type == 'pickup' %}
+
+                            <div class="checkout-type-icon">
+                                🛍
+                            </div>
+
+
+                            <div>
+
+                                <strong>
+                                    Pickup
+                                </strong>
+
+                                <span>
+                                    Pick up your order from the cafe.
+                                </span>
+
+                            </div>
+
+                        {% else %}
+
+                            <div class="checkout-type-icon">
+                                🏠
+                            </div>
+
+
+                            <div>
+
+                                <strong>
+                                    Delivery
+                                </strong>
+
+                                <span>
+                                    Your order will be delivered.
+                                </span>
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- =================================================
+                     DELIVERY ADDRESS
+                     ================================================= -->
+
+                {% if order_type == 'delivery' and address %}
+
+                    <section class="checkout-card">
+
+                        <div class="checkout-card-header">
+
+                            <div>
+
+                                <h2>
+                                    Delivery Address
+                                </h2>
+
+                                <p>
+                                    Your selected delivery address
+                                </p>
+
+                            </div>
+
+
+                            <a
+                                href="{% url 'order_type' %}"
+                                class="change-link"
+                            >
+                                Change
+                            </a>
+
+                        </div>
+
+
+                        <div class="checkout-address">
+
+                            <strong>
+                                {{ address.name }}
+                            </strong>
+
+
+                            <p>
+                                {{ address.flat_house }},
+                                {{ address.area_street }}
+                            </p>
+
+
+                            <p>
+                                {{ address.city }},
+                                {{ address.state }}
+                                - {{ address.pincode }}
+                            </p>
+
+
+                            <p>
+                                {{ address.contact_number }}
+                            </p>
+
+                        </div>
+
+                    </section>
+
+                {% endif %}
+
+
+
+                <!-- =================================================
+                     ORDER ITEMS
+                     ================================================= -->
+
+                <section class="checkout-card">
+
+                    <div class="checkout-card-header">
+
+                        <div>
+
+                            <h2>
+                                Order Items
+                            </h2>
+
+                            <p>
+                                {{ cart_count }}
+                                item{{ cart_count|pluralize }}
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="checkout-items">
+
+                        {% for item in cart_items %}
+
+                            <div class="checkout-item">
+
+
+                                <div class="checkout-item-image">
+
+                                    {% with image=item.product.images.first %}
+
+                                        {% if image %}
+
+                                            <img
+                                                src="{{ image.image.url }}"
+                                                alt="{{ item.product.name }}"
+                                            >
+
+                                        {% else %}
+
+                                            <div class="item-image-placeholder">
+                                                🍽
+                                            </div>
+
+                                        {% endif %}
+
+                                    {% endwith %}
+
+                                </div>
+
+
+
+                                <div class="checkout-item-info">
+
+                                    <h3>
+                                        {{ item.product.name }}
+                                    </h3>
+
+
+                                    <span>
+                                        Quantity: {{ item.quantity }}
+                                    </span>
+
+
+                                    {% if item.instructions %}
+
+                                        <p class="item-instructions">
+
+                                            <strong>
+                                                Special instructions:
+                                            </strong>
+
+                                            {{ item.instructions }}
+
+                                        </p>
+
+                                    {% endif %}
+
+                                </div>
+
+
+
+                                <strong class="checkout-item-price">
+                                    ₹{{ item.item_total|floatformat:2 }}
+                                </strong>
+
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- =================================================
+                     PAYMENT METHOD
+                     ================================================= -->
+
+                <section class="checkout-card">
+
+                    <div class="checkout-card-header">
+
+                        <div>
+
+                            <h2>
+                                Payment Method
+                            </h2>
+
+                            <p>
+                                Choose how you want to pay.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="payment-options">
+
+
+                        <!-- ONLINE -->
+
+                        <label class="payment-option disabled">
+
+                            <input
+                                type="radio"
+                                name="payment_method_display"
+                                value="online"
+                                disabled
+                            >
+
+
+                            <div class="payment-method-icon">
+                                UPI
+                            </div>
+
+
+                            <div class="payment-method-content">
+
+                                <strong>
+                                    Pay Online
+                                </strong>
+
+                                <span>
+                                    UPI / Card / Netbanking
+                                </span>
+
+                            </div>
+
+
+                            <span class="coming-soon">
+                                Coming Soon
+                            </span>
+
+                        </label>
+
+
+
+                        <!-- CASH ON DELIVERY -->
+
+                        <label class="payment-option selected">
+
+                            <input
+                                type="radio"
+                                name="payment_method_display"
+                                value="cod"
+                                checked
+                                disabled
+                            >
+
+
+                            <div class="payment-method-icon">
+                                ₹
+                            </div>
+
+
+                            <div class="payment-method-content">
+
+                                <strong>
+                                    Cash on Delivery
+                                </strong>
+
+                                <span>
+                                    Pay at counter
+                                    (Cash / UPI / Card)
+                                </span>
+
+                            </div>
+
+
+                            <span class="selected-indicator"></span>
+
+                        </label>
+
+
+                    </div>
+
+                </section>
+
+
+            </div>
+
+
+
+            <!-- =================================================
+                 RIGHT COLUMN
+                 ================================================= -->
+
+            <aside class="checkout-sidebar">
+
+
+                <section class="price-card">
+
+                    <h2>
+                        Price Details
+                    </h2>
+
+
+
+                    <div class="price-row">
+
+                        <span>
+                            Subtotal
+                        </span>
+
+                        <span>
+                            ₹{{ subtotal|floatformat:2 }}
+                        </span>
+
+                    </div>
+
+
+
+                    <div class="price-row">
+
+                        <span>
+                            GST (5%)
+                        </span>
+
+                        <span>
+                            ₹{{ gst|floatformat:2 }}
+                        </span>
+
+                    </div>
+
+
+
+                    <div class="price-row">
+
+                        <span>
+                            Shipping
+                        </span>
+
+                        <span>
+                            ₹{{ shipping|floatformat:2 }}
+                        </span>
+
+                    </div>
+
+
+
+                    <div class="price-row">
+
+                        <span>
+                            Discount
+                        </span>
+
+                        <span>
+                            ₹{{ discount|floatformat:2 }}
+                        </span>
+
+                    </div>
+
+
+
+                    <div class="price-divider"></div>
+
+
+
+                    <div class="price-total">
+
+                        <strong>
+                            Total
+                        </strong>
+
+                        <strong>
+                            ₹{{ total|floatformat:2 }}
+                        </strong>
+
+                    </div>
+
+
+
+                    <form
+                        method="POST"
+                        action="{% url 'place_order' %}"
+                        class="place-order-form"
+                    >
+
+                        {% csrf_token %}
+
+                        <input
+                            type="hidden"
+                            name="payment_method"
+                            value="cod"
+                        >
+
+
+                        <button
+                            type="submit"
+                            class="place-order-button"
+                        >
+                            Place Order
+                        </button>
+
+                    </form>
+
+
+
+                    <a
+                        href="{% url 'cart' %}"
+                        class="cancel-order-link"
+                    >
+                        Cancel Order
+                    </a>
+
+
+                </section>
+
+            </aside>
+
+
+        </div>
+
+    </div>
+
+</main>
+
+
+{% endblock %}

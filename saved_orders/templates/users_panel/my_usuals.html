@@ -1,429 +1,301 @@
+{% extends "users_panel/users_base.html" %}
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>My Usuals | SmartCafe</title>
-
-    <link
-        rel="icon"
-        type="image/png"
-        href="{% static 'common/images/favicon.png' %}"
-    >
-
-    <!-- Existing SmartCafe header/navbar -->
-    <link
-        rel="stylesheet"
-        href="{% static 'users_panel/css/home.css' %}"
-    >
-
-    <!-- My Usuals -->
-    <link
-        rel="stylesheet"
-        href="{% static 'users_panel/css/my_usuals.css' %}"
-    >
-
-    <link
-        href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"
-        rel="stylesheet"
-    >
-
-</head>
+{% block title %}
+    My Usuals | SmartCafe
+{% endblock %}
 
 
-<body>
+{% block extra_head %}
 
-{% if messages %}
+<link
+    rel="stylesheet"
+    href="{% static 'users_panel/css/my_usuals.css' %}"
+>
 
-    <div class="messages">
+<link
+    href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"
+    rel="stylesheet"
+>
 
-        {% for message in messages %}
-
-            <div class="message {{ message.tags }}">
-                {{ message }}
-            </div>
-
-        {% endfor %}
-
-    </div>
-
-{% endif %}
+{% endblock %}
 
 
-<main class="home-page usuals-page">
-
-    <!-- EXACT SAME CONTAINER STRUCTURE AS HOME -->
-
-    <div class="home-container">
+{% block content %}
 
 
-        <!-- HEADER / NAVBAR -->
+<!-- =====================================================
+     MY USUALS CONTENT
+     ===================================================== -->
 
-        <header class="home-header">
+<div class="usuals-page">
+
+    <div class="usuals-content">
+
+
+        <!-- Page Heading -->
+
+        <section class="usuals-heading">
+
+            <h1>
+                My Usuals
+            </h1>
+
+            <p>
+                Saved combinations for quick reordering
+            </p>
+
+        </section>
+
+
+        <!-- Create Usual -->
+
+        <div class="create-usual-wrapper">
 
             <a
-                href="{% url 'home' %}"
-                class="brand"
+                href="{% url 'create_usual' %}"
+                class="create-usual-button"
             >
 
-                <span class="brand-icon">
-                    ☕
+                <span class="create-icon">
+                    +
                 </span>
 
-                <span class="brand-name">
-                    CAFE
-                </span>
+                Create Usual
 
             </a>
 
+        </div>
 
-            <nav class="main-navigation">
 
-                <a
-                    href="{% url 'home' %}"
-                    class="main-nav-item"
-                >
-                    Menu
-                </a>
 
+        <!-- Saved Usuals -->
 
-                <a
-                    href="#"
-                    class="main-nav-item"
-                >
-                    Orders
-                </a>
+        <section class="saved-usuals">
 
 
-                <a
-                    href="{% url 'my_usuals' %}"
-                    class="main-nav-item active"
-                >
-                    My Usuals
-                </a>
+            {% if saved_orders %}
 
 
-                <a
-                    href="{% url 'profile' %}"
-                    class="main-nav-item"
-                >
-                    Profile
-                </a>
+                {% for saved_order in saved_orders %}
 
-            </nav>
 
+                    <article class="usual-card">
 
-            <div class="header-actions">
 
-                <a
-                    href="{% url 'profile' %}"
-                    class="profile-avatar"
-                >
+                        <div class="usual-card-header">
 
-                    {% if user.profile_image %}
+                            <div class="usual-title-area">
 
-                        <img
-                            src="{{ user.profile_image.url }}"
-                            alt="Profile image"
-                        >
+                                <h2>
 
-                    {% else %}
+                                    {% if saved_order.name %}
 
-                        {{ user.name|first|upper }}
+                                        {{ saved_order.name }}
 
-                    {% endif %}
+                                    {% else %}
 
-                </a>
+                                        My Usual
 
-            </div>
+                                    {% endif %}
 
-        </header>
+                                </h2>
 
 
+                                <p class="usual-date">
 
-        <!-- MY USUALS CONTENT -->
+                                    Saved
+                                    {{ saved_order.updated_at|timesince }}
+                                    ago
 
-        <div class="usuals-content">
-
-
-            <section class="usuals-heading">
-
-                <h1>
-                    My Usuals
-                </h1>
-
-                <p>
-                    Saved combinations for quick reordering
-                </p>
-
-            </section>
-
-            <!-- Create Usual -->
-
-            <div class="create-usual-wrapper">
-
-                <a
-                    href="{% url 'create_usual' %}"
-                    class="create-usual-button"
-                >
-
-                    <span class="create-icon">
-                        +
-                    </span>
-
-                    Create Usual
-
-                </a>
-
-            </div>
-
-
-
-            <!-- Saved Usuals -->
-
-            <section class="saved-usuals">
-
-
-                {% if saved_orders %}
-
-
-                    {% for saved_order in saved_orders %}
-
-
-                        <article class="usual-card">
-
-
-                            <div class="usual-card-header">
-
-                                <div class="usual-title-area">
-
-                                    <h2>
-
-                                        {% if saved_order.name %}
-
-                                            {{ saved_order.name }}
-
-                                        {% else %}
-
-                                            My Usual
-
-                                        {% endif %}
-
-                                    </h2>
-
-
-                                    <p class="usual-date">
-
-                                        Saved
-                                        {{ saved_order.updated_at|timesince }}
-                                        ago
-
-                                    </p>
-
-                                </div>
-
-
-                                <div class="usual-total">
-
-                                    ₹{{ saved_order.total_amount|floatformat:2 }}
-
-                                </div>
+                                </p>
 
                             </div>
 
 
+                            <div class="usual-total">
 
-                            <div class="usual-items">
+                                ₹{{ saved_order.total_amount|floatformat:2 }}
 
+                            </div>
 
-                                {% for item in saved_order.items.all %}
-
-                                    <div class="usual-item">
-
-                                        <div class="usual-item-info">
-
-                                            <span class="item-quantity">
-                                                {{ item.quantity }}×
-                                            </span>
-
-                                            <span class="item-name">
-                                                {{ item.product.name }}
-                                            </span>
-
-                                        </div>
+                        </div>
 
 
-                                        <span class="item-price">
 
-                                            ₹{{ item.item_total|floatformat:2 }}
+                        <div class="usual-items">
 
+
+                            {% for item in saved_order.items.all %}
+
+                                <div class="usual-item">
+
+                                    <div class="usual-item-info">
+
+                                        <span class="item-quantity">
+                                            {{ item.quantity }}×
+                                        </span>
+
+                                        <span class="item-name">
+                                            {{ item.product.name }}
                                         </span>
 
                                     </div>
 
 
-                                    {% if item.instructions %}
+                                    <span class="item-price">
 
-                                        <div class="usual-item-instructions">
+                                        ₹{{ item.item_total|floatformat:2 }}
 
-                                            <strong>
-                                                Instructions:
-                                            </strong>
+                                    </span>
 
-                                            {{ item.instructions }}
-
-                                        </div>
-
-                                    {% endif %}
+                                </div>
 
 
-                                {% endfor %}
+                                {% if item.instructions %}
+
+                                    <div class="usual-item-instructions">
+
+                                        <span>
+                                            Instructions:
+                                        </span>
+
+                                        {{ item.instructions }}
+
+                                    </div>
+
+                                {% endif %}
 
 
-                            </div>
+                            {% endfor %}
 
 
-
-                            <div class="usual-actions">
-
-
-                                <!-- ORDER AGAIN -->
-
-                                <form
-                                    method="POST"
-                                    action="{% url 'order_again' saved_order.id %}"
-                                    style="display: contents;"
-                                >
-
-                                    {% csrf_token %}
-
-                                    <button
-                                        type="submit"
-                                        class="order-again-button"
-                                    >
-                                        Order Again
-                                    </button>
-
-                                </form>
-
-
-
-                                <!-- EDIT -->
-
-                                <form
-                                    method="POST"
-                                    action="{% url 'edit_usual' saved_order.id %}"
-                                    style="display: contents;"
-                                >
-
-                                    {% csrf_token %}
-
-                                    <button
-                                        type="submit"
-                                        class="icon-action edit-action"
-                                        title="Edit Usual"
-                                        aria-label="Edit Usual"
-                                    >
-
-                                        <i class="fa fa-pencil"></i>
-
-                                    </button>
-
-                                </form>
-
-
-
-                                <!-- DELETE -->
-
-                                <form
-                                    method="POST"
-                                    action="{% url 'delete_usual' saved_order.id %}"
-                                    style="display: contents;"
-                                    onsubmit="return confirm('Delete this usual?');"
-                                >
-
-                                    {% csrf_token %}
-
-                                    <button
-                                        type="submit"
-                                        class="icon-action delete-action"
-                                        title="Delete Usual"
-                                        aria-label="Delete Usual"
-                                    >
-
-                                        <i class="fa fa-trash-o"></i>
-
-                                    </button>
-
-                                </form>
-
-
-                            </div>
-
-
-                        </article>
-
-
-                    {% endfor %}
-
-
-                {% else %}
-
-
-                    <!-- Empty State -->
-
-                    <section class="empty-state">
-
-                        <div class="empty-icon">
-                            ☆
                         </div>
 
 
-                        <h2>
-                            No Usuals Yet
-                        </h2>
+
+                        <div class="usual-actions">
 
 
-                        <p>
-                            Save your favourite food combinations here
-                            for quick reordering.
-                        </p>
+                            <!-- ORDER AGAIN -->
+
+                            <form
+                                method="POST"
+                                action="{% url 'order_again' saved_order.id %}"
+                                class="usual-action-form"
+                            >
+
+                                {% csrf_token %}
+
+                                <button
+                                    type="submit"
+                                    class="order-again-button"
+                                >
+                                    Order Again
+                                </button>
+
+                            </form>
 
 
-                        <a
-                            href="{% url 'create_usual' %}"
-                            class="empty-create-button"
-                        >
-                            Create Usual
-                        </a>
+
+                            <!-- EDIT -->
+
+                            <form
+                                method="POST"
+                                action="{% url 'edit_usual' saved_order.id %}"
+                                class="usual-action-form"
+                            >
+
+                                {% csrf_token %}
+
+                                <button
+                                    type="submit"
+                                    class="icon-action edit-action"
+                                    title="Edit Usual"
+                                    aria-label="Edit Usual"
+                                >
+                                    <i class="fa fa-pencil"></i>
+                                </button>
+
+                            </form>
 
 
-                    </section>
+
+                            <!-- DELETE -->
+
+                            <form
+                                method="POST"
+                                action="{% url 'delete_usual' saved_order.id %}"
+                                class="usual-action-form"
+                                onsubmit="return confirm('Delete this usual?');"
+                            >
+
+                                {% csrf_token %}
+
+                                <button
+                                    type="submit"
+                                    class="icon-action delete-action"
+                                    title="Delete Usual"
+                                    aria-label="Delete Usual"
+                                >
+                                    <i class="fa fa-trash-o"></i>
+                                </button>
+
+                            </form>
 
 
-                {% endif %}
+                        </div>
 
 
-            </section>
+                    </article>
 
 
-        </div>
+                {% endfor %}
+
+
+            {% else %}
+
+
+                <!-- Empty State -->
+
+                <section class="empty-state">
+
+                    <div class="empty-icon">
+                        ☆
+                    </div>
+
+
+                    <h2>
+                        No Usuals Yet
+                    </h2>
+
+
+                    <p>
+                        Save your favourite food combinations here
+                        for quick reordering.
+                    </p>
+
+
+                    <a
+                        href="{% url 'create_usual' %}"
+                        class="empty-create-button"
+                    >
+                        Create Usual
+                    </a>
+
+                </section>
+
+
+            {% endif %}
+
+
+        </section>
 
 
     </div>
 
-</main>
+</div>
 
 
-</body>
-
-</html>
+{% endblock %}

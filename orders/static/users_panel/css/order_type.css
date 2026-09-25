@@ -1,0 +1,1249 @@
+/* =========================================================
+   SMARTCAFE - ORDER TYPE
+   ========================================================= */
+
+
+/* =========================================================
+   ROOT
+   ========================================================= */
+
+:root {
+    --page-bg: #f5f0e8;
+    --card-bg: #fffdfa;
+    --card-border: #e2d8ca;
+
+    --text-primary: #25231f;
+    --text-secondary: #746d65;
+    --text-muted: #968e85;
+
+    --accent: #8b3f16;
+    --accent-dark: #743312;
+    --accent-soft: #f1e6d8;
+
+    --green: #304028;
+    --green-dark: #26331f;
+
+    --warning-bg: #fff6e8;
+    --warning-border: #ead2a8;
+    --warning-text: #76511f;
+
+    --shadow:
+        0 8px 24px rgba(72, 55, 39, 0.07);
+}
+
+
+/* =========================================================
+   RESET
+   ========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+
+html {
+    scroll-behavior: smooth;
+}
+
+
+body {
+    margin: 0;
+
+    background: var(--page-bg);
+    color: var(--text-primary);
+
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+}
+
+
+/* =========================================================
+   NAVBAR
+   ========================================================= */
+
+.cafe-navbar {
+    min-height: 68px;
+
+    padding: 0 34px;
+
+    display: flex;
+    align-items: center;
+
+    background: #fffdfa;
+
+    border-bottom: 1px solid #e8dfd4;
+}
+
+
+.cafe-brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    color: #25231f;
+
+    font-size: 18px;
+    font-weight: 700;
+
+    text-decoration: none;
+}
+
+
+.cafe-brand:hover {
+    color: var(--accent);
+}
+
+
+.cafe-brand-icon {
+    width: 30px;
+    height: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+
+    background: var(--accent);
+    color: #fffaf3;
+
+    font-size: 14px;
+    font-weight: 700;
+}
+
+
+.cafe-nav {
+    display: flex;
+    align-items: center;
+
+    gap: 28px;
+
+    margin-left: 52px;
+}
+
+
+.cafe-nav a {
+    color: #686159;
+
+    font-size: 14px;
+    font-weight: 500;
+
+    text-decoration: none;
+
+    transition: color 0.15s ease;
+}
+
+
+.cafe-nav a:hover {
+    color: var(--accent);
+}
+
+
+.cafe-profile {
+    width: 38px;
+    height: 38px;
+
+    margin-left: auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    border-radius: 50%;
+
+    background: var(--accent-soft);
+
+    color: var(--accent);
+
+    text-decoration: none;
+
+    font-size: 14px;
+    font-weight: 700;
+}
+
+
+.cafe-profile img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+.order-type-page {
+    min-height: calc(100vh - 68px);
+
+    padding: 42px 20px 60px;
+}
+
+
+.order-type-container {
+    width: 100%;
+    max-width: 900px;
+
+    margin: 0 auto;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.order-type-header {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 16px;
+
+    margin-bottom: 30px;
+}
+
+
+.back-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 38px;
+    height: 38px;
+
+    color: #6f6258;
+
+    font-size: 30px;
+    line-height: 1;
+}
+
+.back-button:hover {
+    color: #8b3f16;
+}
+
+
+.order-type-header h1 {
+    margin: 0 0 7px;
+
+    color: var(--text-primary);
+
+    font-size: 27px;
+    line-height: 1.2;
+}
+
+
+.order-type-header p {
+    margin: 0;
+
+    color: var(--text-secondary);
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   WARNING
+   ========================================================= */
+
+.order-warning {
+    margin-bottom: 20px;
+
+    padding: 13px 15px;
+
+    border: 1px solid var(--warning-border);
+    border-radius: 10px;
+
+    background: var(--warning-bg);
+    color: var(--warning-text);
+
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   ORDER TYPE OPTIONS
+   ========================================================= */
+
+.order-type-options {
+    display: grid;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 18px;
+
+    margin-bottom: 24px;
+}
+
+
+.order-type-form {
+    margin: 0;
+}
+
+
+.order-type-card {
+    position: relative;
+
+    width: 100%;
+    min-height: 190px;
+
+    padding: 27px 28px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+
+    background: var(--card-bg);
+
+    color: var(--text-primary);
+
+    text-align: left;
+
+    cursor: pointer;
+
+    box-shadow: var(--shadow);
+
+    transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        transform 0.18s ease,
+        background 0.18s ease;
+}
+
+
+.order-type-card:hover:not(:disabled) {
+    border-color: #cda989;
+
+    background: #fffaf4;
+
+    box-shadow:
+        0 12px 28px rgba(72, 55, 39, 0.11);
+
+    transform: translateY(-2px);
+}
+
+
+.order-type-card:focus-visible {
+    outline: 3px solid rgba(139, 63, 22, 0.16);
+    outline-offset: 2px;
+}
+
+
+.order-type-card:disabled {
+    opacity: 0.55;
+
+    cursor: not-allowed;
+
+    box-shadow: none;
+}
+
+
+/* =========================================================
+   ORDER TYPE ICON
+   ========================================================= */
+
+.order-type-icon {
+    width: 48px;
+    height: 48px;
+
+    margin-bottom: 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background: var(--accent-soft);
+
+    font-size: 22px;
+}
+
+
+/* =========================================================
+   ORDER TYPE CONTENT
+   ========================================================= */
+
+.order-type-content {
+    padding-right: 35px;
+}
+
+
+.order-type-content h2 {
+    margin: 0 0 7px;
+
+    color: var(--text-primary);
+
+    font-size: 19px;
+    line-height: 1.3;
+}
+
+
+.order-type-content p {
+    margin: 0;
+
+    color: var(--text-secondary);
+
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+
+/* =========================================================
+   ARROW
+   ========================================================= */
+
+.order-type-arrow {
+    position: absolute;
+
+    right: 25px;
+    bottom: 25px;
+
+    color: var(--accent);
+
+    font-size: 20px;
+    font-weight: 600;
+
+    transition:
+        transform 0.18s ease,
+        color 0.18s ease;
+}
+
+
+.order-type-card:hover:not(:disabled) .order-type-arrow {
+    color: var(--accent-dark);
+
+    transform: translateX(4px);
+}
+
+
+/* =========================================================
+   ORDER SUMMARY
+   ========================================================= */
+
+.order-summary {
+    padding: 22px 24px;
+
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+
+    background: var(--card-bg);
+
+    box-shadow: var(--shadow);
+}
+
+
+.summary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 6px 0;
+
+    color: var(--text-secondary);
+
+    font-size: 13px;
+}
+
+
+.summary-divider {
+    height: 1px;
+
+    margin: 12px 0;
+
+    background: #e4dbd1;
+}
+
+
+.total-row {
+    padding-top: 4px;
+
+    color: var(--text-primary);
+
+    font-size: 15px;
+}
+
+
+.total-row strong:last-child {
+    color: var(--accent);
+
+    font-size: 20px;
+}
+
+/* =========================================================
+   SELECTED DELIVERY ADDRESS
+   ========================================================= */
+
+.selected-address-section {
+    margin-bottom: 24px;
+}
+
+
+.selected-address-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    margin-bottom: 12px;
+}
+
+
+.selected-address-heading h2 {
+    margin: 0 0 5px;
+
+    color: var(--text-primary);
+
+    font-size: 17px;
+}
+
+
+.selected-address-heading p {
+    margin: 0;
+
+    color: var(--text-secondary);
+
+    font-size: 12px;
+}
+
+
+.change-address-button {
+    padding: 7px 0;
+
+    border: 0;
+
+    background: transparent;
+
+    color: var(--accent);
+
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+.change-address-button:hover {
+    color: var(--accent-dark);
+
+    text-decoration: underline;
+}
+
+
+.selected-address-card {
+    padding: 18px 20px;
+
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+
+    background: var(--card-bg);
+
+    box-shadow: var(--shadow);
+}
+
+
+.selected-address-top {
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+
+    margin-bottom: 9px;
+}
+
+
+.selected-address-top strong {
+    color: var(--text-primary);
+
+    font-size: 14px;
+}
+
+
+.default-badge {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 4px 8px;
+
+    border-radius: 20px;
+
+    background: var(--accent-soft);
+
+    color: var(--accent);
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+
+.selected-address-card p {
+    margin: 4px 0;
+
+    color: var(--text-secondary);
+
+    font-size: 12px;
+
+    line-height: 1.5;
+}
+
+
+.selected-address-phone {
+    margin-top: 10px !important;
+
+    color: var(--text-primary) !important;
+
+    font-weight: 500;
+}
+
+
+/* =========================================================
+   CONTINUE TO CHECKOUT
+   ========================================================= */
+
+.checkout-button {
+    width: 100%;
+
+    display: block;
+
+    margin-top: 14px;
+
+    padding: 14px 18px;
+
+    border: 0;
+    border-radius: 10px;
+
+    background: var(--accent);
+
+    color: #fffaf3;
+
+    text-align: center;
+    text-decoration: none;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 7px 18px rgba(139, 63, 22, 0.15);
+
+    transition:
+        background 0.15s ease,
+        transform 0.15s ease;
+}
+
+
+.checkout-button:hover {
+    background: var(--accent-dark);
+
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   EMPTY ADDRESS STATE
+   ========================================================= */
+
+.delivery-address-empty {
+    margin-bottom: 24px;
+
+    padding: 25px 20px;
+
+    border: 1px dashed var(--card-border);
+    border-radius: 14px;
+
+    background: var(--card-bg);
+
+    text-align: center;
+}
+
+
+.address-empty-icon {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 0 auto 11px;
+
+    border-radius: 50%;
+
+    background: var(--accent-soft);
+
+    color: var(--accent);
+
+    font-size: 21px;
+}
+
+
+.delivery-address-empty h2 {
+    margin: 0 0 6px;
+
+    color: var(--text-primary);
+
+    font-size: 16px;
+}
+
+
+.delivery-address-empty p {
+    max-width: 400px;
+
+    margin: 0 auto;
+
+    color: var(--text-secondary);
+
+    font-size: 12px;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   ADDRESS MODAL
+   ========================================================= */
+
+.address-modal-overlay {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 1000;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(37, 35, 31, 0.48);
+}
+
+
+.address-modal-overlay.show {
+    display: flex;
+}
+
+
+.address-modal {
+    width: 100%;
+    max-width: 650px;
+
+    max-height: 88vh;
+
+    overflow-y: auto;
+
+    padding: 24px;
+
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+
+    background: var(--card-bg);
+
+    box-shadow:
+        0 24px 60px rgba(45, 35, 25, 0.18);
+}
+
+
+.address-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    margin-bottom: 20px;
+}
+
+
+.address-modal-header h2 {
+    margin: 0 0 6px;
+
+    color: var(--text-primary);
+
+    font-size: 19px;
+}
+
+
+.address-modal-header p {
+    margin: 0;
+
+    color: var(--text-secondary);
+
+    font-size: 12px;
+}
+
+
+.address-modal-close {
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border: 0;
+    border-radius: 50%;
+
+    background: #eee8e0;
+
+    color: var(--text-primary);
+
+    font-size: 22px;
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+
+.address-modal-close:hover {
+    background: var(--accent-soft);
+
+    color: var(--accent);
+}
+
+
+/* =========================================================
+   ADDRESS LIST
+   ========================================================= */
+
+.address-list {
+    display: grid;
+
+    gap: 11px;
+}
+
+
+.address-option {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 18px;
+
+    padding: 16px;
+
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+
+    background: #fffdfa;
+
+    transition:
+        border-color 0.15s ease,
+        background 0.15s ease;
+}
+
+
+.address-option:hover {
+    border-color: #cda989;
+}
+
+
+.address-option.selected {
+    border-color: var(--accent);
+
+    background: var(--accent-soft);
+}
+
+
+.address-option-details {
+    min-width: 0;
+
+    flex: 1;
+}
+
+
+.address-option-name {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    margin-bottom: 8px;
+}
+
+
+.address-option-name strong {
+    color: var(--text-primary);
+
+    font-size: 13px;
+}
+
+
+.address-option-details p {
+    margin: 3px 0;
+
+    color: var(--text-secondary);
+
+    font-size: 11px;
+
+    line-height: 1.45;
+}
+
+
+.address-option-actions {
+    display: flex;
+    align-items: center;
+
+    gap: 7px;
+
+    flex-shrink: 0;
+}
+
+
+.address-option-actions form {
+    margin: 0;
+}
+
+
+.select-address-button,
+.edit-address-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 8px 12px;
+
+    border-radius: 8px;
+
+    font-size: 10px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    text-decoration: none;
+}
+
+
+.select-address-button {
+    border: 0;
+
+    background: var(--accent);
+
+    color: #fffaf3;
+}
+
+
+.select-address-button:hover {
+    background: var(--accent-dark);
+}
+
+
+.edit-address-button {
+    border: 1px solid var(--card-border);
+
+    background: #fffdfa;
+
+    color: var(--text-primary);
+}
+
+
+.edit-address-button:hover {
+    border-color: var(--accent);
+
+    color: var(--accent);
+}
+
+
+/* =========================================================
+   NO ADDRESSES
+   ========================================================= */
+
+.no-addresses {
+    padding: 24px 15px;
+
+    text-align: center;
+}
+
+
+.no-addresses .address-empty-icon {
+    margin-bottom: 10px;
+}
+
+
+.no-addresses h3 {
+    margin: 0 0 5px;
+
+    color: var(--text-primary);
+
+    font-size: 15px;
+}
+
+
+.no-addresses p {
+    margin: 0;
+
+    color: var(--text-secondary);
+
+    font-size: 11px;
+}
+
+
+/* =========================================================
+   ADD ADDRESS
+   ========================================================= */
+
+.add-address-button {
+    display: block;
+
+    margin-top: 15px;
+
+    padding: 12px 15px;
+
+    border: 1px dashed var(--accent);
+    border-radius: 10px;
+
+    background: transparent;
+
+    color: var(--accent);
+
+    text-align: center;
+    text-decoration: none;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    transition:
+        background 0.15s ease,
+        color 0.15s ease;
+}
+
+
+.add-address-button:hover {
+    background: var(--accent-soft);
+}
+
+
+/* =========================================================
+   MODAL RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 560px) {
+
+    .address-modal-overlay {
+        align-items: flex-end;
+
+        padding: 0;
+    }
+
+
+    .address-modal {
+        max-height: 90vh;
+
+        padding: 20px;
+
+        border-radius: 16px 16px 0 0;
+    }
+
+
+    .address-option {
+        flex-direction: column;
+
+        gap: 12px;
+    }
+
+
+    .address-option-actions {
+        width: 100%;
+    }
+
+
+    .address-option-actions form {
+        flex: 1;
+    }
+
+
+    .select-address-button,
+    .edit-address-button {
+        width: 100%;
+    }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE - TABLET
+   ========================================================= */
+
+@media (max-width: 760px) {
+
+    .cafe-navbar {
+        padding: 0 20px;
+    }
+
+
+    .cafe-nav {
+        gap: 18px;
+
+        margin-left: 28px;
+    }
+
+
+    .order-type-page {
+        padding-top: 30px;
+    }
+
+
+    .order-type-options {
+        grid-template-columns: 1fr;
+    }
+
+
+    .order-type-card {
+        min-height: 165px;
+    }
+}
+
+
+/* =========================================================
+   RESPONSIVE - MOBILE
+   ========================================================= */
+
+@media (max-width: 560px) {
+
+    .cafe-navbar {
+        min-height: 60px;
+
+        padding: 0 15px;
+    }
+
+
+    .cafe-brand {
+        font-size: 16px;
+    }
+
+
+    .cafe-brand-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+
+    .cafe-nav {
+        gap: 13px;
+
+        margin-left: 18px;
+    }
+
+
+    .cafe-nav a {
+        font-size: 12px;
+    }
+
+
+    .cafe-profile {
+        width: 34px;
+        height: 34px;
+    }
+
+
+    .order-type-page {
+        min-height: calc(100vh - 60px);
+
+        padding: 24px 14px 40px;
+    }
+
+
+    .order-type-header {
+        gap: 11px;
+
+        margin-bottom: 22px;
+    }
+
+
+    .back-link {
+        width: 36px;
+        height: 36px;
+
+        font-size: 18px;
+    }
+
+
+    .order-type-header h1 {
+        font-size: 22px;
+    }
+
+
+    .order-type-header p {
+        font-size: 13px;
+    }
+
+
+    .order-type-card {
+        min-height: 155px;
+
+        padding: 22px;
+    }
+
+
+    .order-type-icon {
+        width: 43px;
+        height: 43px;
+
+        margin-bottom: 15px;
+
+        font-size: 20px;
+    }
+
+
+    .order-type-content h2 {
+        font-size: 17px;
+    }
+
+
+    .order-type-content p {
+        font-size: 12px;
+    }
+
+
+    .order-type-arrow {
+        right: 20px;
+        bottom: 20px;
+    }
+
+
+    .order-summary {
+        padding: 18px;
+    }
+}
+
+
+/* =========================================================
+   VERY SMALL SCREENS
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+    .cafe-nav {
+        gap: 8px;
+
+        margin-left: 12px;
+    }
+
+
+    .cafe-nav a {
+        font-size: 11px;
+    }
+
+
+    .order-type-header h1 {
+        font-size: 20px;
+    }
+}

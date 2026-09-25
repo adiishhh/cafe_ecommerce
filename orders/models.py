@@ -127,5 +127,18 @@ class OrderItem(models.Model):
         decimal_places=2,
     )
 
+    is_cancelled = models.BooleanField(
+        default=False
+    )
+    
+    cancellation_reason = models.TextField(
+        blank=True
+    )
+    
+    cancelled_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
     def __str__(self):
         return f"{self.order.order_no} - {self.product.name}"

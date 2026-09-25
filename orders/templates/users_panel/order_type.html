@@ -1,0 +1,620 @@
+{% extends "users_panel/users_base.html" %}
+{% load static %}
+
+
+
+{% block title %}
+    Order Type | CAFE
+{% endblock %}
+
+
+{% block extra_head %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'users_panel/css/order_type.css' %}"
+>
+
+{% endblock %}
+
+
+
+{% block content %}
+
+
+<main class="order-type-page">
+
+    <div class="order-type-container">
+
+
+        <div class="order-type-header">
+
+            <a
+                href="{% url 'cart' %}"
+                class="back-button"
+            >
+                ←
+            </a>
+
+
+            <div>
+
+                <h1>
+                    Choose Order Type
+                </h1>
+
+                <p>
+                    How would you like to receive your order?
+                </p>
+
+            </div>
+
+        </div>
+
+
+
+        {% if has_unavailable_items %}
+
+            <div class="order-warning">
+
+                Some items in your order are currently
+                unavailable. Please return to your cart and
+                remove them before continuing.
+
+            </div>
+
+        {% endif %}
+
+
+
+        <section class="order-type-options">
+
+
+            <!-- PICKUP -->
+
+            <form
+                method="POST"
+                action="{% url 'order_type' %}"
+                class="order-type-form"
+            >
+
+                {% csrf_token %}
+
+                <input
+                    type="hidden"
+                    name="order_type"
+                    value="pickup"
+                >
+
+
+                <button
+                    type="submit"
+                    class="order-type-card"
+                    {% if has_unavailable_items %}disabled{% endif %}
+                >
+
+                    <div class="order-type-icon">
+                        🛍
+                    </div>
+
+
+                    <div class="order-type-content">
+
+                        <h2>
+                            Pickup
+                        </h2>
+
+                        <p>
+                            Pick up your order from the cafe.
+                        </p>
+
+                    </div>
+
+
+                    <span class="order-type-arrow">
+                        →
+                    </span>
+
+                </button>
+
+            </form>
+
+
+
+            <!-- DELIVERY -->
+
+            <form
+                method="POST"
+                action="{% url 'order_type' %}"
+                class="order-type-form"
+            >
+
+                {% csrf_token %}
+
+                <input
+                    type="hidden"
+                    name="order_type"
+                    value="delivery"
+                >
+
+
+                <button
+                    type="submit"
+                    class="order-type-card"
+                    {% if has_unavailable_items %}disabled{% endif %}
+                >
+
+                    <div class="order-type-icon">
+                        🏠
+                    </div>
+
+
+                    <div class="order-type-content">
+
+                        <h2>
+                            Delivery
+                        </h2>
+
+                        <p>
+                            Have your order delivered to your address.
+                        </p>
+
+                    </div>
+
+
+                    <span class="order-type-arrow">
+                        →
+                    </span>
+
+                </button>
+
+            </form>
+
+
+        </section>
+
+
+
+        <!-- SELECTED DELIVERY ADDRESS -->
+
+        {% if selected_order_type == 'delivery' and selected_address %}
+
+            <section class="selected-address-section">
+
+
+                <div class="selected-address-heading">
+
+                    <div>
+
+                        <h2>
+                            Delivery Address
+                        </h2>
+
+                        <p>
+                            Your selected delivery address
+                        </p>
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        class="change-address-button"
+                        id="openAddressModal"
+                    >
+                        Change
+                    </button>
+
+                </div>
+
+
+
+                <div class="selected-address-card">
+
+                    <div class="selected-address-top">
+
+                        <strong>
+                            {{ selected_address.name }}
+                        </strong>
+
+
+                        {% if selected_address.is_default %}
+
+                            <span class="default-badge">
+                                Default
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <p>
+                        {{ selected_address.flat_house }},
+                        {{ selected_address.area_street }}
+                    </p>
+
+                    <p>
+                        {{ selected_address.city }},
+                        {{ selected_address.state }}
+                        - {{ selected_address.pincode }}
+                    </p>
+
+                    <p class="selected-address-phone">
+                        {{ selected_address.contact_number }}
+                    </p>
+
+                </div>
+
+
+
+                <a
+                    href="{% url 'final_checkout' %}"
+                    class="checkout-button"
+                >
+                    Continue to Checkout
+                </a>
+
+            </section>
+
+
+        {% elif selected_order_type == 'delivery' %}
+
+
+            <section class="delivery-address-empty">
+
+                <div class="address-empty-icon">
+                    +
+                </div>
+
+
+                <h2>
+                    Select a delivery address
+                </h2>
+
+
+                <p>
+                    Choose an existing address or add a new one
+                    to continue.
+                </p>
+
+
+                <button
+                    type="button"
+                    class="checkout-button"
+                    id="openAddressModalEmpty"
+                >
+                    Select Address
+                </button>
+
+            </section>
+
+        {% endif %}
+
+
+
+        <!-- ORDER SUMMARY -->
+
+        <section class="order-summary">
+
+            <div class="summary-row">
+
+                <span>
+                    {{ cart_count }}
+                    item{{ cart_count|pluralize }}
+                </span>
+
+                <span>
+                    ₹{{ subtotal|floatformat:2 }}
+                </span>
+
+            </div>
+
+
+            <div class="summary-row">
+
+                <span>
+                    GST (5%)
+                </span>
+
+                <span>
+                    ₹{{ gst|floatformat:2 }}
+                </span>
+
+            </div>
+
+
+            <div class="summary-divider"></div>
+
+
+            <div class="summary-row total-row">
+
+                <strong>
+                    Total
+                </strong>
+
+                <strong>
+                    ₹{{ total|floatformat:2 }}
+                </strong>
+
+            </div>
+
+        </section>
+
+
+    </div>
+
+</main>
+
+
+
+<!-- =====================================================
+     DELIVERY ADDRESS MODAL
+     ===================================================== -->
+
+<div
+    class="address-modal-overlay {% if address_modal %}show{% endif %}"
+    id="addressModal"
+>
+
+    <div class="address-modal">
+
+
+        <div class="address-modal-header">
+
+            <div>
+
+                <h2>
+                    Select Delivery Address
+                </h2>
+
+                <p>
+                    Choose where you want your order delivered.
+                </p>
+
+            </div>
+
+
+            <button
+                type="button"
+                class="address-modal-close"
+                id="closeAddressModal"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+
+        {% if addresses %}
+
+            <div class="address-list">
+
+
+                {% for address in addresses %}
+
+                    <div
+                        class="address-option
+                        {% if selected_address and selected_address.id == address.id %}
+                            selected
+                        {% endif %}"
+                    >
+
+
+                        <div class="address-option-details">
+
+                            <div class="address-option-name">
+
+                                <strong>
+                                    {{ address.name }}
+                                </strong>
+
+
+                                {% if address.is_default %}
+
+                                    <span class="default-badge">
+                                        Default
+                                    </span>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <p>
+                                {{ address.flat_house }},
+                                {{ address.area_street }}
+                            </p>
+
+                            <p>
+                                {{ address.city }},
+                                {{ address.state }}
+                                - {{ address.pincode }}
+                            </p>
+
+                            <p>
+                                {{ address.contact_number }}
+                            </p>
+
+                        </div>
+
+
+
+                        <div class="address-option-actions">
+
+
+                            <form
+                                method="POST"
+                                action="{% url 'select_checkout_address' %}"
+                            >
+
+                                {% csrf_token %}
+
+                                <input
+                                    type="hidden"
+                                    name="address_id"
+                                    value="{{ address.id }}"
+                                >
+
+
+                                <button
+                                    type="submit"
+                                    class="select-address-button"
+                                >
+
+                                    {% if selected_address and selected_address.id == address.id %}
+                                        Selected
+                                    {% else %}
+                                        Select
+                                    {% endif %}
+
+                                </button>
+
+                            </form>
+
+
+
+                            <a
+                                href="{% url 'edit_address' address.id %}?next={% url 'order_type' %}"
+                                class="edit-address-button"
+                            >
+                                Edit
+                            </a>
+
+                        </div>
+
+
+                    </div>
+
+                {% endfor %}
+
+
+            </div>
+
+
+        {% else %}
+
+
+            <div class="no-addresses">
+
+                <div class="address-empty-icon">
+                    +
+                </div>
+
+
+                <h3>
+                    No addresses yet
+                </h3>
+
+
+                <p>
+                    You haven't created a delivery address yet.
+                </p>
+
+            </div>
+
+        {% endif %}
+
+
+
+        <a
+            href="{% url 'add_address' %}?next={% url 'order_type' %}"
+            class="add-address-button"
+        >
+            + Add New Address
+        </a>
+
+
+    </div>
+
+</div>
+
+
+
+<script>
+
+    const addressModal =
+        document.getElementById("addressModal");
+
+    const openAddressModal =
+        document.getElementById("openAddressModal");
+
+    const openAddressModalEmpty =
+        document.getElementById("openAddressModalEmpty");
+
+    const closeAddressModal =
+        document.getElementById("closeAddressModal");
+
+
+    function openAddressSelection() {
+
+        if (addressModal) {
+            addressModal.classList.add("show");
+        }
+
+    }
+
+
+    function closeAddressSelection() {
+
+        if (addressModal) {
+            addressModal.classList.remove("show");
+        }
+
+    }
+
+
+    if (openAddressModal) {
+
+        openAddressModal.addEventListener(
+            "click",
+            openAddressSelection
+        );
+
+    }
+
+
+    if (openAddressModalEmpty) {
+
+        openAddressModalEmpty.addEventListener(
+            "click",
+            openAddressSelection
+        );
+
+    }
+
+
+    if (closeAddressModal) {
+
+        closeAddressModal.addEventListener(
+            "click",
+            closeAddressSelection
+        );
+
+    }
+
+
+    if (addressModal) {
+
+        addressModal.addEventListener(
+            "click",
+            function (event) {
+
+                if (
+                    event.target === addressModal
+                ) {
+
+                    closeAddressSelection();
+
+                }
+
+            }
+        );
+
+    }
+
+</script>
+
+
+{% endblock %}

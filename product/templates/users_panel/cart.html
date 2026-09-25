@@ -1,100 +1,23 @@
+{% extends "users_panel/users_base.html" %}
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>Review Order - CAFE</title>
-
-    <link
-        rel="icon"
-        type="image/png"
-        href="{% static 'common/images/favicon.png' %}"
-    >
-
-    <link
-        rel="stylesheet"
-        href="{% static 'users_panel/css/cart.css' %}"
-    >
-
-</head>
+{% block title %}
+    Review Order - CAFE
+{% endblock %}
 
 
-<body>
+{% block extra_head %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'users_panel/css/cart.css' %}"
+>
+
+{% endblock %}
 
 
-<!-- =========================================================
-     NAVBAR
-     ========================================================= -->
-
-<header class="cafe-navbar">
-
-    <a href="{% url 'home' %}" class="cafe-brand">
-
-        <span class="cafe-brand-icon">
-            C
-        </span>
-
-        <span>CAFE</span>
-
-    </a>
-
-
-    <nav class="cafe-nav">
-
-        <a href="{% url 'home' %}">
-            Menu
-        </a>
-
-        <a href="#">
-            Orders
-        </a>
-
-        <a href="{% url 'my_usuals' %}">
-            My Usuals
-        </a>
-
-        <a href="{% url 'profile' %}">
-            Profile
-        </a>
-
-    </nav>
-
-
-    <a href="{% url 'profile' %}" class="cafe-profile">
-
-        {% if request.user.profile_image %}
-
-            <img
-                src="{{ request.user.profile_image.url }}"
-                alt="Profile"
-            >
-
-        {% else %}
-
-            <span>
-                {{ request.user.name|first|upper }}
-            </span>
-
-        {% endif %}
-
-    </a>
-
-</header>
-
-
-
-<!-- =========================================================
-     MESSAGES
-     ========================================================= -->
+{% block content %}
 
 {% if messages %}
 
@@ -534,15 +457,26 @@
 
             {% else %}
 
-                <button
-                    type="button"
-                    class="continue-button"
-                    {% if has_unavailable_items %}disabled{% endif %}
-                >
-
-                    Continue · ₹<span id="continue-total">{{ total|floatformat:2 }}</span>
-
-                </button>
+                {% if has_unavailable_items %}
+                            
+                    <button
+                        type="button"
+                        class="continue-button"
+                        disabled
+                    >
+                        Continue · ₹<span id="continue-total">{{ total|floatformat:2 }}</span>
+                    </button>
+                
+                {% else %}
+                
+                    <a
+                        href="{% url 'order_type' %}"
+                        class="continue-button"
+                    >
+                        Continue · ₹<span id="continue-total">{{ total|floatformat:2 }}</span>
+                    </a>
+                
+                {% endif %}
 
             {% endif %}
 
@@ -1189,7 +1123,4 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </script>
 
-
-</body>
-
-</html>
+{% endblock %}

@@ -1,41 +1,56 @@
+{% extends "users_panel/users_base.html" %}
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Profile | SmartCafe</title>
-
-    <link rel="icon"
-          type="image/png"
-          href="{% static 'common/images/favicon.png' %}">
-
-    <link rel="stylesheet"
-          href="{% static 'users/css/profile.css' %}">
-</head>
+{% block title %}
+    Profile | SmartCafe
+{% endblock %}
 
 
-<body>
+{% block extra_head %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'users/css/profile.css' %}"
+>
+
+{% endblock %}
+
+
+{% block content %}
+
 
 <main class="profile-page">
 
     <div class="profile-container">
 
+
         <!-- Header -->
 
         <header class="profile-header">
 
-            <a href="/" class="back-button">←</a>
+            <a
+                href="/"
+                class="back-button"
+            >
+                ←
+            </a>
+
 
             <div>
-                <h1>Profile</h1>
-                <p>Manage your account</p>
+
+                <h1>
+                    Profile
+                </h1>
+
+                <p>
+                    Manage your account
+                </p>
+
             </div>
 
         </header>
+
 
 
         <div class="profile-layout">
@@ -45,59 +60,95 @@
 
             <aside class="profile-sidebar">
 
+
                 <div class="sidebar-title">
-                    <span>ACCOUNT</span>
+
+                    <span>
+                        ACCOUNT
+                    </span>
+
                 </div>
 
 
+
                 <nav class="profile-nav">
-                
+
+
                     <a
                         href="#personal-information"
                         class="profile-nav-link"
                     >
-                        <span>Personal Information</span>
+
+                        <span>
+                            Personal Information
+                        </span>
+
                     </a>
-                
-                
+
+
+
                     <a
                         href="#delivery-address"
                         class="profile-nav-link"
                     >
-                        <span>Delivery Address</span>
+
+                        <span>
+                            Delivery Address
+                        </span>
+
                     </a>
-                
-                
+
+
+
                     <a
                         href="#my-usuals"
                         class="profile-nav-link"
                     >
-                        <span>My Usuals</span>
+
+                        <span>
+                            My Usuals
+                        </span>
+
                     </a>
-                
-                
+
+
+
                     <a
                         href="#security"
                         class="profile-nav-link"
                     >
-                        <span>Security</span>
+
+                        <span>
+                            Security
+                        </span>
+
                     </a>
-                
+
+
                 </nav>
+
 
 
                 <!-- Logout -->
 
-                <form method="POST"
-                      action="{% url 'logout' %}"
-                      class="sidebar-logout-form">
+                <form
+                    method="POST"
+                    action="{% url 'logout' %}"
+                    class="sidebar-logout-form"
+                >
 
                     {% csrf_token %}
 
-                    <button type="submit"
-                            class="sidebar-logout">
 
-                        <span>Log out</span>
+                    <button
+                        type="submit"
+                        class="sidebar-logout"
+                    >
+
+                        <span>
+                            Log out
+                        </span>
+
 
                         <span class="logout-icon">
                             ↪
@@ -106,6 +157,7 @@
                     </button>
 
                 </form>
+
 
             </aside>
 
@@ -120,12 +172,16 @@
 
                 <section class="profile-summary">
 
+
                     <div class="avatar">
+
 
                         {% if request.user.profile_image %}
 
-                            <img src="{{ request.user.profile_image.url }}"
-                                 alt="Profile image">
+                            <img
+                                src="{{ request.user.profile_image.url }}"
+                                alt="Profile image"
+                            >
 
                         {% else %}
 
@@ -135,20 +191,26 @@
 
                         {% endif %}
 
+
                     </div>
 
 
+
                     <div class="summary-details">
+
 
                         <h2>
                             {{ request.user.name }}
                         </h2>
 
+
                         <p>
                             {{ request.user.email }}
                         </p>
 
+
                     </div>
+
 
                 </section>
 
@@ -156,21 +218,30 @@
 
                 <!-- Personal Information -->
 
-                <section class="profile-section"
-                         id="personal-information">
+                <section
+                    class="profile-section"
+                    id="personal-information"
+                >
+
 
                     <div class="section-title">
+
 
                         <h2>
                             Personal Information
                         </h2>
 
-                        <a href="{% url 'edit_profile' %}"
-                           class="edit-link">
+
+                        <a
+                            href="{% url 'edit_profile' %}"
+                            class="edit-link"
+                        >
                             Edit
                         </a>
 
+
                     </div>
+
 
 
                     <div class="information-list">
@@ -182,11 +253,13 @@
                                 Name
                             </span>
 
+
                             <span class="information-value">
                                 {{ request.user.name }}
                             </span>
 
                         </div>
+
 
 
                         <div class="information-item">
@@ -195,6 +268,7 @@
                                 Email
                             </span>
 
+
                             <span class="information-value">
                                 {{ request.user.email }}
                             </span>
@@ -202,11 +276,13 @@
                         </div>
 
 
+
                         <div class="information-item">
 
                             <span class="information-label">
                                 Phone
                             </span>
+
 
                             <span class="information-value">
                                 {{ request.user.phone }}
@@ -217,38 +293,50 @@
 
                     </div>
 
+
                 </section>
 
 
 
                 <!-- Delivery Address -->
 
-                <section class="profile-section address-section"
-                         id="delivery-address">
+                <section
+                    class="profile-section address-section"
+                    id="delivery-address"
+                >
 
 
                     <div class="section-title address-title">
+
 
                         <h2>
                             Delivery Address
                         </h2>
 
-                        <a href="{% url 'addresses' %}"
-                           class="edit-link"
-                           aria-label="Manage delivery addresses">
+
+                        <a
+                            href="{% url 'addresses' %}"
+                            class="edit-link"
+                            aria-label="Manage delivery addresses"
+                        >
                             →
                         </a>
+
 
                     </div>
 
 
+
                     {% if default_address %}
 
+
                         <div class="address-content">
+
 
                             <p class="recipient-name">
                                 {{ default_address.name }}
                             </p>
+
 
                             <p class="address-text">
 
@@ -262,27 +350,36 @@
 
                             </p>
 
+
                             <p class="address-contact">
                                 {{ default_address.contact_number }}
                             </p>
+
 
                         </div>
 
 
                     {% else %}
 
+
                         <div class="empty-address">
+
 
                             <p>
                                 No delivery address added.
                             </p>
 
-                            <a href="{% url 'add_address' %}"
-                               class="add-address">
+
+                            <a
+                                href="{% url 'add_address' %}"
+                                class="add-address"
+                            >
                                 Add Address
                             </a>
 
+
                         </div>
+
 
                     {% endif %}
 
@@ -290,69 +387,99 @@
                 </section>
 
 
-                <section class="profile-section my-usuals-section"
-                         id="my-usuals">
 
-                    <a href="{% url 'my_usuals' %}"
-                       class="my-usuals-link">
+                <!-- My Usuals -->
+
+                <section
+                    class="profile-section my-usuals-section"
+                    id="my-usuals"
+                >
+
+
+                    <a
+                        href="{% url 'my_usuals' %}"
+                        class="my-usuals-link"
+                    >
+
 
                         <div class="my-usuals-content">
+
 
                             <h2>
                                 My Usuals
                             </h2>
 
+
                             <p>
                                 Manage Saved Orders
                             </p>
 
+
                         </div>
+
 
                         <span class="my-usuals-arrow">
                             →
                         </span>
 
+
                     </a>
+
 
                 </section>
 
+
+
                 <!-- Security -->
 
-                <section class="profile-section security-section"
-                         id="security">
+                <section
+                    class="profile-section security-section"
+                    id="security"
+                >
 
-                    <a href="{% url 'security' %}"
-                       class="security-link">
+
+                    <a
+                        href="{% url 'security' %}"
+                        class="security-link"
+                    >
+
 
                         <div class="security-content">
+
 
                             <h2>
                                 Security
                             </h2>
 
+
                             <p>
                                 Manage your email and password
                             </p>
 
+
                         </div>
+
 
                         <span class="security-arrow">
                             →
                         </span>
 
+
                     </a>
+
 
                 </section>
 
 
             </div>
 
+
         </div>
+
 
     </div>
 
 </main>
 
-</body>
 
-</html>
+{% endblock %}

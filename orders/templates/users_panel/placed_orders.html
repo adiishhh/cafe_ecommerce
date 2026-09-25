@@ -1,0 +1,412 @@
+{% extends "users_panel/users_base.html" %}
+{% load static %}
+
+
+{% block title %}
+    Orders | SmartCafe
+{% endblock %}
+
+
+{% block extra_head %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'users_panel/css/placed_orders.css' %}"
+>
+
+{% endblock %}
+
+
+{% block content %}
+
+
+<main class="orders-page">
+
+    <div class="home-container">
+
+
+        <!-- PAGE HEADER -->
+
+        <section class="orders-header">
+
+            <a
+                href="{% url 'home' %}"
+                class="back-button"
+            >
+                ←
+            </a>
+
+            <div>
+
+                <h1>
+                    Orders
+                </h1>
+
+                <p>
+                    Track and manage your orders
+                </p>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- FILTERS -->
+
+        <section class="orders-filters">
+
+            <form method="get">
+
+                <div class="search-wrapper">
+
+                    <span class="search-icon">
+                        ⌕
+                    </span>
+
+                    <input
+                        type="text"
+                        name="q"
+                        value="{{ search }}"
+                        placeholder="Search by order number"
+                    >
+
+                </div>
+
+
+                <div class="filter-row">
+
+                    <select name="status">
+
+                        <option value="">
+                            All
+                        </option>
+
+                        <option
+                            value="confirmed"
+                            {% if status_filter == "confirmed" %}selected{% endif %}
+                        >
+                            Confirmed
+                        </option>
+
+                        <option
+                            value="preparing"
+                            {% if status_filter == "preparing" %}selected{% endif %}
+                        >
+                            Preparing
+                        </option>
+
+                        <option
+                            value="ready"
+                            {% if status_filter == "ready" %}selected{% endif %}
+                        >
+                            Ready
+                        </option>
+
+                        <option
+                            value="delivered"
+                            {% if status_filter == "delivered" %}selected{% endif %}
+                        >
+                            Delivered
+                        </option>
+
+                        <option
+                            value="cancelled"
+                            {% if status_filter == "cancelled" %}selected{% endif %}
+                        >
+                            Cancelled
+                        </option>
+
+                    </select>
+
+
+                    <select name="date">
+
+                        <option value="">
+                            All Dates
+                        </option>
+
+                        <option
+                            value="today"
+                            {% if date_filter == "today" %}selected{% endif %}
+                        >
+                            Today
+                        </option>
+
+                        <option
+                            value="this_week"
+                            {% if date_filter == "this_week" %}selected{% endif %}
+                        >
+                            This Week
+                        </option>
+
+                        <option
+                            value="this_month"
+                            {% if date_filter == "this_month" %}selected{% endif %}
+                        >
+                            This Month
+                        </option>
+
+                        <option
+                            value="last_month"
+                            {% if date_filter == "last_month" %}selected{% endif %}
+                        >
+                            Last Month
+                        </option>
+
+                    </select>
+
+
+                    <button
+                        type="submit"
+                        class="filter-button"
+                    >
+                        Apply
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+
+
+        <!-- CURRENT ORDERS -->
+
+        <section class="orders-section">
+
+            <div class="section-title-row">
+
+                <div>
+
+                    <h2>
+                        Current Orders
+                    </h2>
+
+                    <p>
+                        Orders that are still being processed
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            {% if current_orders %}
+
+                <div class="orders-list">
+
+                    {% for order in current_orders %}
+
+                        <article class="order-card">
+
+                            <div class="order-card-top">
+
+                                <div>
+
+                                    <span class="order-number">
+                                        {{ order.order_no }}
+                                    </span>
+
+                                    <span class="order-date">
+                                        {{ order.created_at|date:"d M Y · H:i" }}
+                                    </span>
+
+                                </div>
+
+
+                                <span
+                                    class="status-badge status-{{ order.status }}"
+                                >
+                                    {{ order.get_status_display }}
+                                </span>
+
+                            </div>
+
+
+                            <div class="order-card-middle">
+
+                                <div class="order-meta">
+
+                                    <span>
+                                        {{ order.items.count }}
+                                        item{{ order.items.count|pluralize }}
+                                    </span>
+
+                                    <span>
+                                        {{ order.get_order_type_display }}
+                                    </span>
+
+                                </div>
+
+
+                                <strong class="order-total">
+                                    ₹{{ order.total_amount }}
+                                </strong>
+
+                            </div>
+
+
+                            <div class="order-card-bottom">
+
+                                <a
+                                    href="{% url 'order_detail' order.id %}"
+                                    class="view-order-button"
+                                >
+                                    View Order
+                                </a>
+
+                            </div>
+
+                        </article>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <div class="empty-orders">
+
+                    <div class="empty-orders-icon">
+                        🧾
+                    </div>
+
+                    <h3>
+                        No current orders
+                    </h3>
+
+                    <p>
+                        Your active orders will appear here.
+                    </p>
+
+                    <a
+                        href="{% url 'home' %}"
+                        class="browse-menu-button"
+                    >
+                        Browse Menu
+                    </a>
+
+                </div>
+
+            {% endif %}
+
+        </section>
+
+
+
+        <!-- PAST ORDERS -->
+
+        <section class="orders-section past-orders-section">
+
+            <div class="section-title-row">
+
+                <div>
+
+                    <h2>
+                        Past Orders
+                    </h2>
+
+                    <p>
+                        Your completed and cancelled orders
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            {% if past_orders %}
+
+                <div class="orders-list">
+
+                    {% for order in past_orders %}
+
+                        <article class="order-card">
+
+                            <div class="order-card-top">
+
+                                <div>
+
+                                    <span class="order-number">
+                                        {{ order.order_no }}
+                                    </span>
+
+                                    <span class="order-date">
+                                        {{ order.created_at|date:"d M Y · H:i" }}
+                                    </span>
+
+                                </div>
+
+
+                                <span
+                                    class="status-badge status-{{ order.status }}"
+                                >
+                                    {{ order.get_status_display }}
+                                </span>
+
+                            </div>
+
+
+                            <div class="order-card-middle">
+
+                                <div class="order-meta">
+
+                                    <span>
+                                        {{ order.items.count }}
+                                        item{{ order.items.count|pluralize }}
+                                    </span>
+
+                                    <span>
+                                        {{ order.get_order_type_display }}
+                                    </span>
+
+                                </div>
+
+
+                                <strong class="order-total">
+                                    ₹{{ order.total_amount }}
+                                </strong>
+
+                            </div>
+
+
+                            <div class="order-card-bottom">
+
+                                <a
+                                    href="{% url 'order_detail' order.id %}"
+                                    class="view-order-button"
+                                >
+                                    View Order
+                                </a>
+
+                            </div>
+
+                        </article>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <div class="empty-past-orders">
+
+                    <p>
+                        No past orders found.
+                    </p>
+
+                </div>
+
+            {% endif %}
+
+        </section>
+
+
+    </div>
+
+</main>
+
+
+{% endblock %}

@@ -1,0 +1,697 @@
+/* =========================================================
+   CAFE - FINAL CHECKOUT
+   ========================================================= */
+
+:root {
+    --page-bg: #f5f0e8;
+    --card-bg: #fffdfa;
+    --card-border: #e2d8ca;
+
+    --text-primary: #25231f;
+    --text-secondary: #746d65;
+    --text-muted: #968e85;
+
+    --accent: #8b3f16;
+    --accent-dark: #743312;
+    --accent-soft: #f1e6d8;
+
+    --shadow:
+        0 8px 24px rgba(72, 55, 39, 0.07);
+}
+
+
+* {
+    box-sizing: border-box;
+}
+
+
+html {
+    scroll-behavior: smooth;
+}
+
+
+body {
+    margin: 0;
+
+    background: var(--page-bg);
+    color: var(--text-primary);
+
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+}
+
+
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+.final-checkout-page {
+    min-height: calc(100vh - 68px);
+
+    padding: 42px 20px 60px;
+}
+
+
+.final-checkout-container {
+    width: 100%;
+    max-width: 1050px;
+
+    margin: 0 auto;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.checkout-page-header {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 16px;
+
+    margin-bottom: 30px;
+}
+
+
+.checkout-back-button {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    color: #6f6258;
+
+    font-size: 30px;
+    line-height: 1;
+
+    text-decoration: none;
+}
+
+
+.checkout-back-button:hover {
+    color: var(--accent);
+}
+
+
+.checkout-page-header h1 {
+    margin: 0 0 7px;
+
+    font-size: 27px;
+    line-height: 1.2;
+}
+
+
+.checkout-page-header p {
+    margin: 0;
+
+    color: var(--text-secondary);
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   LAYOUT
+   ========================================================= */
+
+.checkout-layout {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        330px;
+
+    gap: 20px;
+
+    align-items: start;
+}
+
+
+.checkout-main {
+    display: grid;
+
+    gap: 18px;
+}
+
+
+.checkout-sidebar {
+    position: sticky;
+
+    top: 20px;
+}
+
+
+/* =========================================================
+   CARD
+   ========================================================= */
+
+.checkout-card,
+.price-card {
+    padding: 22px 24px;
+
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+
+    background: var(--card-bg);
+
+    box-shadow: var(--shadow);
+}
+
+
+.checkout-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    margin-bottom: 17px;
+}
+
+
+.checkout-card-header h2 {
+    margin: 0 0 5px;
+
+    color: var(--text-primary);
+
+    font-size: 17px;
+}
+
+
+.checkout-card-header p {
+    margin: 0;
+
+    color: var(--text-secondary);
+
+    font-size: 12px;
+}
+
+
+.change-link {
+    color: var(--accent);
+
+    font-size: 11px;
+    font-weight: 600;
+
+    text-decoration: none;
+}
+
+
+.change-link:hover {
+    color: var(--accent-dark);
+
+    text-decoration: underline;
+}
+
+
+/* =========================================================
+   ORDER TYPE
+   ========================================================= */
+
+.checkout-type-display {
+    display: flex;
+    align-items: center;
+
+    gap: 13px;
+
+    padding: 14px;
+
+    border-radius: 10px;
+
+    background: #faf6f0;
+}
+
+
+.checkout-type-icon {
+    width: 43px;
+    height: 43px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 11px;
+
+    background: var(--accent-soft);
+
+    font-size: 20px;
+}
+
+
+.checkout-type-display strong {
+    display: block;
+
+    margin-bottom: 4px;
+
+    font-size: 13px;
+}
+
+
+.checkout-type-display span {
+    display: block;
+
+    color: var(--text-secondary);
+
+    font-size: 11px;
+}
+
+
+/* =========================================================
+   ADDRESS
+   ========================================================= */
+
+.checkout-address {
+    padding: 16px;
+
+    border-radius: 10px;
+
+    background: #faf6f0;
+}
+
+
+.checkout-address strong {
+    display: block;
+
+    margin-bottom: 7px;
+
+    font-size: 13px;
+}
+
+
+.checkout-address p {
+    margin: 4px 0;
+
+    color: var(--text-secondary);
+
+    font-size: 11px;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   ITEMS
+   ========================================================= */
+
+.checkout-items {
+    display: grid;
+
+    gap: 14px;
+}
+
+
+.checkout-item {
+    display: flex;
+    align-items: center;
+
+    gap: 13px;
+
+    padding-bottom: 14px;
+
+    border-bottom: 1px solid #e8dfd4;
+}
+
+
+.checkout-item:last-child {
+    padding-bottom: 0;
+
+    border-bottom: 0;
+}
+
+
+.checkout-item-image {
+    width: 58px;
+    height: 58px;
+
+    flex-shrink: 0;
+
+    overflow: hidden;
+
+    border-radius: 9px;
+
+    background: #eee8df;
+}
+
+
+.checkout-item-image img {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+}
+
+
+.item-image-placeholder {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 20px;
+}
+
+
+.checkout-item-info {
+    flex: 1;
+}
+
+
+.checkout-item-info h3 {
+    margin: 0 0 5px;
+
+    font-size: 13px;
+}
+
+
+.checkout-item-info > span {
+    color: var(--text-muted);
+
+    font-size: 10px;
+}
+
+
+.item-instructions {
+    margin: 6px 0 0;
+
+    color: var(--text-secondary);
+
+    font-size: 10px;
+
+    line-height: 1.45;
+}
+
+
+.checkout-item-price {
+    flex-shrink: 0;
+
+    color: var(--text-primary);
+
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   PAYMENT
+   ========================================================= */
+
+.payment-options {
+    display: grid;
+
+    gap: 10px;
+}
+
+
+.payment-option {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 14px;
+
+    border: 1px solid var(--card-border);
+    border-radius: 11px;
+
+    background: #fffdfa;
+}
+
+
+.payment-option.selected {
+    border-color: var(--accent);
+
+    background: var(--accent-soft);
+}
+
+
+.payment-option.disabled {
+    opacity: 0.55;
+}
+
+
+.payment-option input {
+    position: absolute;
+
+    opacity: 0;
+}
+
+
+.payment-method-icon {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 9px;
+
+    background: #eee7df;
+
+    color: var(--accent);
+
+    font-size: 10px;
+    font-weight: 700;
+}
+
+
+.payment-method-content {
+    flex: 1;
+}
+
+
+.payment-method-content strong {
+    display: block;
+
+    margin-bottom: 4px;
+
+    font-size: 12px;
+}
+
+
+.payment-method-content span {
+    display: block;
+
+    color: var(--text-secondary);
+
+    font-size: 10px;
+}
+
+
+.coming-soon {
+    color: var(--text-muted);
+
+    font-size: 9px;
+    font-weight: 600;
+}
+
+
+.selected-indicator {
+    width: 18px;
+    height: 18px;
+
+    flex-shrink: 0;
+
+    border: 5px solid var(--accent);
+
+    border-radius: 50%;
+}
+
+
+/* =========================================================
+   PRICE CARD
+   ========================================================= */
+
+.price-card h2 {
+    margin: 0 0 20px;
+
+    font-size: 17px;
+}
+
+
+.price-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 6px 0;
+
+    color: var(--text-secondary);
+
+    font-size: 12px;
+}
+
+
+.price-divider {
+    height: 1px;
+
+    margin: 12px 0;
+
+    background: #e4dbd1;
+}
+
+
+.price-total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    color: var(--text-primary);
+
+    font-size: 15px;
+}
+
+
+.price-total strong:last-child {
+    color: var(--accent);
+
+    font-size: 20px;
+}
+
+
+/* =========================================================
+   PLACE ORDER
+   ========================================================= */
+
+.place-order-form {
+    margin-top: 20px;
+}
+
+
+.place-order-button {
+    width: 100%;
+
+    padding: 14px 18px;
+
+    border: 0;
+    border-radius: 10px;
+
+    background: var(--accent);
+
+    color: #fffaf3;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 7px 18px rgba(139, 63, 22, 0.15);
+
+    transition:
+        background 0.15s ease,
+        transform 0.15s ease;
+}
+
+
+.place-order-button:hover {
+    background: var(--accent-dark);
+
+    transform: translateY(-1px);
+}
+
+
+.cancel-order-link {
+    display: block;
+
+    margin-top: 13px;
+
+    color: var(--text-muted);
+
+    text-align: center;
+
+    font-size: 11px;
+
+    text-decoration: none;
+}
+
+
+.cancel-order-link:hover {
+    color: var(--accent);
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 850px) {
+
+    .checkout-layout {
+        grid-template-columns: 1fr;
+    }
+
+
+    .checkout-sidebar {
+        position: static;
+    }
+
+}
+
+
+@media (max-width: 560px) {
+
+    .final-checkout-page {
+        padding: 24px 14px 40px;
+    }
+
+
+    .checkout-page-header {
+        gap: 11px;
+
+        margin-bottom: 22px;
+    }
+
+
+    .checkout-page-header h1 {
+        font-size: 22px;
+    }
+
+
+    .checkout-page-header p {
+        font-size: 13px;
+    }
+
+
+    .checkout-card,
+    .price-card {
+        padding: 18px;
+    }
+
+
+    .checkout-item {
+        align-items: flex-start;
+    }
+
+
+    .checkout-item-image {
+        width: 52px;
+        height: 52px;
+    }
+
+
+    .checkout-item-price {
+        font-size: 11px;
+    }
+
+}
