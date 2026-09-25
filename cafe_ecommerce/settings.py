@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'product',
     'saved_orders',
     'orders',
+    'tables',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
