@@ -93,6 +93,15 @@ class Order(models.Model):
         auto_now=True,
     )
 
+    cancelled_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+    
+    cancellation_reason = models.TextField(
+        blank=True
+    )
+
     def __str__(self):
         return self.order_no
 
