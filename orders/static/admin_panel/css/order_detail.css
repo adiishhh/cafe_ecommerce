@@ -1,0 +1,730 @@
+/* =========================================================
+   ADMIN ORDER DETAIL
+   ========================================================= */
+
+
+.order-detail-page {
+
+    max-width: 1200px;
+
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.detail-header {
+
+    margin-bottom: 24px;
+}
+
+
+.back-link {
+
+    display: inline-block;
+
+    margin-bottom: 10px;
+
+    color: #777;
+
+    text-decoration: none;
+
+    font-size: 12px;
+}
+
+
+.back-link:hover {
+
+    color: #e44700;
+}
+
+
+.detail-title {
+
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+}
+
+
+.detail-title h1 {
+
+    margin: 0;
+
+    color: #211f1e;
+
+    font-size: 27px;
+    font-weight: 600;
+}
+
+
+.detail-header > div > p {
+
+    margin: 7px 0 0;
+
+    color: #888;
+
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   GRID
+   ========================================================= */
+
+.detail-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 1fr);
+
+    gap: 16px;
+}
+
+
+/* =========================================================
+   CARDS
+   ========================================================= */
+
+.detail-card {
+
+    padding: 20px;
+
+    background: white;
+
+    border: 1px solid #e2e2e2;
+
+    border-radius: 11px;
+}
+
+
+.card-title {
+
+    margin-bottom: 18px;
+
+    color: #211f1e;
+
+    font-size: 14px;
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   CUSTOMER
+   ========================================================= */
+
+.customer-detail {
+
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    margin-bottom: 18px;
+}
+
+
+.customer-avatar {
+
+    width: 44px;
+    height: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    background: #fff0e8;
+
+    color: #e44700;
+
+    font-size: 16px;
+    font-weight: 600;
+}
+
+
+.customer-detail h3 {
+
+    margin: 0 0 4px;
+
+    color: #222;
+
+    font-size: 15px;
+}
+
+
+.customer-detail p {
+
+    margin: 0;
+
+    color: #999;
+
+    font-size: 11px;
+}
+
+
+/* =========================================================
+   INFORMATION ROWS
+   ========================================================= */
+
+.info-list {
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 0;
+}
+
+
+.info-row {
+
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 11px 0;
+
+    border-bottom: 1px solid #eee;
+}
+
+
+.info-row:first-child {
+
+    padding-top: 0;
+}
+
+
+.info-row:last-child {
+
+    padding-bottom: 0;
+
+    border-bottom: none;
+}
+
+
+.info-row span {
+
+    color: #888;
+
+    font-size: 12px;
+}
+
+
+.info-row strong {
+
+    color: #333;
+
+    font-size: 12px;
+
+    text-align: right;
+}
+
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+.status-card {
+
+    display: flex;
+    flex-direction: column;
+}
+
+
+.status-label {
+
+    margin-bottom: 7px;
+
+    color: #888;
+
+    font-size: 11px;
+}
+
+
+.detail-status-select {
+
+    width: 100%;
+    height: 40px;
+
+    padding: 0 12px;
+
+    border: 1px solid #ddd;
+
+    border-radius: 8px;
+
+    background: white;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    outline: none;
+
+    cursor: pointer;
+}
+
+
+.detail-status-select:focus {
+
+    border-color: #e44700;
+}
+
+
+.detail-status-select:disabled {
+
+    opacity: 0.6;
+
+    cursor: wait;
+}
+
+
+.status-help {
+
+    margin: 8px 0 0;
+
+    color: #999;
+
+    font-size: 11px;
+}
+
+
+/* Status badge */
+
+.detail-status {
+
+    display: inline-flex;
+    align-items: center;
+
+    padding: 5px 10px;
+
+    border-radius: 20px;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+
+.detail-status.status-confirmed {
+
+    background: #f2f7ff;
+
+    color: #2864b8;
+}
+
+
+.detail-status.status-preparing {
+
+    background: #fff8e8;
+
+    color: #a16b00;
+}
+
+
+.detail-status.status-ready {
+
+    background: #eefaf2;
+
+    color: #21864b;
+}
+
+
+.detail-status.status-delivered {
+
+    background: #edf8f1;
+
+    color: #237449;
+}
+
+
+.detail-status.status-cancelled {
+
+    background: #fff1f1;
+
+    color: #b33b3b;
+}
+
+
+/* =========================================================
+   DELIVERY ADDRESS
+   ========================================================= */
+
+.address-detail {
+
+    color: #555;
+
+    font-size: 12px;
+
+    line-height: 1.6;
+}
+
+
+.address-detail strong {
+
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #222;
+
+    font-size: 13px;
+}
+
+
+.address-detail p {
+
+    margin: 0;
+}
+
+
+/* =========================================================
+   ORDER ITEMS
+   ========================================================= */
+
+.order-items-card {
+
+    grid-column: 1 / -1;
+}
+
+
+.items-table-container {
+
+    overflow-x: auto;
+}
+
+
+.items-table {
+
+    width: 100%;
+
+    border-collapse: collapse;
+}
+
+
+.items-table th {
+
+    padding: 11px 10px;
+
+    background: #fafafa;
+
+    border-bottom: 1px solid #eee;
+
+    color: #777;
+
+    font-size: 10px;
+    font-weight: 600;
+
+    text-align: left;
+
+    text-transform: uppercase;
+}
+
+
+.items-table td {
+
+    padding: 13px 10px;
+
+    border-bottom: 1px solid #eee;
+
+    color: #333;
+
+    font-size: 12px;
+
+    vertical-align: top;
+}
+
+
+.items-table tbody tr:last-child td {
+
+    border-bottom: none;
+}
+
+
+.item-name {
+
+    color: #222;
+
+    font-weight: 600;
+}
+
+
+.item-instructions {
+
+    margin-top: 5px;
+
+    color: #999;
+
+    font-size: 11px;
+
+    font-weight: 400;
+}
+
+
+.cancelled-item {
+
+    opacity: 0.6;
+}
+
+
+.cancelled-label {
+
+    display: inline-block;
+
+    margin-left: 7px;
+
+    padding: 3px 6px;
+
+    border-radius: 10px;
+
+    background: #fff1f1;
+
+    color: #b33b3b;
+
+    font-size: 9px;
+    font-weight: 600;
+
+    text-transform: uppercase;
+}
+
+
+/* =========================================================
+   TOTALS
+   ========================================================= */
+
+.totals-card {
+
+    align-self: start;
+}
+
+
+.summary-row {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 9px 0;
+
+    color: #777;
+
+    font-size: 12px;
+}
+
+
+.summary-row strong {
+
+    color: #333;
+
+    font-weight: 500;
+}
+
+
+.summary-total {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-top: 8px;
+    padding-top: 14px;
+
+    border-top: 1px solid #ddd;
+
+    color: #222;
+
+    font-size: 14px;
+    font-weight: 600;
+}
+
+
+.summary-total strong {
+
+    font-size: 16px;
+}
+
+
+/* =========================================================
+   CANCELLATION
+   ========================================================= */
+
+.cancellation-card {
+
+    grid-column: 1 / -1;
+
+    background: #fffafa;
+
+    border-color: #f0d7d7;
+}
+
+
+.cancellation-reason {
+
+    margin-top: 15px;
+
+    padding-top: 13px;
+
+    border-top: 1px solid #f0dddd;
+}
+
+
+.cancellation-reason span {
+
+    color: #999;
+
+    font-size: 10px;
+    font-weight: 600;
+
+    text-transform: uppercase;
+}
+
+
+.cancellation-reason p {
+
+    margin: 6px 0 0;
+
+    color: #555;
+
+    font-size: 12px;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   AJAX MESSAGE
+   ========================================================= */
+
+.status-message {
+
+    position: fixed;
+
+    right: 24px;
+    bottom: 24px;
+
+    z-index: 1000;
+
+    min-width: 220px;
+
+    padding: 12px 16px;
+
+    border-radius: 8px;
+
+    background: #211f1e;
+
+    color: white;
+
+    font-size: 13px;
+    font-weight: 500;
+
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transform: translateY(8px);
+
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+.status-message.success,
+.status-message.error {
+
+    opacity: 1;
+
+    transform: translateY(0);
+}
+
+
+.status-message.success {
+
+    background: #18733b;
+}
+
+
+.status-message.error {
+
+    background: #b33b3b;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 850px) {
+
+    .detail-grid {
+
+        grid-template-columns: 1fr;
+    }
+
+
+    .order-items-card,
+    .cancellation-card {
+
+        grid-column: auto;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .detail-title {
+
+        align-items: flex-start;
+        flex-direction: column;
+
+        gap: 7px;
+    }
+
+
+    .detail-title h1 {
+
+        font-size: 23px;
+    }
+
+
+    .detail-card {
+
+        padding: 16px;
+    }
+
+
+    .info-row {
+
+        flex-direction: column;
+
+        gap: 4px;
+    }
+
+
+    .info-row strong {
+
+        text-align: left;
+    }
+
+
+    .status-message {
+
+        right: 14px;
+        bottom: 14px;
+        left: 14px;
+
+        min-width: 0;
+    }
+
+}

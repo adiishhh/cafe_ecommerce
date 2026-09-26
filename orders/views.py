@@ -9,7 +9,7 @@ from django.views.decorators.http import require_POST
 from product.models import Product
 from users.models import Address
 from .models import Order, OrderItem
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.conf import settings
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT
@@ -20,11 +20,13 @@ from reportlab.platypus import (SimpleDocTemplate,Paragraph,Spacer,Table,TableSt
 from django.db.models import Q
 from django.utils import timezone
 from datetime import timedelta
+from django.core.paginator import Paginator
 
 # Create your views here.
 
 GST_RATE = Decimal("0.05")
 MAX_CART_QUANTITY = 10
+ADMIN_ORDER_PAGE_SIZE = 10
 
 
 def _get_cart_item(cart, product_id):
@@ -1516,5 +1518,273 @@ def placed_orders(request):
             "search": search,
             "status_filter": status_filter,
             "date_filter": date_filter,
+        }
+    )
+
+def _admin_staff_check(request):
+    if not request.user.is_staff:
+        return HttpResponse(
+            "You do not have permission to access this page.",
+            status=403,
+        )
+    return None
+
+
+@login_required(login_url="login")
+def admin_order_list(request):
+    forbidden = _admin_staff_check(request)
+
+    if forbidden:
+        return forbidden
+
+    search = request.GET.get("q", "").strip()
+    status_filter = request.GET.get("status", "").strip()
+    order_type_filter = request.GET.get("type", "").strip()
+    date_filter = request.GET.get("date", "").strip()
+    sort = request.GET.get("sort", "newest").strip()
+
+    orders = (
+        Order.objects
+        .select_related("user", "table", "address")
+        .all()
+    )
+
+    # Search
+    if search:
+        search_filter = (
+            Q(order_no__icontains=search)
+            | Q(tracking_no__icontains=search)
+            | Q(user__name__icontains=search)
+            | Q(user__email__icontains=search)
+        )
+
+        if search.isdigit():
+            search_filter |= Q(user_id=int(search))
+
+        orders = orders.filter(search_filter)
+
+    # Status filter
+    valid_statuses = {
+        choice[0]
+        for choice in Order.Status.choices
+    }
+
+    if status_filter in valid_statuses:
+        orders = orders.filter(status=status_filter)
+
+    # Order type filter
+    valid_order_types = {
+        choice[0]
+        for choice in Order.OrderType.choices
+    }
+
+    if order_type_filter in valid_order_types:
+        orders = orders.filter(order_type=order_type_filter)
+
+    # Date filter
+    now = timezone.localtime(timezone.now())
+    today = now.date()
+
+    if date_filter == "today":
+
+        orders = orders.filter(
+            created_at__date=today
+        )
+
+    elif date_filter == "this_week":
+
+        start_of_week = today - timedelta(
+            days=today.weekday()
+        )
+
+        orders = orders.filter(
+            created_at__date__gte=start_of_week
+        )
+
+    elif date_filter == "this_month":
+
+        orders = orders.filter(
+            created_at__year=today.year,
+            created_at__month=today.month,
+        )
+
+    elif date_filter == "last_month":
+
+        first_of_this_month = today.replace(day=1)
+
+        last_month_end = (
+            first_of_this_month - timedelta(days=1)
+        )
+
+        last_month_start = last_month_end.replace(day=1)
+
+        orders = orders.filter(
+            created_at__date__gte=last_month_start,
+            created_at__date__lte=last_month_end,
+        )
+
+    # Sorting
+    sort_options = {
+        "newest": "-created_at",
+        "oldest": "created_at",
+        "amount_high": "-total_amount",
+        "amount_low": "total_amount",
+        "order_asc": "order_no",
+        "order_desc": "-order_no",
+    }
+
+    order_by = sort_options.get(
+        sort,
+        "-created_at",
+    )
+
+    orders = orders.order_by(
+        order_by,
+        "-id",
+    )
+
+    paginator = Paginator(
+        orders,
+        ADMIN_ORDER_PAGE_SIZE,
+    )
+
+    page_obj = paginator.get_page(
+        request.GET.get("page")
+    )
+
+    return render(
+        request,
+        "admin_panel/orders.html",
+        {
+            "page_obj": page_obj,
+            "search": search,
+            "status_filter": status_filter,
+            "order_type_filter": order_type_filter,
+            "date_filter": date_filter,
+            "sort": sort,
+            "status_choices": Order.Status.choices,
+            "order_type_choices": Order.OrderType.choices,
+            "total_orders": paginator.count,
+        },
+    )
+
+
+@login_required(login_url="login")
+def admin_order_detail(request, order_id):
+    forbidden = _admin_staff_check(request)
+
+    if forbidden:
+        return forbidden
+
+    order = get_object_or_404(
+        Order.objects
+        .select_related(
+            "user",
+            "table",
+            "address",
+        )
+        .prefetch_related(
+            "items__product__images"
+        ),
+        id=order_id,
+    )
+
+    return render(
+        request,
+        "admin_panel/order_detail.html",
+        {
+            "order": order,
+            "status_choices": Order.Status.choices,
+        },
+    )
+
+
+@login_required(login_url="login")
+@require_POST
+@transaction.atomic
+def admin_update_order_status(request, order_id):
+    forbidden = _admin_staff_check(request)
+
+    if forbidden:
+        return forbidden
+
+    order = get_object_or_404(
+        Order.objects.select_for_update(),
+        id=order_id,
+    )
+
+    new_status = request.POST.get(
+        "status",
+        "",
+    ).strip()
+
+    valid_statuses = {
+        choice[0]
+        for choice in Order.Status.choices
+    }
+
+    if new_status not in valid_statuses:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "Invalid order status.",
+            },
+            status=400,
+        )
+
+    # Nothing to change
+    if order.status == new_status:
+        return JsonResponse(
+            {
+                "success": True,
+                "message": "Order status is already up to date.",
+                "order_id": order.id,
+                "order_no": order.order_no,
+                "status": order.status,
+                "status_display": order.get_status_display(),
+            }
+        )
+
+    order.status = new_status
+
+    update_fields = [
+        "status",
+        "updated_at",
+    ]
+
+    # Handle cancellation information
+    if new_status == Order.Status.CANCELLED:
+
+        if not order.cancelled_at:
+            order.cancelled_at = timezone.now()
+            update_fields.append("cancelled_at")
+
+    else:
+
+        if order.cancelled_at:
+            order.cancelled_at = None
+            update_fields.append("cancelled_at")
+
+        if order.cancellation_reason:
+            order.cancellation_reason = ""
+            update_fields.append("cancellation_reason")
+
+    order.save(
+        update_fields=update_fields
+    )
+
+    return JsonResponse(
+        {
+            "success": True,
+            "message": "Order status updated successfully.",
+            "order_id": order.id,
+            "order_no": order.order_no,
+            "status": order.status,
+            "status_display": order.get_status_display(),
+            "updated_at": timezone.localtime(
+                order.updated_at
+            ).strftime(
+                "%d %b %Y, %H:%M"
+            ),
         }
     )

@@ -1,0 +1,823 @@
+{% extends "admin_panel/base.html" %}
+
+{% load static %}
+
+
+{% block title %}
+    SmartCafe Admin - {{ order.order_no }}
+{% endblock %}
+
+
+{% block extra_css %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'admin_panel/css/order_detail.css' %}"
+>
+
+{% endblock %}
+
+
+{% block content %}
+
+
+<div class="order-detail-page">
+
+
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
+
+    <div class="detail-header">
+
+        <div>
+
+            <a
+                href="{% url 'admin_order_list' %}"
+                class="back-link"
+            >
+                ← Back to Orders
+            </a>
+
+
+            <div class="detail-title">
+
+                <h1>
+                    {{ order.order_no }}
+                </h1>
+
+
+                <span
+                    id="detailStatusBadge"
+                    class="detail-status status-{{ order.status }}"
+                >
+                    {{ order.get_status_display }}
+                </span>
+
+            </div>
+
+
+            <p>
+                Order ID: {{ order.id }}
+                ·
+                {{ order.created_at|date:"d M Y, h:i A" }}
+            </p>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         DETAIL GRID
+         ===================================================== -->
+
+    <div class="detail-grid">
+
+
+        <!-- =================================================
+             CUSTOMER
+             ================================================= -->
+
+        <section class="detail-card">
+
+            <div class="card-title">
+                Customer
+            </div>
+
+
+            <div class="customer-detail">
+
+                <div class="customer-avatar">
+                    {{ order.user.name|first|upper }}
+                </div>
+
+
+                <div>
+
+                    <h3>
+                        {{ order.user.name|default:"No name" }}
+                    </h3>
+
+                    <p>
+                        User ID: {{ order.user.id }}
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="info-list">
+
+                <div class="info-row">
+
+                    <span>
+                        Email
+                    </span>
+
+                    <strong>
+                        {{ order.user.email }}
+                    </strong>
+
+                </div>
+
+
+                <div class="info-row">
+
+                    <span>
+                        Phone
+                    </span>
+
+                    <strong>
+                        {{ order.user.phone|default:"—" }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             ORDER INFORMATION
+             ================================================= -->
+
+        <section class="detail-card">
+
+            <div class="card-title">
+                Order Information
+            </div>
+
+
+            <div class="info-list">
+
+                <div class="info-row">
+
+                    <span>
+                        Order Type
+                    </span>
+
+                    <strong>
+
+                        {% if order.order_type == "table" %}
+
+                            Dine-in
+
+                        {% else %}
+
+                            {{ order.get_order_type_display }}
+
+                        {% endif %}
+
+                    </strong>
+
+                </div>
+
+
+                <div class="info-row">
+
+                    <span>
+                        Payment
+                    </span>
+
+                    <strong>
+                        Cash on Delivery
+                    </strong>
+
+                </div>
+
+
+                {% if order.tracking_no %}
+
+                    <div class="info-row">
+
+                        <span>
+                            Tracking No.
+                        </span>
+
+                        <strong>
+                            {{ order.tracking_no }}
+                        </strong>
+
+                    </div>
+
+                {% endif %}
+
+
+                {% if order.table %}
+
+                    <div class="info-row">
+
+                        <span>
+                            Table
+                        </span>
+
+                        <strong>
+                            {{ order.table }}
+                        </strong>
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             ORDER STATUS
+             ================================================= -->
+
+        <section class="detail-card status-card">
+
+            <div class="card-title">
+                Order Status
+            </div>
+
+
+            <label
+                for="detailStatusSelect"
+                class="status-label"
+            >
+                Update status
+            </label>
+
+
+            <select
+                id="detailStatusSelect"
+                class="detail-status-select status-{{ order.status }}"
+                data-order-id="{{ order.id }}"
+                data-current-status="{{ order.status }}"
+            >
+
+                {% for value, label in status_choices %}
+
+                    <option
+                        value="{{ value }}"
+                        {% if order.status == value %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ label }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </section>
+
+
+
+        <!-- =================================================
+             ORDER SUMMARY
+             ================================================= -->
+
+        <section class="detail-card totals-card">
+
+            <div class="card-title">
+                Order Summary
+            </div>
+
+
+            <div class="summary-row">
+
+                <span>
+                    Subtotal
+                </span>
+
+                <strong>
+                    ₹{{ order.subtotal }}
+                </strong>
+
+            </div>
+
+
+            <div class="summary-row">
+
+                <span>
+                    GST (5%)
+                </span>
+
+                <strong>
+                    ₹{{ order.tax_amount }}
+                </strong>
+
+            </div>
+
+
+            <div class="summary-row">
+
+                <span>
+                    Shipping
+                </span>
+
+                <strong>
+                    ₹0.00
+                </strong>
+
+            </div>
+
+
+            <div class="summary-row">
+
+                <span>
+                    Discount
+                </span>
+
+                <strong>
+                    ₹0.00
+                </strong>
+
+            </div>
+
+
+            <div class="summary-total">
+
+                <span>
+                    Total
+                </span>
+
+                <strong>
+                    ₹{{ order.total_amount }}
+                </strong>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             DELIVERY ADDRESS
+             ================================================= -->
+
+        {% if order.order_type == "delivery" and order.address %}
+
+            <section class="detail-card">
+
+                <div class="card-title">
+                    Delivery Address
+                </div>
+
+
+                <div class="address-detail">
+
+                    <strong>
+                        {{ order.address.name }}
+                    </strong>
+
+
+                    <p>
+                        {{ order.address.flat_house }}
+                    </p>
+
+
+                    <p>
+                        {{ order.address.area_street }}
+                    </p>
+
+
+                    <p>
+                        {{ order.address.city }},
+                        {{ order.address.state }}
+                        -
+                        {{ order.address.pincode }}
+                    </p>
+
+
+                    <p>
+                        {{ order.address.contact_number }}
+                    </p>
+
+                </div>
+
+            </section>
+
+        {% endif %}
+
+
+
+        <!-- =================================================
+             ORDER ITEMS
+             ================================================= -->
+
+        <section class="detail-card order-items-card">
+
+            <div class="card-title">
+                Order Items
+            </div>
+
+
+            <div class="items-table-container">
+
+                <table class="items-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Item
+                            </th>
+
+                            <th>
+                                Qty
+                            </th>
+
+                            <th>
+                                Unit Price
+                            </th>
+
+                            <th>
+                                Total
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for item in order.items.all %}
+
+                            <tr
+                                {% if item.is_cancelled %}
+                                    class="cancelled-item"
+                                {% endif %}
+                            >
+
+                                <td>
+
+                                    <div class="item-name">
+
+                                        {{ item.product.name }}
+
+
+                                        {% if item.is_cancelled %}
+
+                                            <span class="cancelled-label">
+                                                Cancelled
+                                            </span>
+
+                                        {% endif %}
+
+                                    </div>
+
+
+                                    {% if item.instructions %}
+
+                                        <div class="item-instructions">
+
+                                            Note:
+                                            {{ item.instructions }}
+
+                                        </div>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <td>
+                                    {{ item.quantity }}
+                                </td>
+
+
+                                <td>
+                                    ₹{{ item.unit_price }}
+                                </td>
+
+
+                                <td>
+                                    ₹{{ item.subtotal }}
+                                </td>
+
+                            </tr>
+
+                        {% empty %}
+
+                            <tr>
+
+                                <td colspan="4">
+                                    No items found for this order.
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             CANCELLATION INFORMATION
+             ================================================= -->
+
+        {% if order.status == "cancelled" %}
+
+            <section class="detail-card cancellation-card">
+
+                <div class="card-title">
+                    Cancellation Information
+                </div>
+
+
+                {% if order.cancelled_at %}
+
+                    <div class="info-row">
+
+                        <span>
+                            Cancelled At
+                        </span>
+
+                        <strong>
+                            {{ order.cancelled_at|date:"d M Y, h:i A" }}
+                        </strong>
+
+                    </div>
+
+                {% endif %}
+
+
+                {% if order.cancellation_reason %}
+
+                    <div class="cancellation-reason">
+
+                        <span>
+                            Reason
+                        </span>
+
+
+                        <p>
+                            {{ order.cancellation_reason }}
+                        </p>
+
+                    </div>
+
+                {% endif %}
+
+            </section>
+
+        {% endif %}
+
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================================
+     AJAX STATUS MESSAGE
+     ========================================================= -->
+
+<div
+    id="statusMessage"
+    class="status-message"
+></div>
+
+
+
+<script>
+
+
+function getCookie(name) {
+
+    let cookieValue = null;
+
+
+    if (document.cookie && document.cookie !== "") {
+
+        const cookies = document.cookie.split(";");
+
+
+        for (let cookie of cookies) {
+
+            cookie = cookie.trim();
+
+
+            if (
+                cookie.substring(
+                    0,
+                    name.length + 1
+                ) === name + "="
+            ) {
+
+                cookieValue =
+                    decodeURIComponent(
+                        cookie.substring(
+                            name.length + 1
+                        )
+                    );
+
+
+                break;
+
+            }
+
+        }
+
+    }
+
+
+    return cookieValue;
+
+}
+
+
+
+function showStatusMessage(
+    message,
+    success = true
+) {
+
+    const element =
+        document.getElementById(
+            "statusMessage"
+        );
+
+
+    element.textContent =
+        message;
+
+
+    element.className =
+        success
+            ? "status-message success"
+            : "status-message error";
+
+
+    setTimeout(
+        function() {
+
+            element.className =
+                "status-message";
+
+        },
+        3000
+    );
+
+}
+
+
+
+const detailStatusSelect =
+    document.getElementById(
+        "detailStatusSelect"
+    );
+
+
+
+detailStatusSelect.addEventListener(
+    "change",
+    async function() {
+
+        const newStatus =
+            this.value;
+
+
+        const previousStatus =
+            this.dataset.currentStatus ||
+            "{{ order.status }}";
+
+
+        this.disabled = true;
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "{% url 'admin_update_order_status' order.id %}",
+                    {
+
+                        method: "POST",
+
+                        headers: {
+
+                            "X-CSRFToken":
+                                getCookie("csrftoken"),
+
+                            "Content-Type":
+                                "application/x-www-form-urlencoded",
+
+                            "X-Requested-With":
+                                "XMLHttpRequest"
+
+                        },
+
+                        body:
+                            `status=${encodeURIComponent(newStatus)}`
+
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (
+                !response.ok ||
+                !data.success
+            ) {
+
+                throw new Error(
+                    data.message ||
+                    "Unable to update order status."
+                );
+
+            }
+
+
+            this.dataset.currentStatus =
+                data.status;
+
+
+            this.className =
+                `detail-status-select status-${data.status}`;
+
+
+            const badge =
+                document.getElementById(
+                    "detailStatusBadge"
+                );
+
+
+            badge.textContent =
+                data.status_display;
+
+
+            badge.className =
+                `detail-status status-${data.status}`;
+
+
+            showStatusMessage(
+                data.message,
+                true
+            );
+
+
+            /*
+             * Reload when entering or leaving
+             * the cancelled state so that the
+             * cancellation information is updated.
+             */
+
+            if (
+                data.status === "cancelled" ||
+                previousStatus === "cancelled"
+            ) {
+
+                setTimeout(
+                    function() {
+
+                        window.location.reload();
+
+                    },
+                    700
+                );
+
+            }
+
+
+        } catch (error) {
+
+            this.value =
+                previousStatus;
+
+
+            showStatusMessage(
+                error.message,
+                false
+            );
+
+        } finally {
+
+            this.disabled = false;
+
+        }
+
+    }
+);
+
+
+</script>
+
+
+{% endblock %}

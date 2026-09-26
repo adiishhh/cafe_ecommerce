@@ -44,4 +44,19 @@ urlpatterns = [
         views.placed_orders,
         name="placed_orders",
     ),
+    path(
+        "admin_panel/orders/",
+        views.admin_order_list,
+        name="admin_order_list",
+    ),
+    path(
+        "admin_panel/orders/<int:order_id>/",
+        views.admin_order_detail,
+        name="admin_order_detail",
+    ),
+    path(
+        "admin_panel/orders/<int:order_id>/status/",
+        views.admin_update_order_status,
+        name="admin_update_order_status",
+    ),
 ]

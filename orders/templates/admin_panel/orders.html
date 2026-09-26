@@ -1,0 +1,676 @@
+{% extends "admin_panel/base.html" %}
+
+{% load static %}
+
+{% block title %}
+    SmartCafe Admin - Orders
+{% endblock %}
+
+
+{% block extra_css %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'admin_panel/css/orders.css' %}"
+>
+
+{% endblock %}
+
+
+{% block content %}
+
+
+<div class="page-header">
+
+    <div>
+        <h1>Orders</h1>
+
+        <p>
+            {{ total_orders }} total orders
+        </p>
+    </div>
+
+</div>
+
+
+<!-- Filters -->
+
+<form
+    method="get"
+    action="{% url 'admin_order_list' %}"
+    class="orders-toolbar"
+>
+
+
+    <div class="search-box">
+
+        <input
+            type="text"
+            name="q"
+            value="{{ search }}"
+            placeholder="Search order, customer, email or user ID..."
+        >
+
+    </div>
+
+
+    <select name="status">
+
+        <option value="">
+            All Status
+        </option>
+
+        {% for value, label in status_choices %}
+
+            <option
+                value="{{ value }}"
+                {% if status_filter == value %}
+                    selected
+                {% endif %}
+            >
+                {{ label }}
+            </option>
+
+        {% endfor %}
+
+    </select>
+
+
+    <select name="type">
+
+        <option value="">
+            All Types
+        </option>
+
+        {% for value, label in order_type_choices %}
+
+            <option
+                value="{{ value }}"
+                {% if order_type_filter == value %}
+                    selected
+                {% endif %}
+            >
+                {% if value == "table" %}
+                    Dine-in
+                {% else %}
+                    {{ label }}
+                {% endif %}
+            </option>
+
+        {% endfor %}
+
+    </select>
+
+
+    <select name="date">
+
+        <option value="">
+            All Dates
+        </option>
+
+        <option
+            value="today"
+            {% if date_filter == "today" %}
+                selected
+            {% endif %}
+        >
+            Today
+        </option>
+
+        <option
+            value="this_week"
+            {% if date_filter == "this_week" %}
+                selected
+            {% endif %}
+        >
+            This Week
+        </option>
+
+        <option
+            value="this_month"
+            {% if date_filter == "this_month" %}
+                selected
+            {% endif %}
+        >
+            This Month
+        </option>
+
+        <option
+            value="last_month"
+            {% if date_filter == "last_month" %}
+                selected
+            {% endif %}
+        >
+            Last Month
+        </option>
+
+    </select>
+
+
+    <select name="sort">
+
+        <option
+            value="newest"
+            {% if sort == "newest" %}
+                selected
+            {% endif %}
+        >
+            Newest First
+        </option>
+
+        <option
+            value="oldest"
+            {% if sort == "oldest" %}
+                selected
+            {% endif %}
+        >
+            Oldest First
+        </option>
+
+        <option
+            value="amount_high"
+            {% if sort == "amount_high" %}
+                selected
+            {% endif %}
+        >
+            Amount: High to Low
+        </option>
+
+        <option
+            value="amount_low"
+            {% if sort == "amount_low" %}
+                selected
+            {% endif %}
+        >
+            Amount: Low to High
+        </option>
+
+        <option
+            value="order_asc"
+            {% if sort == "order_asc" %}
+                selected
+            {% endif %}
+        >
+            Order ID: A-Z
+        </option>
+
+        <option
+            value="order_desc"
+            {% if sort == "order_desc" %}
+                selected
+            {% endif %}
+        >
+            Order ID: Z-A
+        </option>
+
+    </select>
+
+
+    <button
+        type="submit"
+        class="filter-button"
+    >
+        Apply
+    </button>
+
+
+    {% if search or status_filter or order_type_filter or date_filter or sort != "newest" %}
+
+        <a
+            href="{% url 'admin_order_list' %}"
+            class="clear-button"
+        >
+            Clear
+        </a>
+
+    {% endif %}
+
+
+</form>
+
+
+<!-- Orders table -->
+
+<div class="orders-table-container">
+
+
+    {% if page_obj.object_list %}
+
+        <table class="orders-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Order
+                    </th>
+
+                    <th>
+                        Date & Time
+                    </th>
+
+                    <th>
+                        Customer
+                    </th>
+
+                    <th>
+                        Type
+                    </th>
+
+                    <th>
+                        Table
+                    </th>
+
+                    <th>
+                        Amount
+                    </th>
+
+                    <th>
+                        Status
+                    </th>
+
+                    <th>
+                        View
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for order in page_obj %}
+
+                    <tr id="order-row-{{ order.id }}">
+
+
+                        <!-- Order -->
+
+                        <td>
+
+                            <div class="order-number">
+                                {{ order.order_no }}
+                            </div>
+
+                            <div class="order-id">
+                                ID: {{ order.id }}
+                            </div>
+
+                        </td>
+
+
+                        <!-- Date -->
+
+                        <td>
+
+                            <div class="date-main">
+                                {{ order.created_at|date:"d M Y" }}
+                            </div>
+
+                            <div class="date-time">
+                                {{ order.created_at|date:"h:i A" }}
+                            </div>
+
+                        </td>
+
+
+                        <!-- Customer -->
+
+                        <td>
+
+                            <div class="customer-name">
+                                {{ order.user.name|default:"No name" }}
+                            </div>
+
+                            <div class="customer-id">
+                                User ID: {{ order.user.id }}
+                            </div>
+
+                        </td>
+
+
+                        <!-- Type -->
+
+                        <td>
+
+                            <span class="order-type">
+
+                                {% if order.order_type == "table" %}
+                                    Dine-in
+                                {% else %}
+                                    {{ order.get_order_type_display }}
+                                {% endif %}
+
+                            </span>
+
+                        </td>
+
+
+                        <!-- Table -->
+
+                        <td>
+
+                            {% if order.table %}
+
+                                {{ order.table }}
+
+                            {% else %}
+
+                                <span class="muted">
+                                    —
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- Amount -->
+
+                        <td>
+
+                            <span class="amount">
+                                ₹{{ order.total_amount }}
+                            </span>
+
+                        </td>
+
+
+                        <!-- Status -->
+
+                        <td>
+
+                            <select
+                                class="status-select status-{{ order.status }}"
+                                data-order-id="{{ order.id }}"
+                                data-current-status="{{ order.status }}"
+                            >
+
+                                {% for value, label in status_choices %}
+
+                                    <option
+                                        value="{{ value }}"
+                                        {% if order.status == value %}
+                                            selected
+                                        {% endif %}
+                                    >
+                                        {{ label }}
+                                    </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                        </td>
+
+
+                        <!-- View -->
+
+                        <td>
+
+                            <a
+                                href="{% url 'admin_order_detail' order.id %}"
+                                class="view-button"
+                            >
+                                View
+                            </a>
+
+                        </td>
+
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+
+    {% else %}
+
+        <div class="empty-orders">
+
+            <h3>
+                No orders found
+            </h3>
+
+            <p>
+                Try changing your search or filters.
+            </p>
+
+        </div>
+
+    {% endif %}
+
+
+</div>
+
+
+<!-- Pagination -->
+
+{% if page_obj.paginator.num_pages > 1 %}
+
+    <div class="pagination">
+
+
+        {% if page_obj.has_previous %}
+
+            <a
+                href="?page={{ page_obj.previous_page_number }}{% if search %}&q={{ search|urlencode }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if order_type_filter %}&type={{ order_type_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+            >
+                Previous
+            </a>
+
+        {% else %}
+
+            <span class="disabled">
+                Previous
+            </span>
+
+        {% endif %}
+
+
+        {% for number in page_obj.paginator.page_range %}
+
+            {% if number == page_obj.number %}
+
+                <span class="current">
+                    {{ number }}
+                </span>
+
+            {% else %}
+
+                <a
+                    href="?page={{ number }}{% if search %}&q={{ search|urlencode }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if order_type_filter %}&type={{ order_type_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+                >
+                    {{ number }}
+                </a>
+
+            {% endif %}
+
+        {% endfor %}
+
+
+        {% if page_obj.has_next %}
+
+            <a
+                href="?page={{ page_obj.next_page_number }}{% if search %}&q={{ search|urlencode }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if order_type_filter %}&type={{ order_type_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+            >
+                Next
+            </a>
+
+        {% else %}
+
+            <span class="disabled">
+                Next
+            </span>
+
+        {% endif %}
+
+
+    </div>
+
+{% endif %}
+
+
+<!-- AJAX status message -->
+
+<div
+    id="statusMessage"
+    class="status-message"
+></div>
+
+
+<script>
+
+
+function getCookie(name) {
+
+    let cookieValue = null;
+
+    if (document.cookie && document.cookie !== "") {
+
+        const cookies = document.cookie.split(";");
+
+        for (let cookie of cookies) {
+
+            cookie = cookie.trim();
+
+            if (cookie.substring(0, name.length + 1) === (name + "=")) {
+
+                cookieValue = decodeURIComponent(
+                    cookie.substring(name.length + 1)
+                );
+
+                break;
+            }
+        }
+    }
+
+    return cookieValue;
+}
+
+
+function showStatusMessage(message, success = true) {
+
+    const element =
+        document.getElementById("statusMessage");
+
+    element.textContent = message;
+
+    element.className =
+        success
+            ? "status-message success"
+            : "status-message error";
+
+    setTimeout(() => {
+
+        element.className = "status-message";
+
+    }, 3000);
+}
+
+
+document.querySelectorAll(".status-select").forEach(
+    function(select) {
+
+        select.addEventListener(
+            "change",
+            async function() {
+
+                const orderId =
+                    this.dataset.orderId;
+
+                const oldStatus =
+                    this.dataset.currentStatus;
+
+                const newStatus =
+                    this.value;
+
+                const selectElement = this;
+
+                selectElement.disabled = true;
+
+
+                try {
+
+                    const response = await fetch(
+                        "{% url 'admin_update_order_status' 0 %}"
+                            .replace(
+                                "/0/status/",
+                                `/${orderId}/status/`
+                            ),
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "X-CSRFToken": getCookie("csrftoken"),
+                                "Content-Type":
+                                    "application/x-www-form-urlencoded",
+                                "X-Requested-With":
+                                    "XMLHttpRequest"
+                            },
+
+                            body:
+                                `status=${encodeURIComponent(newStatus)}`
+                        }
+                    );
+
+
+                    const data =
+                        await response.json();
+
+
+                    if (!response.ok || !data.success) {
+
+                        throw new Error(
+                            data.message ||
+                            "Unable to update order status."
+                        );
+                    }
+
+
+                    selectElement.dataset.currentStatus =
+                        data.status;
+
+                    selectElement.className =
+                        `status-select status-${data.status}`;
+
+
+                    showStatusMessage(
+                        data.message,
+                        true
+                    );
+
+
+                } catch (error) {
+
+                    selectElement.value =
+                        oldStatus;
+
+                    showStatusMessage(
+                        error.message,
+                        false
+                    );
+
+                } finally {
+
+                    selectElement.disabled = false;
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+</script>
+
+
+{% endblock %}

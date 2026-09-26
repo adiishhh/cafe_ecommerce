@@ -39,22 +39,6 @@
 
 <body>
 
-{% if messages %}
-
-    <div class="messages">
-
-        {% for message in messages %}
-
-            <div class="message {{ message.tags }}">
-                {{ message }}
-            </div>
-
-        {% endfor %}
-
-    </div>
-
-{% endif %}
-
     <!-- TOP BAR -->
 
     <header class="topbar">
@@ -107,8 +91,8 @@
             
             
                 <a
-                    href="#"
-                    class="nav-link {% if request.resolver_match.url_name == 'admin_orders' %}active{% endif %}"
+                    href="{% url "admin_order_list" %}"
+                    class="nav-link {% if 'order' in request.resolver_match.url_name %}active{% endif %}"
                 >
             
                     <span class="nav-icon">
