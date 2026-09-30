@@ -706,7 +706,280 @@ body {
     position: relative;
 }
 
+/* =========================================================
+   ORDER HEADER ACTIONS
+   ========================================================= */
 
+.order-header-actions {
+    margin-left: auto;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-end;
+
+    gap: 8px;
+
+    flex-shrink: 0;
+}
+
+
+.save-order-top-button {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-height: 36px;
+
+    padding: 0 13px;
+
+    border: 1px solid #304028;
+
+    border-radius: 8px;
+
+    background: #304028;
+
+    color: #fffaf3;
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        transform 0.15s ease;
+}
+
+
+.save-order-top-button:hover {
+    background: #26331f;
+
+    border-color: #26331f;
+
+    color: #fffaf3;
+
+    transform: translateY(-1px);
+}
+
+
+.save-order-top-button:active {
+    transform: translateY(0);
+}
+
+
+/* =========================================================
+   SAVE AS USUAL MODAL
+   ========================================================= */
+
+.save-usual-modal {
+    position: relative;
+
+    width: 100%;
+
+    max-width: 430px;
+
+    padding: 25px;
+
+    border: 1px solid #ded5c8;
+
+    border-radius: 15px;
+
+    background: #fffdf9;
+
+    box-shadow:
+        0 18px 50px rgba(47, 41, 36, 0.18);
+}
+
+
+.save-usual-icon {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 14px;
+
+    border-radius: 11px;
+
+    background: #f1dfce;
+
+    color: #8b3f16;
+
+    font-size: 20px;
+}
+
+
+.save-usual-modal h2 {
+    margin: 0 35px 7px 0;
+
+    font-family: Georgia, serif;
+
+    font-size: 22px;
+
+    color: #3d2619;
+}
+
+
+.save-usual-modal .modal-description {
+    margin: 0 0 20px;
+
+    color: #817568;
+
+    font-size: 12px;
+
+    line-height: 1.6;
+}
+
+
+.save-usual-modal label {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin-bottom: 7px;
+
+    color: #4f453d;
+
+    font-size: 12px;
+
+    font-weight: 600;
+}
+
+
+.save-usual-modal label span {
+    color: #a0968d;
+
+    font-size: 10px;
+
+    font-weight: 400;
+}
+
+
+#save-usual-name {
+    width: 100%;
+
+    padding: 12px 13px;
+
+    border: 1px solid #d9d0c5;
+
+    border-radius: 8px;
+
+    outline: none;
+
+    background: #fffdf9;
+
+    color: #30271f;
+
+    font-size: 13px;
+}
+
+
+#save-usual-name:focus {
+    border-color: #8b3f16;
+
+    box-shadow:
+        0 0 0 3px rgba(139, 63, 22, 0.08);
+}
+
+
+.save-usual-actions {
+    display: flex;
+
+    gap: 9px;
+
+    margin-top: 18px;
+}
+
+
+.save-usual-cancel,
+.save-usual-confirm {
+    flex: 1;
+
+    padding: 11px;
+
+    border-radius: 8px;
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+.save-usual-cancel {
+    border: 1px solid #d8cec4;
+
+    background: transparent;
+
+    color: #817568;
+}
+
+
+.save-usual-cancel:hover {
+    background: #f6f0e8;
+}
+
+
+.save-usual-confirm {
+    border: 1px solid #304028;
+
+    background: #304028;
+
+    color: #fffaf3;
+}
+
+
+.save-usual-confirm:hover {
+    background: #26331f;
+}
+
+
+/* =========================================================
+   SAVE AS USUAL RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    .order-header-actions {
+        width: 100%;
+
+        margin-left: 0;
+
+        margin-top: 10px;
+
+        justify-content: stretch;
+    }
+
+
+    .order-header-actions > a,
+    .order-header-actions > button {
+        flex: 1;
+    }
+
+
+    .save-order-top-button {
+        padding: 0 9px;
+
+        font-size: 10px;
+    }
+
+
+    .save-usual-modal {
+        padding: 21px;
+    }
+
+}
 
 /*
 Small invoice action.

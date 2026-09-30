@@ -22,6 +22,12 @@ urlpatterns = [
     ),
 
     path(
+        "orders/<int:order_id>/save-usual/",
+        views.save_order_as_usual,
+        name="save_order_as_usual",
+    ),
+
+    path(
         "my-usuals/<int:saved_order_id>/order-again/",
         views.order_again,
         name="order_again",

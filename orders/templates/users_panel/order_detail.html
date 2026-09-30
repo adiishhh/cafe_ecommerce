@@ -74,14 +74,37 @@
                 </div>
 
 
-                <!-- Small invoice action -->
+                <!-- =================================================
+                     HEADER ACTIONS
+                     ================================================= -->
 
-                <a
-                    href="{% url 'download_invoice' order.id %}"
-                    class="invoice-button invoice-top-button"
-                >
-                    Download Invoice
-                </a>
+                <div class="order-header-actions">
+                
+                    <!-- Download Invoice -->
+                
+                    <a
+                        href="{% url 'download_invoice' order.id %}"
+                        class="invoice-button invoice-top-button"
+                    >
+                        Download Invoice
+                    </a>
+                
+                
+                    <!-- Save This Order -->
+                
+                    {% if can_save_as_usual %}
+                
+                        <button
+                            type="button"
+                            class="save-order-top-button"
+                            id="open-save-order-usual"
+                        >
+                            Save this order
+                        </button>
+                    
+                    {% endif %}
+                    
+                </div>
 
             </div>
 
@@ -789,6 +812,102 @@
 
                 {% endif %}
 
+                <!-- =========================================================
+                     SAVE ORDER AS USUAL MODAL
+                     ========================================================= -->
+
+                {% if can_save_as_usual %}
+
+                    <div
+                        class="modal-overlay"
+                        id="save-order-usual-modal"
+                    >
+
+                        <div class="save-usual-modal">
+                        
+                            <button
+                                type="button"
+                                class="modal-close"
+                                data-close-save-usual
+                                aria-label="Close"
+                            >
+                                ×
+                            </button>
+                        
+                        
+                            <div class="save-usual-icon">
+                                ☆
+                            </div>
+                        
+                        
+                            <h2>
+                                Save this order
+                            </h2>
+                        
+                        
+                            <p class="modal-description">
+                                Save this order to My Usuals so you can quickly
+                                order the same items again later.
+                            </p>
+                        
+                        
+                            <form
+                                method="POST"
+                                action="{% url 'save_order_as_usual' order.id %}"
+                            >
+                        
+                                {% csrf_token %}
+                        
+                        
+                                <label for="save-usual-name">
+                                
+                                    Name
+                                
+                                    <span>
+                                        Optional
+                                    </span>
+                                
+                                </label>
+                            
+                            
+                                <input
+                                    type="text"
+                                    id="save-usual-name"
+                                    name="name"
+                                    maxlength="100"
+                                    placeholder="e.g. Breakfast"
+                                    autocomplete="off"
+                                >
+                            
+                            
+                                <div class="save-usual-actions">
+                                
+                                    <button
+                                        type="button"
+                                        class="save-usual-cancel"
+                                        data-close-save-usual
+                                    >
+                                        Cancel
+                                    </button>
+                                
+                                
+                                    <button
+                                        type="submit"
+                                        class="save-usual-confirm"
+                                    >
+                                        Save to My Usuals
+                                    </button>
+                                
+                                </div>
+                            
+                            </form>
+                        
+                        </div>
+                    
+                    </div>
+                
+                {% endif %}                
+
 
             </section>
 
@@ -1219,6 +1338,103 @@
 
             }
         );
+        /* =====================================================
+           SAVE ORDER AS USUAL
+           ===================================================== */
+                
+        const saveOrderUsualButton =
+            document.getElementById(
+                "open-save-order-usual"
+            );
+                
+        const saveOrderUsualModal =
+            document.getElementById(
+                "save-order-usual-modal"
+            );
+                
+        const saveUsualName =
+            document.getElementById(
+                "save-usual-name"
+            );
+                
+                
+        function openSaveOrderUsualModal() {
+        
+            if (!saveOrderUsualModal) {
+                return;
+            }
+        
+            saveOrderUsualModal.classList.add(
+                "is-open"
+            );
+        
+            if (saveUsualName) {
+            
+                saveUsualName.focus();
+            
+            }
+        
+        }
+        
+        
+        function closeSaveOrderUsualModal() {
+        
+            if (!saveOrderUsualModal) {
+                return;
+            }
+        
+            saveOrderUsualModal.classList.remove(
+                "is-open"
+            );
+        
+        }
+        
+        
+        if (saveOrderUsualButton) {
+        
+            saveOrderUsualButton.addEventListener(
+                "click",
+                openSaveOrderUsualModal
+            );
+        
+        }
+        
+        
+        document
+            .querySelectorAll(
+                "[data-close-save-usual]"
+            )
+            .forEach(
+                function (button) {
+                
+                    button.addEventListener(
+                        "click",
+                        closeSaveOrderUsualModal
+                    );
+                
+                }
+            );
+            
+            
+        if (saveOrderUsualModal) {
+        
+            saveOrderUsualModal.addEventListener(
+                "click",
+                function (event) {
+                
+                    if (
+                        event.target ===
+                        saveOrderUsualModal
+                    ) {
+                    
+                        closeSaveOrderUsualModal();
+                    
+                    }
+                
+                }
+            );
+            
+        }
 
     </script>
 

@@ -60,9 +60,76 @@
 
                 <div>
 
-                    <h1>
-                        Review Order
-                    </h1>
+                    {% if save_order_mode and saved_order_edit_id %}
+
+                        <div class="usual-edit-title-row">
+
+                            <h1>
+                                Edit
+                                {% if saved_order_edit_name %}
+                                    "{{ saved_order_edit_name }}"
+                                {% else %}
+                                    Usual
+                                {% endif %}
+                            </h1>
+
+                            <button
+                                type="button"
+                                class="usual-name-edit-button"
+                                id="editUsualNameButton"
+                                aria-label="Edit usual name"
+                                title="Edit usual name"
+                            >
+                                ✎
+                            </button>
+
+                        </div>
+
+
+                        <div
+                            class="usual-name-editor"
+                            id="usualNameEditor"
+                            hidden
+                        >
+
+                            <label
+                                for="inlineUsualName"
+                                class="usual-name-editor-label"
+                            >
+                                Usual name
+                            </label>
+
+                            <div class="usual-name-editor-row">
+
+                                <input
+                                    type="text"
+                                    id="inlineUsualName"
+                                    maxlength="100"
+                                    value="{{ saved_order_edit_name }}"
+                                    placeholder="e.g. Breakfast"
+                                    autocomplete="off"
+                                >
+
+                                <button
+                                    type="button"
+                                    class="usual-name-editor-done"
+                                    id="doneUsualNameButton"
+                                >
+                                    Done
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    {% else %}
+
+                        <h1>
+                            Review Order
+                        </h1>
+
+                    {% endif %}
+
 
                     <p>
                         {{ cart_items|length }}
@@ -153,11 +220,13 @@
                                     {% if item.instructions %}
 
                                         <p class="cart-item-instructions">
+
                                             <strong>
                                                 Instructions:
                                             </strong>
 
                                             {{ item.instructions }}
+
                                         </p>
 
                                     {% endif %}
@@ -430,8 +499,8 @@
 
 
             <!-- =============================================
-                 CONTINUE
-            ============================================= -->
+                 CONTINUE / SAVE
+                 ============================================= -->
 
             {% if save_order_mode %}
 
@@ -458,7 +527,7 @@
             {% else %}
 
                 {% if has_unavailable_items %}
-                            
+
                     <button
                         type="button"
                         class="continue-button"
@@ -466,19 +535,20 @@
                     >
                         Continue · ₹<span id="continue-total">{{ total|floatformat:2 }}</span>
                     </button>
-                
+
                 {% else %}
-                
+
                     <a
                         href="{% url 'order_type' %}"
                         class="continue-button"
                     >
                         Continue · ₹<span id="continue-total">{{ total|floatformat:2 }}</span>
                     </a>
-                
+
                 {% endif %}
 
             {% endif %}
+
 
 
             <!-- =============================================
@@ -586,7 +656,7 @@
 
                         {% if saved_order_edit_id %}
 
-                            Update the name for this saved order.
+                            Update the name and items in this saved order.
 
                         {% else %}
 
@@ -624,6 +694,7 @@
                             id="savedOrderName"
                             name="name"
                             maxlength="100"
+                            value="{% if saved_order_edit_id %}{{ saved_order_edit_name }}{% endif %}"
                             placeholder="e.g. Breakfast"
                             autocomplete="off"
                         >
@@ -675,6 +746,7 @@
     </div>
 
 </div>
+
 
 
 <script>
@@ -764,7 +836,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const itemContainer = document.querySelector(
                 `.quantity-row[data-cart-item="${productId}"]`
-            )
+            );
 
             if (itemContainer) {
 
@@ -989,6 +1061,111 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     /* =====================================================
+       USUAL NAME EDITOR
+       ===================================================== */
+
+    const editUsualNameButton =
+        document.getElementById(
+            'editUsualNameButton'
+        );
+
+    const doneUsualNameButton =
+        document.getElementById(
+            'doneUsualNameButton'
+        );
+
+    const usualNameEditor =
+        document.getElementById(
+            'usualNameEditor'
+        );
+
+    const inlineUsualName =
+        document.getElementById(
+            'inlineUsualName'
+        );
+
+    const savedOrderName =
+        document.getElementById(
+            'savedOrderName'
+        );
+
+
+    function openUsualNameEditor() {
+
+        if (!usualNameEditor) {
+            return;
+        }
+
+        usualNameEditor.hidden = false;
+
+        if (inlineUsualName) {
+
+            inlineUsualName.focus();
+
+            inlineUsualName.select();
+
+        }
+
+    }
+
+
+    function closeUsualNameEditor() {
+
+        if (!usualNameEditor) {
+            return;
+        }
+
+        usualNameEditor.hidden = true;
+
+    }
+
+
+    if (editUsualNameButton) {
+
+        editUsualNameButton.addEventListener(
+            'click',
+            openUsualNameEditor
+        );
+
+    }
+
+
+    if (doneUsualNameButton) {
+
+        doneUsualNameButton.addEventListener(
+            'click',
+            closeUsualNameEditor
+        );
+
+    }
+
+
+    /*
+     * Keep the modal's name field synchronized
+     * with the inline name editor.
+     */
+
+    if (inlineUsualName) {
+
+        inlineUsualName.addEventListener(
+            'input',
+            function () {
+
+                if (savedOrderName) {
+
+                    savedOrderName.value =
+                        inlineUsualName.value;
+
+                }
+
+            }
+        );
+
+    }
+
+
+
+    /* =====================================================
        SAVE ORDER MODAL
        ===================================================== */
 
@@ -1010,17 +1187,27 @@ document.addEventListener('DOMContentLoaded', function () {
         );
 
 
-    const savedOrderName =
-        document.getElementById(
-            'savedOrderName'
-        );
-
-
 
     function openSaveOrderModal() {
 
         if (!saveOrderModal) {
             return;
+        }
+
+
+        /*
+         * Make sure the modal always contains
+         * the latest inline name.
+         */
+
+        if (
+            inlineUsualName
+            && savedOrderName
+        ) {
+
+            savedOrderName.value =
+                inlineUsualName.value;
+
         }
 
 
@@ -1036,7 +1223,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
         if (savedOrderName) {
+
             savedOrderName.focus();
+
+            savedOrderName.select();
+
         }
 
     }
@@ -1119,7 +1310,6 @@ document.addEventListener('DOMContentLoaded', function () {
     );
 
 });
-
 
 </script>
 

@@ -299,6 +299,187 @@ button {
     font-size: 12px;
 }
 
+/* =========================================================
+   USUAL EDIT HEADER
+   ========================================================= */
+
+.usual-edit-title-row {
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    min-width: 0;
+}
+
+
+.usual-edit-title-row h1 {
+    margin: 0;
+
+    font-family: Georgia, serif;
+
+    font-size: 27px;
+
+    color: #3d2619;
+
+    line-height: 1.15;
+
+    word-break: break-word;
+}
+
+
+.usual-name-edit-button {
+    width: 28px;
+    height: 28px;
+
+    flex: 0 0 28px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: 1px solid #d9d0c5;
+
+    border-radius: 7px;
+
+    background: #fffdf9;
+
+    color: #6f6258;
+
+    font-size: 14px;
+
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition:
+        border-color 0.15s ease,
+        background 0.15s ease,
+        color 0.15s ease,
+        transform 0.15s ease;
+}
+
+
+.usual-name-edit-button:hover {
+    border-color: #8b3f16;
+
+    background: #faf4eb;
+
+    color: #8b3f16;
+
+    transform: translateY(-1px);
+}
+
+
+.usual-name-edit-button:active {
+    transform: translateY(0);
+}
+
+
+/* =========================================================
+   INLINE USUAL NAME EDITOR
+   ========================================================= */
+
+.usual-name-editor {
+    margin-top: 9px;
+}
+
+
+.usual-name-editor[hidden] {
+    display: none;
+}
+
+
+.usual-name-editor-label {
+    display: block;
+
+    margin-bottom: 6px;
+
+    color: #817568;
+
+    font-size: 10px;
+
+    font-weight: 600;
+}
+
+
+.usual-name-editor-row {
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+}
+
+
+#inlineUsualName {
+    width: 100%;
+
+    min-width: 0;
+
+    padding: 9px 11px;
+
+    border: 1px solid #d9d0c5;
+
+    border-radius: 8px;
+
+    outline: none;
+
+    background: #fffdf9;
+
+    color: #30271f;
+
+    font-size: 12px;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+
+#inlineUsualName:focus {
+    border-color: #8b3f16;
+
+    box-shadow:
+        0 0 0 3px rgba(139, 63, 22, 0.08);
+}
+
+
+.usual-name-editor-done {
+    flex: 0 0 auto;
+
+    padding: 9px 12px;
+
+    border: 1px solid #304028;
+
+    border-radius: 8px;
+
+    background: #304028;
+
+    color: #fffaf3;
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.15s ease,
+        transform 0.15s ease;
+}
+
+
+.usual-name-editor-done:hover {
+    background: #26331f;
+
+    transform: translateY(-1px);
+}
+
 
 /* =========================================================
    SECTIONS
@@ -1111,6 +1292,42 @@ button {
 
     .quantity-row {
         gap: 8px;
+    }
+
+}
+
+@media (max-width: 600px) {
+
+    /* existing mobile CSS... */
+
+
+    .usual-edit-title-row {
+        gap: 7px;
+    }
+
+
+    .usual-edit-title-row h1 {
+        font-size: 23px;
+    }
+
+
+    .usual-name-edit-button {
+        width: 26px;
+        height: 26px;
+
+        flex-basis: 26px;
+
+        font-size: 13px;
+    }
+
+
+    .usual-name-editor-row {
+        align-items: stretch;
+    }
+
+
+    .usual-name-editor-done {
+        padding: 9px 10px;
     }
 
 }

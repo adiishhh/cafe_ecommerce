@@ -329,6 +329,20 @@ def cart(request):
         {}
     )
 
+    save_order_mode = request.session.get(
+        "save_order_mode",
+        False,
+    )
+
+    saved_order_edit_id = request.session.get(
+        "saved_order_edit_id"
+    )
+
+    saved_order_edit_name = request.session.get(
+        "saved_order_edit_name",
+        "",
+    )
+
     if not session_cart:
 
         return render(
@@ -341,13 +355,10 @@ def cart(request):
                 "gst": Decimal("0.00"),
                 "total": Decimal("0.00"),
                 "has_unavailable_items": False,
-                "save_order_mode": request.session.get(
-                    "save_order_mode",
-                    False,
-                ),
-                "saved_order_edit_id": request.session.get(
-                    "saved_order_edit_id"
-                ),
+
+                "save_order_mode": save_order_mode,
+                "saved_order_edit_id": saved_order_edit_id,
+                "saved_order_edit_name": saved_order_edit_name,
             },
         )
 
@@ -435,13 +446,10 @@ def cart(request):
             "gst": gst,
             "total": total,
             "has_unavailable_items": has_unavailable_items,
-            "save_order_mode": request.session.get(
-                "save_order_mode",
-                False,
-            ),
-            "saved_order_edit_id": request.session.get(
-                "saved_order_edit_id"
-            ),
+
+            "save_order_mode": save_order_mode,
+            "saved_order_edit_id": saved_order_edit_id,
+            "saved_order_edit_name": saved_order_edit_name,
         },
     )
 
@@ -778,6 +786,11 @@ def cancel_cart(request):
 
     request.session.pop(
         "saved_order_edit_id",
+        None
+    )
+
+    request.session.pop(
+        "saved_order_edit_name",
         None
     )
 

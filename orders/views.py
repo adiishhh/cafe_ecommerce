@@ -559,6 +559,7 @@ def order_detail(request, order_id):
             "payment_method": payment_method,
             "can_cancel": can_cancel,
             "active_items": active_items,
+            "can_save_as_usual": bool(active_items),
         }
     )
 
@@ -1549,7 +1550,6 @@ def admin_order_list(request):
         .all()
     )
 
-    # Search
     if search:
         search_filter = (
             Q(order_no__icontains=search)
@@ -1563,7 +1563,6 @@ def admin_order_list(request):
 
         orders = orders.filter(search_filter)
 
-    # Status filter
     valid_statuses = {
         choice[0]
         for choice in Order.Status.choices
@@ -1572,7 +1571,6 @@ def admin_order_list(request):
     if status_filter in valid_statuses:
         orders = orders.filter(status=status_filter)
 
-    # Order type filter
     valid_order_types = {
         choice[0]
         for choice in Order.OrderType.choices
@@ -1581,7 +1579,6 @@ def admin_order_list(request):
     if order_type_filter in valid_order_types:
         orders = orders.filter(order_type=order_type_filter)
 
-    # Date filter
     now = timezone.localtime(timezone.now())
     today = now.date()
 
@@ -1623,7 +1620,6 @@ def admin_order_list(request):
             created_at__date__lte=last_month_end,
         )
 
-    # Sorting
     sort_options = {
         "newest": "-created_at",
         "oldest": "created_at",
@@ -1732,7 +1728,6 @@ def admin_update_order_status(request, order_id):
             status=400,
         )
 
-    # Nothing to change
     if order.status == new_status:
         return JsonResponse(
             {
@@ -1752,7 +1747,6 @@ def admin_update_order_status(request, order_id):
         "updated_at",
     ]
 
-    # Handle cancellation information
     if new_status == Order.Status.CANCELLED:
 
         if not order.cancelled_at:

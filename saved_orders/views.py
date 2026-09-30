@@ -5,10 +5,12 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from product.models import Product
 from .models import SavedOrder, SavedOrderItem
+from orders.models import Order
 
 # Create your views here.
 
 def _clear_saved_order_session(request):
+
     request.session.pop(
         "save_order_mode",
         None
@@ -16,6 +18,11 @@ def _clear_saved_order_session(request):
 
     request.session.pop(
         "saved_order_edit_id",
+        None
+    )
+
+    request.session.pop(
+        "saved_order_edit_name",
         None
     )
 
@@ -48,6 +55,11 @@ def create_usual(request):
 
     request.session.pop(
         "saved_order_edit_id",
+        None
+    )
+
+    request.session.pop(
+        "saved_order_edit_name",
         None
     )
 
@@ -136,6 +148,69 @@ def save_usual(request):
     messages.success(
         request,
         "Your usual has been saved."
+    )
+
+    return redirect(
+        "my_usuals"
+    )
+
+@login_required
+@require_POST
+def save_order_as_usual(request, order_id):
+
+    order = get_object_or_404(
+        Order.objects.prefetch_related(
+            "items"
+        ),
+        id=order_id,
+        user=request.user,
+    )
+
+    name = request.POST.get(
+        "name",
+        ""
+    ).strip()
+
+    order_items = [
+        item
+        for item in order.items.all()
+        if not item.is_cancelled
+    ]
+
+    if not order_items:
+
+        messages.error(
+            request,
+            "This order cannot be saved as a usual because it has no active items."
+        )
+
+        return redirect(
+            "order_detail",
+            order_id=order.id
+        )
+
+    with transaction.atomic():
+
+        saved_order = SavedOrder.objects.create(
+            user=request.user,
+            name=name,
+        )
+
+        SavedOrderItem.objects.bulk_create(
+            [
+                SavedOrderItem(
+                    saved_order=saved_order,
+                    product=item.product,
+                    quantity=item.quantity,
+                    instructions=item.instructions,
+                )
+                for item in order_items
+            ]
+        )
+
+    messages.success(
+        request,
+        "This order has been saved to My Usuals."
     )
 
     return redirect(
@@ -245,6 +320,7 @@ def order_again(request, saved_order_id):
         }
 
     request.session["cart"] = cart
+
     request.session.pop(
         "save_order_mode",
         None
@@ -252,6 +328,11 @@ def order_again(request, saved_order_id):
 
     request.session.pop(
         "saved_order_edit_id",
+        None
+    )
+
+    request.session.pop(
+        "saved_order_edit_name",
         None
     )
 
@@ -289,6 +370,10 @@ def edit_usual(request, saved_order_id):
 
     request.session["saved_order_edit_id"] = (
         saved_order.id
+    )
+
+    request.session["saved_order_edit_name"] = (
+        saved_order.name
     )
 
     request.session.modified = True
