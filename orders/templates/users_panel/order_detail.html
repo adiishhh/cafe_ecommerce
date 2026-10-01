@@ -691,7 +691,7 @@
 
                 <!-- DELIVERY ADDRESS -->
 
-                {% if order.order_type == 'delivery' and order.address %}
+                {% if order.order_type == 'delivery' and order.address_name %}
 
                     <div class="order-delivery-address">
 
@@ -701,25 +701,25 @@
 
 
                         <strong>
-                            {{ order.address.name }}
+                            {{ order.address_name }}
                         </strong>
 
 
                         <p>
-                            {{ order.address.flat_house }},
-                            {{ order.address.area_street }}
+                            {{ order.address_flat_house }},
+                            {{ order.address_area_street }}
                         </p>
 
 
                         <p>
-                            {{ order.address.city }},
-                            {{ order.address.state }}
-                            - {{ order.address.pincode }}
+                            {{ order.address_city }},
+                            {{ order.address_state }}
+                            - {{ order.address_pincode }}
                         </p>
 
 
                         <p>
-                            {{ order.address.contact_number }}
+                            {{ order.address_contact_number }}
                         </p>
 
                     </div>
@@ -1341,23 +1341,23 @@
         /* =====================================================
            SAVE ORDER AS USUAL
            ===================================================== */
-                
+
         const saveOrderUsualButton =
             document.getElementById(
                 "open-save-order-usual"
             );
-                
+
         const saveOrderUsualModal =
             document.getElementById(
                 "save-order-usual-modal"
             );
-                
+
         const saveUsualName =
             document.getElementById(
                 "save-usual-name"
             );
-                
-                
+
+
         function openSaveOrderUsualModal() {
         
             if (!saveOrderUsualModal) {
@@ -1375,8 +1375,8 @@
             }
         
         }
-        
-        
+
+
         function closeSaveOrderUsualModal() {
         
             if (!saveOrderUsualModal) {
@@ -1388,8 +1388,8 @@
             );
         
         }
-        
-        
+
+
         if (saveOrderUsualButton) {
         
             saveOrderUsualButton.addEventListener(
@@ -1398,8 +1398,8 @@
             );
         
         }
-        
-        
+
+
         document
             .querySelectorAll(
                 "[data-close-save-usual]"

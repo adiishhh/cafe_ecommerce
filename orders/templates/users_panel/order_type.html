@@ -248,100 +248,100 @@
 
 
 
-                <a
-                    href="{% url 'final_checkout' %}"
-                    class="checkout-button"
-                >
-                    Continue to Checkout
-                </a>
-
+                
             </section>
+            
 
-
-        {% elif selected_order_type == 'delivery' %}
-
-
+            {% elif selected_order_type == 'delivery' %}
+            
+            
             <section class="delivery-address-empty">
-
+                
                 <div class="address-empty-icon">
                     +
                 </div>
-
-
+                
+                
                 <h2>
                     Select a delivery address
                 </h2>
-
-
+                
+                
                 <p>
                     Choose an existing address or add a new one
                     to continue.
                 </p>
-
-
+                
+                
                 <button
-                    type="button"
-                    class="checkout-button"
-                    id="openAddressModalEmpty"
+                type="button"
+                class="checkout-button"
+                id="openAddressModalEmpty"
                 >
-                    Select Address
-                </button>
-
-            </section>
-
+                Select Address
+            </button>
+            
+        </section>
+        
         {% endif %}
-
-
-
+        
+        
+        
         <!-- ORDER SUMMARY -->
-
+        
         <section class="order-summary">
-
+            
             <div class="summary-row">
-
+                
                 <span>
                     {{ cart_count }}
                     item{{ cart_count|pluralize }}
                 </span>
-
+                
                 <span>
                     ₹{{ subtotal|floatformat:2 }}
                 </span>
 
             </div>
-
-
+            
+            
             <div class="summary-row">
-
+                
                 <span>
                     GST (5%)
                 </span>
-
+                
                 <span>
                     ₹{{ gst|floatformat:2 }}
                 </span>
-
+                
             </div>
-
-
+            
+            
             <div class="summary-divider"></div>
-
-
+            
+            
             <div class="summary-row total-row">
-
+                
                 <strong>
                     Total
                 </strong>
-
+                
                 <strong>
                     ₹{{ total|floatformat:2 }}
                 </strong>
-
+                
             </div>
-
+            <a
+                href="{% url 'final_checkout' %}"
+                class="checkout-button"
+            >
+                Continue to Checkout
+            </a>
+            
         </section>
-
-
+        
+        
     </div>
 
 </main>
@@ -492,7 +492,7 @@
 
             </div>
 
-
+            
         {% else %}
 
 

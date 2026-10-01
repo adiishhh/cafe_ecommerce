@@ -358,9 +358,9 @@
              DELIVERY ADDRESS
              ================================================= -->
 
-        {% if order.order_type == "delivery" and order.address %}
+        {% if order.order_type == "delivery" and order.address_name %}
 
-            <section class="detail-card">
+            <section class="detail-card delivery-address-card">
 
                 <div class="card-title">
                     Delivery Address
@@ -370,30 +370,30 @@
                 <div class="address-detail">
 
                     <strong>
-                        {{ order.address.name }}
+                        {{ order.address_name }}
                     </strong>
 
 
                     <p>
-                        {{ order.address.flat_house }}
+                        {{ order.address_flat_house }}
                     </p>
 
 
                     <p>
-                        {{ order.address.area_street }}
+                        {{ order.address_area_street }}
                     </p>
 
 
                     <p>
-                        {{ order.address.city }},
-                        {{ order.address.state }}
+                        {{ order.address_city }},
+                        {{ order.address_state }}
                         -
-                        {{ order.address.pincode }}
+                        {{ order.address_pincode }}
                     </p>
 
 
                     <p>
-                        {{ order.address.contact_number }}
+                        {{ order.address_contact_number }}
                     </p>
 
                 </div>

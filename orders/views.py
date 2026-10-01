@@ -198,17 +198,19 @@ def order_type(request):
                 None
             )
 
-            request.session[
-                "checkout_address_modal"
-            ] = False
+            request.session.pop(
+                "checkout_address_modal",
+                None
+            )
 
             request.session.modified = True
 
             return redirect("final_checkout")
 
-        request.session[
-            "checkout_address_modal"
-        ] = True
+        request.session.pop(
+            "checkout_address_modal",
+            None
+        )
 
         request.session.modified = True
 
@@ -218,10 +220,7 @@ def order_type(request):
 
     selected_address = None
 
-    if (
-        selected_type
-        == Order.OrderType.DELIVERY
-    ):
+    if selected_type == Order.OrderType.DELIVERY:
 
         address_id = request.session.get(
             "checkout_address_id"
@@ -251,15 +250,16 @@ def order_type(request):
 
                 request.session.modified = True
 
-    addresses = request.user.addresses.all().order_by(
-        "-is_default",
-        "-id"
+    addresses = (
+        request.user.addresses
+        .all()
+        .order_by(
+            "-is_default",
+            "-id"
+        )
     )
 
-    address_modal = request.session.get(
-        "checkout_address_modal",
-        False
-    )
+    address_modal = False
 
     return render(
         request,
@@ -348,9 +348,10 @@ def final_checkout(request):
                 "Please select a delivery address."
             )
 
-            request.session[
-                "checkout_address_modal"
-            ] = True
+            request.session.pop(
+                "checkout_address_modal",
+                None
+            )
 
             request.session.modified = True
 
@@ -371,9 +372,10 @@ def final_checkout(request):
                 None
             )
 
-            request.session[
-                "checkout_address_modal"
-            ] = True
+            request.session.pop(
+                "checkout_address_modal",
+                None
+            )
 
             request.session.modified = True
 
@@ -468,7 +470,15 @@ def place_order(request):
         order_no=_generate_order_number(),
         tracking_no=None,
         order_type=order_type,
-        address=address,
+
+        address_name=address.name if address else None,
+        address_contact_number=address.contact_number if address else None,
+        address_flat_house=address.flat_house if address else None,
+        address_area_street=address.area_street if address else None,
+        address_city=address.city if address else None,
+        address_state=address.state if address else None,
+        address_pincode=address.pincode if address else None,
+
         table=None,
         status=Order.Status.CONFIRMED,
         subtotal=checkout["subtotal"],
@@ -888,7 +898,7 @@ def download_invoice(request, order_id):
     if (
         order.order_type
         == Order.OrderType.DELIVERY
-        and order.address
+        and order.address_name
     ):
         elements.append(
             Spacer(
@@ -896,14 +906,14 @@ def download_invoice(request, order_id):
                 8 * mm,
             )
         )
-
+    
         elements.append(
             Paragraph(
                 "<b>Delivery Address</b>",
                 normal_style,
             )
         )
-
+    
         elements.append(
             Spacer(
                 1,
@@ -911,24 +921,22 @@ def download_invoice(request, order_id):
             )
         )
 
-        address = order.address
+    address_text = (
+        f"<b>{order.address_name}</b><br/>"
+        f"{order.address_flat_house}, "
+        f"{order.address_area_street}<br/>"
+        f"{order.address_city}, "
+        f"{order.address_state} - "
+        f"{order.address_pincode}<br/>"
+        f"{order.address_contact_number}"
+    )
 
-        address_text = (
-            f"<b>{address.name}</b><br/>"
-            f"{address.flat_house}, "
-            f"{address.area_street}<br/>"
-            f"{address.city}, "
-            f"{address.state} - "
-            f"{address.pincode}<br/>"
-            f"{address.contact_number}"
+    elements.append(
+        Paragraph(
+            address_text,
+            normal_style,
         )
-
-        elements.append(
-            Paragraph(
-                address_text,
-                normal_style,
-            )
-        )
+    )
 
     elements.append(
         Spacer(
@@ -1546,7 +1554,7 @@ def admin_order_list(request):
 
     orders = (
         Order.objects
-        .select_related("user", "table", "address")
+        .select_related("user", "table")
         .all()
     )
 
@@ -1677,7 +1685,6 @@ def admin_order_detail(request, order_id):
         .select_related(
             "user",
             "table",
-            "address",
         )
         .prefetch_related(
             "items__product__images"

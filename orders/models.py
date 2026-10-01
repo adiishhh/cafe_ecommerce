@@ -51,13 +51,13 @@ class Order(models.Model):
         related_name="orders",
     )
 
-    address = models.ForeignKey(
-        "users.Address",
-        on_delete=models.PROTECT,
-        null=True,
-        blank=True,
-        related_name="orders",
-    )
+    address_name = models.CharField(max_length=100, null=True, blank=True)
+    address_contact_number = models.CharField(max_length=15, null=True, blank=True)
+    address_flat_house = models.CharField(max_length=250, null=True, blank=True)
+    address_area_street = models.CharField(max_length=250, null=True, blank=True)
+    address_city = models.CharField(max_length=100, null=True, blank=True)
+    address_state = models.CharField(max_length=100, null=True, blank=True)
+    address_pincode = models.CharField(max_length=10, null=True, blank=True)
 
     status = models.CharField(
         max_length=20,
@@ -97,7 +97,7 @@ class Order(models.Model):
         null=True,
         blank=True
     )
-    
+
     cancellation_reason = models.TextField(
         blank=True
     )
