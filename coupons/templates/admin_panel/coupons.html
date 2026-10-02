@@ -1,0 +1,627 @@
+{% extends "admin_panel/base.html" %}
+{% load static %}
+
+
+{% block extra_css %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'admin_panel/css/coupons.css' %}"
+>
+
+{% endblock %}
+
+
+{% block title %}
+    Coupons | SmartCafe Admin
+{% endblock %}
+
+
+{% block content %}
+
+
+<!-- =========================
+     HEADER
+========================= -->
+
+<div class="page-header">
+
+    <div>
+
+        <h1 class="page-title">
+            Coupons
+        </h1>
+
+        <p class="page-subtitle">
+
+            {{ total_coupons }} coupons
+
+        </p>
+
+    </div>
+
+
+    <a
+        href="{% url "create_coupon" %}"
+        class="add-coupon-button"
+    >
+
+        <span class="add-icon">
+            +
+        </span>
+
+        Create Coupon
+
+    </a>
+
+</div>
+
+
+<!-- =========================
+     SEARCH & FILTERS
+========================= -->
+
+<div class="coupon-toolbar">
+
+    <form
+        method="GET"
+        action="{% url 'coupon_list' %}"
+        class="coupon-search-form"
+    >
+
+        <div class="search-wrapper">
+
+            <i class="fa fa-search search-icon"></i>
+
+            <input
+                type="text"
+                name="q"
+                value="{{ search }}"
+                class="search-input"
+                placeholder="Search coupon codes..."
+            >
+
+        </div>
+
+
+        <select
+            name="type"
+            class="filter-select"
+        >
+
+            <option value="">
+                All Types
+            </option>
+
+            {% for value, label in discount_type_choices %}
+
+                <option
+                    value="{{ value }}"
+                    {% if discount_type_filter == value %}
+                        selected
+                    {% endif %}
+                >
+                    {{ label }}
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+
+        <select
+            name="status"
+            class="filter-select"
+        >
+
+            <option value="">
+                All Status
+            </option>
+
+            <option
+                value="active"
+                {% if status_filter == "active" %}
+                    selected
+                {% endif %}
+            >
+                Active
+            </option>
+
+            <option
+                value="inactive"
+                {% if status_filter == "inactive" %}
+                    selected
+                {% endif %}
+            >
+                Inactive
+            </option>
+
+        </select>
+
+
+        <select
+            name="sort"
+            class="filter-select"
+        >
+
+            <option
+                value="newest"
+                {% if sort == "newest" %}
+                    selected
+                {% endif %}
+            >
+                Newest
+            </option>
+
+            <option
+                value="oldest"
+                {% if sort == "oldest" %}
+                    selected
+                {% endif %}
+            >
+                Oldest
+            </option>
+
+            <option
+                value="expiry_soon"
+                {% if sort == "expiry_soon" %}
+                    selected
+                {% endif %}
+            >
+                Expiring Soon
+            </option>
+
+            <option
+                value="expiry_late"
+                {% if sort == "expiry_late" %}
+                    selected
+                {% endif %}
+            >
+                Expiring Latest
+            </option>
+
+            <option
+                value="value_high"
+                {% if sort == "value_high" %}
+                    selected
+                {% endif %}
+            >
+                Highest Value
+            </option>
+
+            <option
+                value="value_low"
+                {% if sort == "value_low" %}
+                    selected
+                {% endif %}
+            >
+                Lowest Value
+            </option>
+
+        </select>
+
+
+        <button
+            type="submit"
+            class="search-button"
+        >
+            Search
+        </button>
+
+
+        {% if search or discount_type_filter or status_filter or sort != "newest" %}
+
+            <a
+                href="{% url 'coupon_list' %}"
+                class="clear-button"
+            >
+                Clear
+            </a>
+
+        {% endif %}
+
+    </form>
+
+</div>
+
+
+<!-- =========================
+     COUPON CARDS
+========================= -->
+
+{% if page_obj.object_list %}
+
+    <div class="coupon-grid">
+
+        {% for coupon in page_obj %}
+
+            <div
+                class="coupon-card
+                {% if not coupon.is_active %}
+                    inactive
+                {% endif %}"
+            >
+
+
+                <!-- CARD HEADER -->
+
+                <div class="coupon-card-header">
+
+
+                    <div>
+
+                        <div class="coupon-code">
+
+                            {{ coupon.code }}
+
+                        </div>
+
+                        <div class="coupon-id">
+
+                            Coupon #{{ coupon.id }}
+
+                        </div>
+
+                    </div>
+
+
+                    {% if coupon.is_active %}
+
+                        <span class="coupon-status active">
+                            Active
+                        </span>
+
+                    {% else %}
+
+                        <span class="coupon-status inactive">
+                            Inactive
+                        </span>
+
+                    {% endif %}
+
+
+                </div>
+
+
+                <!-- DISCOUNT -->
+
+                <div class="discount-section">
+
+                    <div class="discount-value">
+
+                        {% if coupon.discount_type == "percentage" %}
+
+                            {{ coupon.discount_value|floatformat:"-2" }}%
+
+                        {% else %}
+
+                            ₹{{ coupon.discount_value|floatformat:"-2" }}
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="discount-label">
+
+                        {% if coupon.discount_type == "percentage" %}
+
+                            Percentage discount
+
+                        {% else %}
+
+                            Fixed discount
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <!-- CONDITIONS -->
+
+                <div class="coupon-details">
+
+
+                    <div class="detail-item">
+
+                        <span class="detail-label">
+                            Minimum order
+                        </span>
+
+                        <span class="detail-value">
+                            ₹{{ coupon.minimum_order_amount|floatformat:"-2" }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="detail-item">
+
+                        <span class="detail-label">
+                            Maximum discount
+                        </span>
+
+                        <span class="detail-value">
+
+                            {% if coupon.maximum_discount_amount %}
+
+                                ₹{{ coupon.maximum_discount_amount|floatformat:"-2" }}
+
+                            {% else %}
+
+                                No limit
+
+                            {% endif %}
+
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- USAGE -->
+
+                <div class="usage-section">
+
+
+                    <div class="usage-header">
+
+                        <span>
+                            Usage
+                        </span>
+
+
+                        <span>
+
+                            {{ coupon.used_count }}
+
+                            {% if coupon.usage_limit %}
+
+                                / {{ coupon.usage_limit }}
+
+                            {% else %}
+
+                                / Unlimited
+
+                            {% endif %}
+
+                        </span>
+
+                    </div>
+
+
+                    {% if coupon.usage_limit %}
+
+                        <div class="usage-bar">
+
+                            <div
+                                class="usage-progress"
+                                style="width: {% widthratio coupon.used_count coupon.usage_limit 100 %}%;"
+                            ></div>
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="usage-unlimited">
+
+                            Unlimited usage
+
+                        </div>
+
+                    {% endif %}
+
+
+                </div>
+
+
+                <!-- VALIDITY -->
+
+                <div class="validity-section">
+
+                    <i class="fa fa-calendar-o"></i>
+
+                    <div>
+
+                        <div class="validity-label">
+                            Validity
+                        </div>
+
+                        <div class="validity-date">
+
+                            {{ coupon.valid_from|date:"d M Y" }}
+
+                            -
+
+                            {{ coupon.valid_until|date:"d M Y" }}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ACTIONS -->
+
+                <div class="coupon-actions">
+
+
+                    <a
+                        href="{% url "edit_coupon" coupon.id %}"
+                        class="coupon-action edit"
+                    >
+                        Edit
+                    </a>
+
+
+                    <form
+                        method="POST"
+                        action="{% url 'toggle_coupon_status' coupon.id %}"
+                    >
+                        {% csrf_token %}
+
+                        <button
+                            type="submit"
+                            class="coupon-action toggle"
+                        >
+
+                            {% if coupon.is_active %}
+                                Deactivate
+                            {% else %}
+                                Activate
+                            {% endif %}
+
+                        </button>
+                    
+                    </form>
+
+
+                </div>
+
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+
+{% else %}
+
+
+    <!-- EMPTY STATE -->
+
+    <div class="empty-state">
+
+        <div class="empty-icon">
+
+            <i class="fa fa-ticket"></i>
+
+        </div>
+
+
+        <h3>
+
+            {% if search %}
+
+                No coupons found
+
+            {% else %}
+
+                No coupons created yet
+
+            {% endif %}
+
+        </h3>
+
+
+        <p>
+
+            {% if search %}
+
+                Try a different coupon code or clear your search.
+
+            {% else %}
+
+                Create your first coupon to start offering discounts.
+
+            {% endif %}
+
+        </p>
+
+
+        {% if not search %}
+
+            <a
+                href="{% url "create_coupon" %}"
+                class="empty-create-button"
+            >
+                Create Coupon
+            </a>
+
+        {% endif %}
+
+    </div>
+
+
+{% endif %}
+
+
+<!-- =========================
+     PAGINATION
+========================= -->
+
+{% if page_obj.paginator.num_pages > 1 %}
+
+    <div class="pagination">
+
+
+        {% if page_obj.has_previous %}
+
+            <a
+                href="?page={{ page_obj.previous_page_number }}{% if search %}&q={{ search|urlencode }}{% endif %}{% if discount_type_filter %}&type={{ discount_type_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+                class="page-link"
+            >
+                Previous
+            </a>
+
+        {% else %}
+
+            <span class="page-link disabled">
+                Previous
+            </span>
+
+        {% endif %}
+
+
+        {% for number in page_obj.paginator.page_range %}
+
+            {% if number == page_obj.number %}
+
+                <span class="page-link current">
+                    {{ number }}
+                </span>
+
+            {% else %}
+
+                <a
+                    href="?page={{ number }}{% if search %}&q={{ search|urlencode }}{% endif %}{% if discount_type_filter %}&type={{ discount_type_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+                    class="page-link"
+                >
+                    {{ number }}
+                </a>
+
+            {% endif %}
+
+        {% endfor %}
+
+
+        {% if page_obj.has_next %}
+
+            <a
+                href="?page={{ page_obj.next_page_number }}{% if search %}&q={{ search|urlencode }}{% endif %}{% if discount_type_filter %}&type={{ discount_type_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+                class="page-link"
+            >
+                Next
+            </a>
+
+        {% else %}
+
+            <span class="page-link disabled">
+                Next
+            </span>
+
+        {% endif %}
+
+
+    </div>
+
+{% endif %}
+
+
+{% endblock %}

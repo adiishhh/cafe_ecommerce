@@ -1,0 +1,401 @@
+{% extends "admin_panel/base.html" %}
+{% load static %}
+
+
+{% block extra_css %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'admin_panel/css/coupon_form.css' %}"
+>
+
+{% endblock %}
+
+
+{% block title %}
+
+    {{ page_heading }} | SmartCafe Admin
+
+{% endblock %}
+
+
+{% block content %}
+
+
+<div class="coupon-form-page">
+
+
+    <!-- =========================
+         PAGE HEADER
+    ========================= -->
+
+    <div class="coupon-form-header">
+
+        <h1>
+            {{ page_heading }}
+        </h1>
+
+    </div>
+
+
+    <!-- =========================
+         FORM CARD
+    ========================= -->
+
+    <div class="coupon-form-card">
+
+
+        {% if form.non_field_errors %}
+
+            <div class="form-errors">
+
+                {% for error in form.non_field_errors %}
+
+                    <div>
+                        {{ error }}
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+
+        <form
+            method="POST"
+            novalidate
+        >
+
+            {% csrf_token %}
+
+
+            <!-- =========================
+                 BASIC INFORMATION
+            ========================= -->
+
+            <div class="form-section">
+
+                <div class="section-heading">
+
+                    <h2>
+                        Coupon Details
+                    </h2>
+
+                    <p>
+                        Define the coupon code and discount.
+                    </p>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="{{ form.code.id_for_label }}">
+                        Coupon Code
+                    </label>
+
+                    {{ form.code }}
+
+                    {% for error in form.code.errors %}
+
+                        <span class="field-error">
+                            {{ error }}
+                        </span>
+
+                    {% endfor %}
+
+                </div>
+
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label for="{{ form.discount_type.id_for_label }}">
+                            Discount Type
+                        </label>
+
+                        {{ form.discount_type }}
+
+                        {% for error in form.discount_type.errors %}
+
+                            <span class="field-error">
+                                {{ error }}
+                            </span>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="{{ form.discount_value.id_for_label }}">
+                            Discount Value
+                        </label>
+
+                        {{ form.discount_value }}
+
+                        <span class="field-help">
+                            Percentage or fixed amount depending on the type.
+                        </span>
+
+                        {% for error in form.discount_value.errors %}
+
+                            <span class="field-error">
+                                {{ error }}
+                            </span>
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="form-divider"></div>
+
+
+            <!-- =========================
+                 ORDER CONDITIONS
+            ========================= -->
+
+            <div class="form-section">
+
+                <div class="section-heading">
+
+                    <h2>
+                        Order Conditions
+                    </h2>
+
+                    <p>
+                        Set the minimum order and discount limits.
+                    </p>
+
+                </div>
+
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label for="{{ form.minimum_order_amount.id_for_label }}">
+                            Minimum Order Amount
+                        </label>
+
+                        {{ form.minimum_order_amount }}
+
+                        <span class="field-help">
+                            Minimum cart value required to use this coupon.
+                        </span>
+
+                        {% for error in form.minimum_order_amount.errors %}
+
+                            <span class="field-error">
+                                {{ error }}
+                            </span>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="{{ form.maximum_discount_amount.id_for_label }}">
+                            Maximum Discount
+                        </label>
+
+                        {{ form.maximum_discount_amount }}
+
+                        <span class="field-help">
+                            Applies to percentage coupons. Leave blank for no limit.
+                        </span>
+
+                        {% for error in form.maximum_discount_amount.errors %}
+
+                            <span class="field-error">
+                                {{ error }}
+                            </span>
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="{{ form.usage_limit.id_for_label }}">
+                        Usage Limit
+                    </label>
+
+                    {{ form.usage_limit }}
+
+                    <span class="field-help">
+                        Leave blank to allow unlimited uses.
+                    </span>
+
+                    {% for error in form.usage_limit.errors %}
+
+                        <span class="field-error">
+                            {{ error }}
+                        </span>
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+
+            <div class="form-divider"></div>
+
+
+            <!-- =========================
+                 VALIDITY
+            ========================= -->
+
+            <div class="form-section">
+
+                <div class="section-heading">
+
+                    <h2>
+                        Coupon Validity
+                    </h2>
+
+                    <p>
+                        Choose when customers can use this coupon.
+                    </p>
+
+                </div>
+
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label for="{{ form.valid_from.id_for_label }}">
+                            Valid From
+                        </label>
+
+                        {{ form.valid_from }}
+
+                        {% for error in form.valid_from.errors %}
+
+                            <span class="field-error">
+                                {{ error }}
+                            </span>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="{{ form.valid_until.id_for_label }}">
+                            Valid Until
+                        </label>
+
+                        {{ form.valid_until }}
+
+                        {% for error in form.valid_until.errors %}
+
+                            <span class="field-error">
+                                {{ error }}
+                            </span>
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="form-divider"></div>
+
+
+            <!-- =========================
+                 STATUS
+            ========================= -->
+
+            <div class="form-section">
+
+                <div class="status-setting">
+
+                    <div>
+
+                        <h2>
+                            Coupon Status
+                        </h2>
+
+                        <p>
+                            Inactive coupons cannot be applied by customers.
+                        </p>
+
+                    </div>
+
+
+                    <label class="checkbox-label">
+
+                        {{ form.is_active }}
+
+                        <span>
+                            Active
+                        </span>
+
+                    </label>
+
+                </div>
+
+
+                {% for error in form.is_active.errors %}
+
+                    <span class="field-error">
+                        {{ error }}
+                    </span>
+
+                {% endfor %}
+
+            </div>
+
+
+            <!-- =========================
+                 ACTIONS
+            ========================= -->
+
+            <div class="form-actions">
+
+                <a
+                    href="{% url 'coupon_list' %}"
+                    class="cancel-button"
+                >
+                    Cancel
+                </a>
+
+
+                <button
+                    type="submit"
+                    class="save-button"
+                >
+                    {{ submit_text }}
+                </button>
+
+            </div>
+
+
+        </form>
+
+    </div>
+
+</div>
+
+
+{% endblock %}

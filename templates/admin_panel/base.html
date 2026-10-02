@@ -104,7 +104,21 @@
                     </span>
                 
                 </a>
-            
+
+                <a
+                    href="{% url 'coupon_list' %}"
+                    class="nav-link {% if 'coupon' in request.resolver_match.url_name %}active{% endif %}"
+                >
+
+                    <span class="nav-icon">
+                        <i class="fa fa-ticket"></i>
+                    </span>
+                
+                    <span class="nav-text">
+                        Coupons
+                    </span>
+                
+                </a>
             
                 <a
                     href="{% url "product_list" %}"

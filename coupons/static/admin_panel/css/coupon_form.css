@@ -1,0 +1,461 @@
+/* =========================================================
+   COUPON FORM
+   ========================================================= */
+
+.coupon-form-page {
+
+    width: 100%;
+
+    max-width: 1040px;
+
+    margin: 0 auto;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.coupon-form-header {
+
+    margin-bottom: 28px;
+}
+
+
+.coupon-form-header h1 {
+
+    margin: 0 0 7px;
+
+    color: #25231f;
+
+    font-size: 36px;
+    font-weight: 600;
+}
+
+
+.coupon-form-header p {
+
+    margin: 0;
+
+    color: #746d65;
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   FORM CARD
+   ========================================================= */
+
+.coupon-form-card {
+
+    padding: 38px 36px 0;
+
+    border: 1px solid #e2d8ca;
+    border-radius: 13px;
+
+    background: #fffdfa;
+
+    box-shadow:
+        0 8px 24px rgba(72, 55, 39, 0.06);
+}
+
+
+/* =========================================================
+   SECTIONS
+   ========================================================= */
+
+.form-section {
+
+    padding-bottom: 30px;
+}
+
+
+.section-heading {
+
+    margin-bottom: 22px;
+}
+
+
+.section-heading h2,
+.status-setting h2 {
+
+    margin: 0 0 6px;
+
+    color: #25231f;
+
+    font-size: 17px;
+    font-weight: 600;
+}
+
+
+.section-heading p,
+.status-setting p {
+
+    margin: 0;
+
+    color: #8b837b;
+
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   FORM ROW
+   ========================================================= */
+
+.form-row {
+
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 26px;
+}
+
+
+/* =========================================================
+   FORM GROUP
+   ========================================================= */
+
+.form-group {
+
+    margin-bottom: 22px;
+}
+
+
+.form-group:last-child {
+
+    margin-bottom: 0;
+}
+
+
+.form-group label {
+
+    display: block;
+
+    margin-bottom: 9px;
+
+    color: #25231f;
+
+    font-size: 14px;
+    font-weight: 500;
+}
+
+
+/* =========================================================
+   INPUTS
+   ========================================================= */
+
+.form-group input:not([type="checkbox"]),
+.form-group select {
+
+    width: 100%;
+
+    height: 48px;
+
+    padding: 0 15px;
+
+    border: 1px solid #dcd1c4;
+    border-radius: 9px;
+
+    background: #fcf9f5;
+
+    color: #25231f;
+
+    font-size: 14px;
+
+    outline: none;
+
+    box-sizing: border-box;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+
+.form-group input:not([type="checkbox"]):focus,
+.form-group select:focus {
+
+    border-color: #8b3f16;
+
+    box-shadow:
+        0 0 0 3px rgba(139, 63, 22, 0.08);
+
+    background: #fffdfa;
+}
+
+
+.form-group input::placeholder {
+
+    color: #999087;
+}
+
+
+/* =========================================================
+   HELP TEXT
+   ========================================================= */
+
+.field-help {
+
+    display: block;
+
+    margin-top: 7px;
+
+    color: #968e85;
+
+    font-size: 11px;
+
+    line-height: 1.4;
+}
+
+
+/* =========================================================
+   ERRORS
+   ========================================================= */
+
+.form-errors {
+
+    margin-bottom: 24px;
+
+    padding: 13px 15px;
+
+    border: 1px solid #e3b9ad;
+    border-radius: 8px;
+
+    background: #fff0ed;
+
+    color: #9e402c;
+
+    font-size: 13px;
+}
+
+
+.field-error {
+
+    display: block;
+
+    margin-top: 7px;
+
+    color: #a43d23;
+
+    font-size: 11px;
+}
+
+
+/* =========================================================
+   DIVIDER
+   ========================================================= */
+
+.form-divider {
+
+    height: 1px;
+
+    margin: 0 0 30px;
+
+    background: #ebe3d9;
+}
+
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+.status-setting {
+
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+}
+
+
+.checkbox-label {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    color: #25231f;
+
+    font-size: 13px;
+    font-weight: 500;
+
+    cursor: pointer;
+}
+
+
+.checkbox-label input {
+
+    width: 19px;
+    height: 19px;
+
+    accent-color: #8b3f16;
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   ACTIONS
+   ========================================================= */
+
+.form-actions {
+
+    display: flex;
+
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    margin: 0 -36px;
+
+    padding: 20px 36px;
+
+    border-top: 1px solid #ebe3d9;
+
+    background: #fcf9f5;
+
+    border-radius:
+        0 0 13px 13px;
+}
+
+
+.cancel-button,
+.save-button {
+
+    height: 40px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 18px;
+
+    border-radius: 8px;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    box-sizing: border-box;
+}
+
+
+.cancel-button {
+
+    border: 1px solid #d8cabe;
+
+    background: white;
+
+    color: #746d65;
+
+    text-decoration: none;
+}
+
+
+.cancel-button:hover {
+
+    background: #f5f0e8;
+}
+
+
+.save-button {
+
+    border: 1px solid #8b3f16;
+
+    background: #8b3f16;
+
+    color: white;
+
+    cursor: pointer;
+}
+
+
+.save-button:hover {
+
+    background: #743312;
+
+    border-color: #743312;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 800px) {
+
+    .coupon-form-page {
+
+        max-width: none;
+    }
+
+
+    .coupon-form-card {
+
+        padding: 30px 24px 0;
+    }
+
+
+    .form-row {
+
+        grid-template-columns: 1fr;
+
+        gap: 0;
+    }
+
+
+    .form-actions {
+
+        margin: 0 -24px;
+
+        padding: 18px 24px;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .coupon-form-header h1 {
+
+        font-size: 29px;
+    }
+
+
+    .coupon-form-card {
+
+        padding: 25px 18px 0;
+    }
+
+
+    .status-setting {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+
+    .form-actions {
+
+        margin: 0 -18px;
+
+        padding: 16px 18px;
+    }
+
+
+    .cancel-button,
+    .save-button {
+
+        flex: 1;
+    }
+
+}
