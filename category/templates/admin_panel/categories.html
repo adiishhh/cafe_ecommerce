@@ -133,7 +133,12 @@
                             </h2>
 
                             <div class="category-count">
-                                0 products
+                                {{ category.product_count }}
+                                {% if category.product_count == 1 %}
+                                    product
+                                {% else %}
+                                    products
+                                {% endif %}
                             </div>
 
                         </div>
