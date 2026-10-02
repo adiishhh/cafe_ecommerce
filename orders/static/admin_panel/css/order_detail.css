@@ -559,6 +559,57 @@
     font-size: 16px;
 }
 
+.item-action-cell {
+    white-space: nowrap;
+    text-align: right;
+}
+
+.remove-order-item-btn {
+    border: 1px solid #d9534f;
+    background: transparent;
+    color: #d9534f;
+    padding: 7px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.remove-order-item-btn:hover {
+    background: #d9534f;
+    color: #fff;
+}
+
+.remove-order-item-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.item-removed-text {
+    font-size: 12px;
+    color: #888;
+    font-weight: 600;
+}
+
+.cancelled-item {
+    opacity: 0.65;
+}
+
+.cancelled-item .item-name {
+    text-decoration: line-through;
+}
+
+.cancelled-label {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 3px 7px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
 
 /* =========================================================
    CANCELLATION

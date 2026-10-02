@@ -59,4 +59,9 @@ urlpatterns = [
         views.admin_update_order_status,
         name="admin_update_order_status",
     ),
+        path(
+        "admin_panel/orders/<int:order_id>/items/<int:item_id>/remove/",
+        views.admin_remove_order_item,
+        name="admin_remove_order_item",
+    ),
 ]

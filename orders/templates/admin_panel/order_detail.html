@@ -292,7 +292,7 @@
                     Subtotal
                 </span>
 
-                <strong>
+                <strong id="detailSubtotal">
                     ₹{{ order.subtotal }}
                 </strong>
 
@@ -305,7 +305,7 @@
                     GST (5%)
                 </span>
 
-                <strong>
+                <strong id="detailTaxAmount">
                     ₹{{ order.tax_amount }}
                 </strong>
 
@@ -344,7 +344,7 @@
                     Total
                 </span>
 
-                <strong>
+                <strong id="detailTotalAmount">
                     ₹{{ order.total_amount }}
                 </strong>
 
@@ -439,6 +439,10 @@
                                 Total
                             </th>
 
+                            <th>
+                                Action
+                            </th>
+
                         </tr>
 
                     </thead>
@@ -447,73 +451,64 @@
                     <tbody>
 
                         {% for item in order.items.all %}
-
                             <tr
-                                {% if item.is_cancelled %}
-                                    class="cancelled-item"
-                                {% endif %}
+                                id="orderItemRow-{{ item.id }}"
+                                {% if item.is_cancelled %}class="cancelled-item"{% endif %}
                             >
-
                                 <td>
-
                                     <div class="item-name">
-
                                         {{ item.product.name }}
-
-
+                                    
                                         {% if item.is_cancelled %}
-
                                             <span class="cancelled-label">
                                                 Cancelled
                                             </span>
-
                                         {% endif %}
-
                                     </div>
-
-
+                                
                                     {% if item.instructions %}
-
                                         <div class="item-instructions">
-
-                                            Note:
-                                            {{ item.instructions }}
-
+                                            Note: {{ item.instructions }}
                                         </div>
-
                                     {% endif %}
-
                                 </td>
-
-
-                                <td>
-                                    {{ item.quantity }}
-                                </td>
-
-
+                            
+                                <td>{{ item.quantity }}</td>
+                            
                                 <td>
                                     ₹{{ item.unit_price }}
                                 </td>
-
-
+                            
                                 <td>
                                     ₹{{ item.subtotal }}
                                 </td>
-
+                            
+                                <td class="item-action-cell">
+                                    {% if not item.is_cancelled %}
+                                        <button
+                                            type="button"
+                                            class="remove-order-item-btn"
+                                            data-item-id="{{ item.id }}"
+                                            data-item-name="{{ item.product.name }}"
+                                            data-remove-url="{% url 'admin_remove_order_item' order.id item.id %}"
+                                        >
+                                            Remove Item
+                                        </button>
+                                    {% else %}
+                                        <span class="item-removed-text">
+                                            Removed
+                                        </span>
+                                    {% endif %}
+                                </td>
                             </tr>
 
-                        {% empty %}
-
+                            {% empty %}
                             <tr>
-
-                                <td colspan="4">
+                                <td colspan="5" class="empty-items">
                                     No items found for this order.
                                 </td>
-
                             </tr>
-
-                        {% endfor %}
-
+                            {% endfor %}
                     </tbody>
 
                 </table>
@@ -690,26 +685,21 @@ detailStatusSelect.addEventListener(
         const newStatus =
             this.value;
 
-
         const previousStatus =
             this.dataset.currentStatus ||
             "{{ order.status }}";
 
-
         this.disabled = true;
-
 
         try {
 
-            const response =
+            let response =
                 await fetch(
                     "{% url 'admin_update_order_status' order.id %}",
                     {
-
                         method: "POST",
 
                         headers: {
-
                             "X-CSRFToken":
                                 getCookie("csrftoken"),
 
@@ -718,18 +708,71 @@ detailStatusSelect.addEventListener(
 
                             "X-Requested-With":
                                 "XMLHttpRequest"
-
                         },
 
                         body:
                             `status=${encodeURIComponent(newStatus)}`
-
                     }
                 );
 
 
-            const data =
+            let data =
                 await response.json();
+
+
+            /*
+             * Reverse status changes and changes
+             * involving cancellation require confirmation.
+             */
+            if (
+                response.status === 409 &&
+                data.requires_confirmation
+            ) {
+
+                const shouldConfirm = window.confirm(
+                    `Are you sure you want to change the order status from "${previousStatus}" to "${newStatus}"?`
+                );
+
+
+                if (!shouldConfirm) {
+
+                    this.value =
+                        previousStatus;
+
+                    return;
+                }
+
+
+                /*
+                 * The admin confirmed the change.
+                 * Send the request again with confirmation.
+                 */
+                response =
+                    await fetch(
+                        "{% url 'admin_update_order_status' order.id %}",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "X-CSRFToken":
+                                    getCookie("csrftoken"),
+
+                                "Content-Type":
+                                    "application/x-www-form-urlencoded",
+
+                                "X-Requested-With":
+                                    "XMLHttpRequest"
+                            },
+
+                            body:
+                                `status=${encodeURIComponent(newStatus)}&confirmed=true`
+                        }
+                    );
+
+
+                data =
+                    await response.json();
+            }
 
 
             if (
@@ -778,7 +821,6 @@ detailStatusSelect.addEventListener(
              * the cancelled state so that the
              * cancellation information is updated.
              */
-
             if (
                 data.status === "cancelled" ||
                 previousStatus === "cancelled"
@@ -815,6 +857,134 @@ detailStatusSelect.addEventListener(
 
     }
 );
+
+document.querySelectorAll(".remove-order-item-btn").forEach((button) => {
+    button.addEventListener("click", async () => {
+        const itemId = button.dataset.itemId;
+        const itemName = button.dataset.itemName;
+        const removeUrl = button.dataset.removeUrl;
+
+        const confirmed = window.confirm(
+            `Remove "${itemName}" from this order?`
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        button.disabled = true;
+        button.textContent = "Removing...";
+
+        try {
+            const response = await fetch(removeUrl, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken"),
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+            });
+
+            const responseText = await response.text();
+
+            let data;
+                    
+            try {
+                data = JSON.parse(responseText);
+            } catch (error) {
+                console.error("Server response:", responseText);
+                throw new Error(
+                    `Server returned ${response.status} instead of JSON.`
+                );
+            }
+
+            if (!response.ok || !data.success) {
+                throw new Error(
+                    data.message || "Failed to remove the item."
+                );
+            }
+
+            const row = document.getElementById(
+                `orderItemRow-${itemId}`
+            );
+
+            if (row) {
+                row.classList.add("cancelled-item");
+
+                const nameElement = row.querySelector(".item-name");
+
+                if (nameElement) {
+                    const cancelledLabel =
+                        document.createElement("span");
+
+                    cancelledLabel.className =
+                        "cancelled-label";
+
+                    cancelledLabel.textContent =
+                        "Cancelled";
+
+                    nameElement.appendChild(
+                        document.createTextNode(" ")
+                    );
+
+                    nameElement.appendChild(
+                        cancelledLabel
+                    );
+                }
+
+                const actionCell =
+                    row.querySelector(".item-action-cell");
+
+                if (actionCell) {
+                    actionCell.innerHTML =
+                        '<span class="item-removed-text">Removed</span>';
+                }
+            }
+
+            const subtotalElement =
+                document.getElementById("detailSubtotal");
+
+            const taxElement =
+                document.getElementById("detailTaxAmount");
+
+            const totalElement =
+                document.getElementById("detailTotalAmount");
+
+            if (subtotalElement) {
+                subtotalElement.textContent =
+                    `₹${data.subtotal}`;
+            }
+
+            if (taxElement) {
+                taxElement.textContent =
+                    `₹${data.tax_amount}`;
+            }
+
+            if (totalElement) {
+                totalElement.textContent =
+                    `₹${data.total_amount}`;
+            }
+
+            if (data.order_cancelled) {
+                window.location.reload();
+                return;
+            }
+
+        } catch (error) {
+            console.error(
+                "Remove order item error:",
+                error
+            );
+
+            alert(
+                error.message ||
+                "Something went wrong while removing the item."
+            );
+
+            button.disabled = false;
+            button.textContent = "Remove Item";
+        }
+    });
+});
 
 
 </script>

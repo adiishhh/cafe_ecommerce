@@ -48,7 +48,7 @@
             type="text"
             name="q"
             value="{{ search }}"
-            placeholder="Search order, customer, email or user ID..."
+            placeholder="Search order, product, customer, email or user ID..."
         >
 
     </div>
@@ -595,10 +595,11 @@ document.querySelectorAll(".status-select").forEach(
 
                 selectElement.disabled = true;
 
+                let confirmed = false;
 
                 try {
 
-                    const response = await fetch(
+                    let response = await fetch(
                         "{% url 'admin_update_order_status' 0 %}"
                             .replace(
                                 "/0/status/",
@@ -620,9 +621,67 @@ document.querySelectorAll(".status-select").forEach(
                         }
                     );
 
-
-                    const data =
+                    let data =
                         await response.json();
+
+
+                    /*
+                     * Backend tells us that this transition
+                     * requires confirmation.
+                     */
+                    if (
+                        response.status === 409 &&
+                        data.requires_confirmation
+                    ) {
+
+                        const shouldConfirm = window.confirm(
+                            `Are you sure you want to change the order status from "${oldStatus}" to "${newStatus}"?`
+                        );
+
+                        if (!shouldConfirm) {
+
+                            selectElement.value =
+                                oldStatus;
+
+                            return;
+                        }
+
+                        confirmed = true;
+
+
+                        /*
+                         * Send the request again, this time
+                         * telling the backend that the admin
+                         * has confirmed the transition.
+                         */
+                        response = await fetch(
+                            "{% url 'admin_update_order_status' 0 %}"
+                                .replace(
+                                    "/0/status/",
+                                    `/${orderId}/status/`
+                                ),
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "X-CSRFToken":
+                                        getCookie("csrftoken"),
+
+                                    "Content-Type":
+                                        "application/x-www-form-urlencoded",
+
+                                    "X-Requested-With":
+                                        "XMLHttpRequest"
+                                },
+
+                                body:
+                                    `status=${encodeURIComponent(newStatus)}&confirmed=true`
+                            }
+                        );
+
+                        data =
+                            await response.json();
+                    }
 
 
                     if (!response.ok || !data.success) {

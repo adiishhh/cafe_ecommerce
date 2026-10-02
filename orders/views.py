@@ -1311,6 +1311,97 @@ def cancel_order_item(request, item_id):
         order_id=order.id
     )
 
+@login_required(login_url="login")
+@require_POST
+@transaction.atomic
+def admin_remove_order_item(request, order_id, item_id):
+    forbidden = _admin_staff_check(request)
+    if forbidden:
+        return forbidden
+
+    order = get_object_or_404(
+        Order.objects.select_for_update(),
+        id=order_id,
+    )
+
+    item = get_object_or_404(
+        OrderItem.objects
+        .select_for_update()
+        .select_related("product"),
+        id=item_id,
+        order_id=order.id,
+    )
+
+    if item.is_cancelled:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "This item has already been removed.",
+            },
+            status=400,
+        )
+
+    item.is_cancelled = True
+    item.cancellation_reason = (
+        request.POST.get("reason", "").strip()
+        or "Removed by admin."
+    )
+    item.cancelled_at = timezone.now()
+
+    item.save(
+        update_fields=[
+            "is_cancelled",
+            "cancellation_reason",
+            "cancelled_at",
+        ]
+    )
+
+    subtotal, tax_amount, total_amount = _recalculate_order_totals(order)
+
+    remaining_items = order.items.filter(
+        is_cancelled=False
+    ).exists()
+
+    order_cancelled = False
+
+    if not remaining_items:
+        order.status = Order.Status.CANCELLED
+        order.cancelled_at = timezone.now()
+        order.cancellation_reason = (
+            "All items in this order were removed by admin."
+        )
+
+        order.save(
+            update_fields=[
+                "status",
+                "cancelled_at",
+                "cancellation_reason",
+                "updated_at",
+            ]
+        )
+
+        order_cancelled = True
+
+    return JsonResponse(
+        {
+            "success": True,
+            "message": (
+                f"{item.product.name} was removed from the order."
+            ),
+            "item_id": item.id,
+            "item_name": item.product.name,
+            "subtotal": f"{subtotal:.2f}",
+            "tax_amount": f"{tax_amount:.2f}",
+            "total_amount": f"{total_amount:.2f}",
+            "order_cancelled": order_cancelled,
+            "status": order.status,
+            "status_display": order.get_status_display(),
+            "updated_at": timezone.localtime(
+                order.updated_at
+            ).strftime("%d %b %Y, %H:%M"),
+        }
+    )
+
 def _recalculate_order_totals(order):
     active_items = order.items.filter(
         is_cancelled=False
@@ -1564,12 +1655,16 @@ def admin_order_list(request):
             | Q(tracking_no__icontains=search)
             | Q(user__name__icontains=search)
             | Q(user__email__icontains=search)
+            | Q(items__product__name__icontains=search)
         )
 
         if search.isdigit():
             search_filter |= Q(user_id=int(search))
 
         orders = orders.filter(search_filter)
+        orders = orders.filter(
+            Q(items__product__name__icontains=search)
+        ).distinct()
 
     valid_statuses = {
         choice[0]
@@ -1692,12 +1787,15 @@ def admin_order_detail(request, order_id):
         id=order_id,
     )
 
+    can_remove_items = True
+
     return render(
         request,
         "admin_panel/order_detail.html",
         {
             "order": order,
             "status_choices": Order.Status.choices,
+            "can_remove_items": can_remove_items,
         },
     )
 
@@ -1745,6 +1843,42 @@ def admin_update_order_status(request, order_id):
                 "status": order.status,
                 "status_display": order.get_status_display(),
             }
+        )
+
+    status_order = {
+        Order.Status.CONFIRMED: 0,
+        Order.Status.PREPARING: 1,
+        Order.Status.READY: 2,
+        Order.Status.DELIVERED: 3,
+    }
+
+    current_status = order.status
+
+    requires_confirmation = (
+        current_status == Order.Status.CANCELLED
+        or new_status == Order.Status.CANCELLED
+        or (
+            current_status in status_order
+            and new_status in status_order
+            and status_order[new_status] < status_order[current_status]
+        )
+    )
+
+    confirmed = request.POST.get("confirmed") == "true"
+
+    if requires_confirmation and not confirmed:
+        return JsonResponse(
+            {
+                "success": False,
+                "requires_confirmation": True,
+                "message": (
+                    f"Changing order status from "
+                    f"{order.get_status_display()} to "
+                    f"{order.get_status_display() if False else dict(Order.Status.choices).get(new_status, new_status)} "
+                    "requires confirmation."
+                ),
+            },
+            status=409,
         )
 
     order.status = new_status
