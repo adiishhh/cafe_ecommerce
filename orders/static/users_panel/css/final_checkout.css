@@ -568,6 +568,111 @@ body {
     font-size: 20px;
 }
 
+/* =========================================================
+   COUPON
+   ========================================================= */
+
+.coupon-section {
+    margin-bottom: 12px;
+}
+
+
+.coupon-form {
+    width: 100%;
+}
+
+
+.coupon-input-row {
+    display: flex;
+    align-items: stretch;
+
+    gap: 8px;
+}
+
+
+.coupon-input-row input {
+    width: 100%;
+    min-width: 0;
+
+    padding: 11px 12px;
+
+    border: 1px solid var(--card-border);
+    border-radius: 9px;
+
+    background: var(--card-bg);
+    color: var(--text-primary);
+
+    font-family: inherit;
+    font-size: 12px;
+
+    outline: none;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+
+.coupon-input-row input::placeholder {
+    color: var(--text-muted);
+}
+
+
+.coupon-input-row input:focus {
+    border-color: var(--accent);
+
+    box-shadow:
+        0 0 0 3px rgba(139, 63, 22, 0.08);
+}
+
+
+.coupon-input-row input[readonly] {
+    background: #faf6f0;
+
+    cursor: default;
+}
+
+
+.coupon-input-row button {
+    flex-shrink: 0;
+
+    padding: 10px 16px;
+
+    border: 1px solid var(--accent);
+    border-radius: 9px;
+
+    background: var(--accent);
+
+    color: #fffaf3;
+
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease;
+}
+
+
+.coupon-input-row button:hover {
+    background: var(--accent-dark);
+
+    border-color: var(--accent-dark);
+}
+
+
+.coupon-success {
+    margin: 8px 2px 0;
+
+    color: #4f7654;
+
+    font-size: 10px;
+    font-weight: 600;
+}
+
 
 /* =========================================================
    PLACE ORDER
@@ -692,6 +797,20 @@ body {
 
     .checkout-item-price {
         font-size: 11px;
+    }
+
+        .coupon-input-row {
+        gap: 6px;
+    }
+
+
+    .coupon-input-row input {
+        padding: 10px;
+    }
+
+
+    .coupon-input-row button {
+        padding: 10px 13px;
     }
 
 }

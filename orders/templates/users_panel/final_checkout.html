@@ -21,6 +21,22 @@
 
 {% block content %}
 
+{% if messages %}
+
+    <div class="messages">
+
+        {% for message in messages %}
+
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+{% endif %}
+
 
 <main class="final-checkout-page">
 
@@ -426,6 +442,51 @@
                  ================================================= -->
 
             <aside class="checkout-sidebar">
+
+                <div class="coupon-section">                              
+                    <form method="post" action="{% url 'final_checkout' %}">
+                        {% csrf_token %}
+                    
+                        <div class="coupon-input-row">
+                        
+                            <input
+                                type="text"
+                                name="coupon_code"
+                                value="{% if applied_coupon %}{{ applied_coupon.code }}{% endif %}"
+                                placeholder="Enter coupon code"
+                                maxlength="50"
+                                {% if applied_coupon %}readonly{% endif %}
+                            >
+                        
+                            {% if applied_coupon %}
+                        
+                                <button
+                                    type="submit"
+                                    name="coupon_code"
+                                    value=""
+                                >
+                                    Remove
+                                </button>
+                            
+                            {% else %}
+                            
+                                <button type="submit">
+                                    Apply
+                                </button>
+                            
+                            {% endif %}
+                            
+                        </div>
+                    
+                    </form>
+                
+                    {% if applied_coupon %}
+                        <p class="coupon-success">
+                            {{ applied_coupon.code }} applied successfully.
+                        </p>
+                    {% endif %}
+                    
+                </div>
 
 
                 <section class="price-card">

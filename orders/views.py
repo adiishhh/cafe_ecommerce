@@ -21,6 +21,7 @@ from django.db.models import Q
 from django.utils import timezone
 from datetime import timedelta
 from django.core.paginator import Paginator
+from coupons.views import apply_coupon
 
 # Create your views here.
 
@@ -388,6 +389,100 @@ def final_checkout(request):
                 "order_type"
             )
 
+    if request.method == "POST":
+
+        coupon_code = request.POST.get(
+            "coupon_code",
+            ""
+        ).strip()
+
+        if coupon_code:
+
+            result = apply_coupon(
+                coupon_code,
+                checkout["subtotal"],
+            )
+
+            if result["success"]:
+
+                request.session[
+                    "checkout_coupon_code"
+                ] = result["coupon"].code
+
+                messages.success(
+                    request,
+                    result["message"]
+                )
+
+            else:
+
+                request.session.pop(
+                    "checkout_coupon_code",
+                    None
+                )
+
+                messages.error(
+                    request,
+                    result["message"]
+                )
+
+        else:
+
+            request.session.pop(
+                "checkout_coupon_code",
+                None
+            )
+
+            messages.info(
+                request,
+                "Coupon removed."
+            )
+
+        request.session.modified = True
+
+        return redirect(
+            "final_checkout"
+        )
+
+    coupon_code = request.session.get(
+        "checkout_coupon_code"
+    )
+
+    discount = Decimal("0.00")
+    applied_coupon = None
+
+    if coupon_code:
+
+        result = apply_coupon(
+            coupon_code,
+            checkout["subtotal"],
+        )
+
+        if result["success"]:
+
+            applied_coupon = result["coupon"]
+            discount = result["discount"]
+
+        else:
+
+            request.session.pop(
+                "checkout_coupon_code",
+                None
+            )
+
+            request.session.modified = True
+
+    gst = checkout["gst"]
+
+    total = (
+        checkout["subtotal"]
+        + gst
+        - discount
+    )
+
+    checkout["discount"] = discount
+    checkout["total"] = total
+
     return render(
         request,
         "users_panel/final_checkout.html",
@@ -396,9 +491,9 @@ def final_checkout(request):
             "order_type": order_type,
             "address": address,
             "payment_method": "cod",
+            "applied_coupon": applied_coupon,
         }
     )
-
 
 @login_required(login_url="login")
 @require_POST
@@ -465,6 +560,49 @@ def place_order(request):
                 "order_type"
             )
 
+    coupon_code = request.session.get(
+        "checkout_coupon_code"
+    )
+
+    discount = Decimal("0.00")
+    coupon = None
+
+    if coupon_code:
+
+        result = apply_coupon(
+            coupon_code,
+            checkout["subtotal"],
+        )
+
+        if not result["success"]:
+
+            request.session.pop(
+                "checkout_coupon_code",
+                None
+            )
+
+            request.session.modified = True
+
+            messages.error(
+                request,
+                result["message"]
+            )
+
+            return redirect(
+                "final_checkout"
+            )
+
+        coupon = result["coupon"]
+        discount = result["discount"]
+
+    gst = checkout["gst"]
+
+    total = (
+        checkout["subtotal"]
+        + gst
+        - discount
+    )
+
     order = Order.objects.create(
         user=request.user,
         order_no=_generate_order_number(),
@@ -472,18 +610,44 @@ def place_order(request):
         order_type=order_type,
 
         address_name=address.name if address else None,
-        address_contact_number=address.contact_number if address else None,
-        address_flat_house=address.flat_house if address else None,
-        address_area_street=address.area_street if address else None,
-        address_city=address.city if address else None,
-        address_state=address.state if address else None,
-        address_pincode=address.pincode if address else None,
+        address_contact_number=(
+            address.contact_number
+            if address
+            else None
+        ),
+        address_flat_house=(
+            address.flat_house
+            if address
+            else None
+        ),
+        address_area_street=(
+            address.area_street
+            if address
+            else None
+        ),
+        address_city=(
+            address.city
+            if address
+            else None
+        ),
+        address_state=(
+            address.state
+            if address
+            else None
+        ),
+        address_pincode=(
+            address.pincode
+            if address
+            else None
+        ),
 
         table=None,
         status=Order.Status.CONFIRMED,
         subtotal=checkout["subtotal"],
-        tax_amount=checkout["gst"],
-        total_amount=checkout["total"],
+        coupon_code=coupon.code if coupon else "",
+        discount_amount=discount,
+        tax_amount=gst,
+        total_amount=total,
     )
 
     for item in checkout["cart_items"]:
@@ -497,6 +661,17 @@ def place_order(request):
             unit_price=product.price,
             instructions=item["instructions"],
             subtotal=item["item_total"],
+        )
+
+    if coupon:
+
+        coupon.used_count += 1
+
+        coupon.save(
+            update_fields=[
+                "used_count",
+                "updated_at",
+            ]
         )
 
     request.session.pop(
@@ -516,6 +691,11 @@ def place_order(request):
 
     request.session.pop(
         "checkout_address_modal",
+        None
+    )
+
+    request.session.pop(
+        "checkout_coupon_code",
         None
     )
 
@@ -1393,6 +1573,7 @@ def admin_remove_order_item(request, order_id, item_id):
             "subtotal": f"{subtotal:.2f}",
             "tax_amount": f"{tax_amount:.2f}",
             "total_amount": f"{total_amount:.2f}",
+            "discount_amount": f"{min(order.discount_amount, subtotal):.2f}",
             "order_cancelled": order_cancelled,
             "status": order.status,
             "status_display": order.get_status_display(),
@@ -1403,12 +1584,16 @@ def admin_remove_order_item(request, order_id, item_id):
     )
 
 def _recalculate_order_totals(order):
+
     active_items = order.items.filter(
         is_cancelled=False
     )
 
     subtotal = sum(
-        (item.subtotal for item in active_items),
+        (
+            item.subtotal
+            for item in active_items
+        ),
         Decimal("0.00")
     )
 
@@ -1418,7 +1603,16 @@ def _recalculate_order_totals(order):
         Decimal("0.01")
     )
 
-    total_amount = subtotal + tax_amount
+    discount = min(
+        order.discount_amount,
+        subtotal,
+    )
+
+    total_amount = (
+        subtotal
+        + tax_amount
+        - discount
+    )
 
     order.subtotal = subtotal
     order.tax_amount = tax_amount
@@ -1433,7 +1627,11 @@ def _recalculate_order_totals(order):
         ]
     )
 
-    return subtotal, tax_amount, total_amount
+    return (
+        subtotal,
+        tax_amount,
+        total_amount,
+    )
 
 @login_required(login_url="login")
 @require_POST

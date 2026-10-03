@@ -1,15 +1,123 @@
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
-from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.views.decorators.http import require_POST
+from decimal import Decimal
+from django.contrib import messages
+from django.http import HttpResponseForbidden
+from django.core.paginator import Paginator
+from django.utils import timezone
 from .forms import CouponForm
 from .models import Coupon
 
 # Create your views here.
 
 ADMIN_COUPON_PAGE_SIZE = 10
+
+def apply_coupon(coupon_code, subtotal):
+    coupon_code = (coupon_code or "").strip().upper()
+
+    if not coupon_code:
+        return {
+            "success": False,
+            "coupon": None,
+            "discount": Decimal("0.00"),
+            "message": "Please enter a coupon code.",
+        }
+
+    subtotal = Decimal(subtotal)
+
+    coupon = Coupon.objects.filter(
+        code__iexact=coupon_code
+    ).first()
+
+    if coupon is None:
+        return {
+            "success": False,
+            "coupon": None,
+            "discount": Decimal("0.00"),
+            "message": "Invalid coupon code.",
+        }
+
+    now = timezone.now()
+
+    if not coupon.is_active:
+        return {
+            "success": False,
+            "coupon": coupon,
+            "discount": Decimal("0.00"),
+            "message": "This coupon is no longer active.",
+        }
+
+    if now < coupon.valid_from:
+        return {
+            "success": False,
+            "coupon": coupon,
+            "discount": Decimal("0.00"),
+            "message": "This coupon is not active yet.",
+        }
+
+    if now > coupon.valid_until:
+        return {
+            "success": False,
+            "coupon": coupon,
+            "discount": Decimal("0.00"),
+            "message": "This coupon has expired.",
+        }
+
+    if (
+        coupon.usage_limit is not None
+        and coupon.used_count >= coupon.usage_limit
+    ):
+        return {
+            "success": False,
+            "coupon": coupon,
+            "discount": Decimal("0.00"),
+            "message": "This coupon has reached its usage limit.",
+        }
+
+    if subtotal < coupon.minimum_order_amount:
+        return {
+            "success": False,
+            "coupon": coupon,
+            "discount": Decimal("0.00"),
+            "message": (
+                f"This coupon requires a minimum order of "
+                f"₹{coupon.minimum_order_amount:.2f}."
+            ),
+        }
+
+    if coupon.discount_type == Coupon.DiscountType.PERCENTAGE:
+        discount = (
+            subtotal * coupon.discount_value / Decimal("100")
+        )
+
+    else:
+        discount = coupon.discount_value
+
+    if coupon.maximum_discount_amount is not None:
+        discount = min(
+            discount,
+            coupon.maximum_discount_amount,
+        )
+
+    discount = min(
+        discount,
+        subtotal,
+    )
+
+    discount = discount.quantize(
+        Decimal("0.01")
+    )
+
+    return {
+        "success": True,
+        "coupon": coupon,
+        "discount": discount,
+        "message": (
+            f"Coupon {coupon.code} applied successfully."
+        ),
+    }
 
 
 def _coupon_admin_check(request):
@@ -18,8 +126,6 @@ def _coupon_admin_check(request):
         return redirect("login")
 
     if not request.user.is_staff:
-        from django.http import HttpResponseForbidden
-
         return HttpResponseForbidden(
             "You are not authorized to access this page."
         )
@@ -147,10 +253,7 @@ def create_coupon(request):
         {
             "form": form,
             "page_heading": "Create Coupon",
-            "page_description": (
-                "Create a discount coupon for your customers."
-            ),
-            "submit_text": "Create Coupon",
+            "submit_text": "Create",
             "is_edit": False,
         },
     )

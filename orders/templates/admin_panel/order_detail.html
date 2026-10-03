@@ -332,7 +332,7 @@
                 </span>
 
                 <strong>
-                    ₹0.00
+                    ₹{{ order.discount_amount|floatformat:2 }}
                 </strong>
 
             </div>
@@ -949,6 +949,9 @@ document.querySelectorAll(".remove-order-item-btn").forEach((button) => {
             const totalElement =
                 document.getElementById("detailTotalAmount");
 
+            const discountElement =
+                document.getElementById("detailDiscountAmount");
+
             if (subtotalElement) {
                 subtotalElement.textContent =
                     `₹${data.subtotal}`;
@@ -957,6 +960,11 @@ document.querySelectorAll(".remove-order-item-btn").forEach((button) => {
             if (taxElement) {
                 taxElement.textContent =
                     `₹${data.tax_amount}`;
+            }
+
+            if (discountElement) {
+                discountElement.textContent =
+                    `₹${data.discount_amount}`;
             }
 
             if (totalElement) {
