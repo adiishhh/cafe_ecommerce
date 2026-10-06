@@ -17,7 +17,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import mm
 from reportlab.platypus import (SimpleDocTemplate,Paragraph,Spacer,Table,TableStyle,)
-from django.db.models import Q
+from django.db.models import Q, Count, Sum
 from django.utils import timezone
 from datetime import timedelta
 from django.core.paginator import Paginator
@@ -1919,11 +1919,263 @@ def admin_dashboard(request):
 
     tax = _get_current_tax()
 
+    period = request.GET.get(
+        "period",
+        "today",
+    ).strip()
+
+    now = timezone.localtime(
+        timezone.now()
+    )
+
+    today = now.date()
+
+    if period == "this_week":
+
+        start_date = (
+            today
+            - timedelta(
+                days=today.weekday()
+            )
+        )
+
+        end_date = today
+
+
+    elif period == "this_month":
+
+        start_date = today.replace(
+            day=1
+        )
+
+        end_date = today
+
+
+    elif period == "this_year":
+
+        start_date = today.replace(
+            month=1,
+            day=1,
+        )
+
+        end_date = today
+
+
+    else:
+
+        period = "today"
+
+        start_date = today
+
+        end_date = today
+
+    period_orders = (
+        Order.objects
+        .filter(
+            created_at__date__gte=start_date,
+            created_at__date__lte=end_date,
+        )
+        .select_related(
+            "user",
+            "table",
+        )
+    )
+
+    total_orders = period_orders.count()
+
+    pending_orders = (
+        period_orders
+        .exclude(
+            status__in=[
+                Order.Status.CANCELLED,
+                Order.Status.DELIVERED,
+            ]
+        )
+        .count()
+    )
+
+    total_sales = (
+        period_orders
+        .exclude(
+            status=Order.Status.CANCELLED
+        )
+        .aggregate(
+            total=Sum(
+                "total_amount"
+            )
+        )["total"]
+        or Decimal("0.00")
+    )
+
+    recent_orders = (
+        period_orders
+        .annotate(
+            item_count=Count(
+                "items",
+                filter=Q(
+                    items__is_cancelled=False
+                ),
+            )
+        )
+        .order_by(
+            "-created_at"
+        )[:10]
+    )
+
+    best_selling_products = (
+        OrderItem.objects
+        .filter(
+            is_cancelled=False,
+            order__created_at__date__gte=start_date,
+            order__created_at__date__lte=end_date,
+        )
+        .exclude(
+            order__status=Order.Status.CANCELLED
+        )
+        .values(
+            "product_id",
+            "product__name",
+        )
+        .annotate(
+            order_count=Count(
+                "order_id",
+                distinct=True,
+            ),
+            quantity=Sum(
+                "quantity"
+            ),
+            revenue=Sum(
+                "subtotal"
+            ),
+        )
+        .order_by(
+            "-quantity",
+            "-revenue",
+        )[:10]
+    )
+
+    best_selling_categories = (
+        OrderItem.objects
+        .filter(
+            is_cancelled=False,
+            order__created_at__date__gte=start_date,
+            order__created_at__date__lte=end_date,
+        )
+        .exclude(
+            order__status=Order.Status.CANCELLED
+        )
+        .values(
+            "product__category_id",
+            "product__category__name",
+        )
+        .annotate(
+            order_count=Count(
+                "order_id",
+                distinct=True,
+            ),
+            quantity=Sum(
+                "quantity"
+            ),
+            revenue=Sum(
+                "subtotal"
+            ),
+        )
+        .order_by(
+            "-quantity",
+            "-revenue",
+        )[:10]
+    )
+
+    pickup_count = period_orders.filter(
+        order_type=Order.OrderType.PICKUP
+    ).count()
+
+
+    delivery_count = period_orders.filter(
+        order_type=Order.OrderType.DELIVERY
+    ).count()
+
+
+    table_count = period_orders.filter(
+        order_type=Order.OrderType.TABLE
+    ).count()
+
+
+    orders_by_type_counts = [
+        {
+            "type": "pickup",
+            "label": "Pickup",
+            "count": pickup_count,
+        },
+        {
+            "type": "delivery",
+            "label": "Delivery",
+            "count": delivery_count,
+        },
+        {
+            "type": "table",
+            "label": "Dine-in",
+            "count": table_count,
+        },
+    ]
+
+
+    orders_by_type = []
+
+
+    for item in orders_by_type_counts:
+
+        if total_orders:
+
+            percentage = (
+                Decimal(item["count"])
+                * Decimal("100")
+                / Decimal(total_orders)
+            )
+
+        else:
+
+            percentage = Decimal("0.00")
+
+
+        orders_by_type.append(
+            {
+                "type": item["type"],
+                "label": item["label"],
+                "count": item["count"],
+                "percentage": percentage,
+            }
+        )
+
+    unpaid_bills = None
+
     return render(
         request,
         "admin_panel/dashboard.html",
         {
-            "tax": tax,
+            "period": period,
+
+            "start_date": start_date,
+            "end_date": end_date,
+
+            "tax_percentage": tax.percentage,
+
+            "total_sales": total_sales,
+            "total_orders": total_orders,
+            "pending_orders": pending_orders,
+            "unpaid_bills": unpaid_bills,
+
+            "best_selling_products": (
+                best_selling_products
+            ),
+
+            "best_selling_categories": (
+                best_selling_categories
+            ),
+
+            "recent_orders": recent_orders,
+
+            "orders_by_type": orders_by_type,
         },
     )
 

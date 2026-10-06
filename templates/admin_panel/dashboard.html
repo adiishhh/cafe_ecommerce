@@ -1,0 +1,898 @@
+{% extends "admin_panel/base.html" %}
+
+{% load static %}
+
+
+{% block title %}
+    SmartCafe Admin - Dashboard
+{% endblock %}
+
+
+{% block extra_css %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'admin_panel/css/dashboard.css' %}"
+>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="dashboard-page">
+
+
+    <!-- =====================================================
+         DASHBOARD HEADER
+         ===================================================== -->
+
+    <div class="dashboard-header">
+
+        <div class="dashboard-heading">
+
+            <h1>
+                Dashboard
+            </h1>
+
+            <p>
+                Overview of your café's performance and recent activity.
+            </p>
+
+        </div>
+
+
+        <div class="dashboard-header-actions">
+
+            <!-- Notifications -->
+
+            <button
+                type="button"
+                class="notification-button"
+                aria-label="Notifications"
+            >
+
+                <i class="fa fa-bell-o"></i>
+
+                <span class="notification-dot"></span>
+
+            </button>
+
+
+            <!-- GST -->
+
+            <div class="gst-widget">
+
+                <div class="gst-info">
+
+                    <div class="gst-label">
+
+                        <span>
+                            GST
+                        </span>
+
+                        <i class="fa fa-info-circle"></i>
+
+                    </div>
+
+
+                    <strong>
+                        {{ tax_percentage|default:"5.00"|floatformat:2 }}%
+                    </strong>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="gst-change-button"
+                >
+
+                    <i class="fa fa-pencil"></i>
+
+                    Change
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         DATE / PERIOD FILTER
+         ===================================================== -->
+
+    <div class="dashboard-filter-bar">
+
+        <div class="period-title">
+
+            <i class="fa fa-calendar-o"></i>
+
+            <span>
+                Sales period
+            </span>
+
+        </div>
+
+
+        <div class="period-buttons">
+
+            <a
+                href="?period=today"
+                class="
+                    period-button
+                    {% if period == 'today' or not period %}
+                        active
+                    {% endif %}
+                "
+            >
+                Today
+            </a>
+
+
+            <a
+                href="?period=this_week"
+                class="
+                    period-button
+                    {% if period == 'this_week' %}
+                        active
+                    {% endif %}
+                "
+            >
+                This Week
+            </a>
+
+
+            <a
+                href="?period=this_month"
+                class="
+                    period-button
+                    {% if period == 'this_month' %}
+                        active
+                    {% endif %}
+                "
+            >
+                This Month
+            </a>
+
+
+            <a
+                href="?period=this_year"
+                class="
+                    period-button
+                    {% if period == 'this_year' %}
+                        active
+                    {% endif %}
+                "
+            >
+                This Year
+            </a>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         ROW 1 — KPI CARDS
+         ===================================================== -->
+
+    <section class="kpi-grid">
+
+
+        <!-- Total Sales -->
+
+        <div class="kpi-card">
+
+            <div class="kpi-icon sales-icon">
+
+                <i class="fa fa-line-chart"></i>
+
+            </div>
+
+
+            <div class="kpi-content">
+
+                <span class="kpi-label">
+                    Total Sales
+                </span>
+
+                <strong class="kpi-value">
+                    ₹{{ total_sales|floatformat:2 }}
+                </strong>
+
+                <span class="kpi-note">
+                    Selected period
+                </span>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- Total Orders -->
+
+        <div class="kpi-card">
+
+            <div class="kpi-icon orders-icon">
+
+                <i class="fa fa-shopping-bag"></i>
+
+            </div>
+
+
+            <div class="kpi-content">
+
+                <span class="kpi-label">
+                    Total Orders
+                </span>
+
+                <strong class="kpi-value">
+                    {{ total_orders }}
+                </strong>
+
+                <span class="kpi-note">
+                    Selected period
+                </span>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- Pending Orders -->
+
+        <div class="kpi-card">
+
+            <div class="kpi-icon pending-icon">
+
+                <i class="fa fa-clock-o"></i>
+
+            </div>
+
+
+            <div class="kpi-content">
+
+                <span class="kpi-label">
+                    Pending Orders
+                </span>
+
+                <strong class="kpi-value">
+                    {{ pending_orders }}
+                </strong>
+
+                <span class="kpi-note">
+                    Not cancelled or delivered
+                </span>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- Unpaid Bills -->
+
+        <div class="kpi-card">
+
+            <div class="kpi-icon bills-icon">
+
+                <i class="fa fa-file-text-o"></i>
+
+            </div>
+
+
+            <div class="kpi-content">
+
+                <span class="kpi-label">
+                    Unpaid Bills
+                </span>
+
+                {% if unpaid_bills is not None %}
+
+                    <strong class="kpi-value">
+                        {{ unpaid_bills }}
+                    </strong>
+
+                    <span class="kpi-note">
+                        Selected period
+                    </span>
+
+                {% else %}
+
+                    <strong class="kpi-value">
+                        —
+                    </strong>
+
+                    <span class="kpi-note">
+                        Billing not available yet
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         ROW 2 — BEST SELLING
+         ===================================================== -->
+
+    <section class="dashboard-grid second-row">
+
+
+        <!-- =================================================
+             BEST SELLING CATEGORIES
+             ================================================= -->
+
+        <div class="dashboard-card">
+
+
+            <div class="card-header">
+
+                <div class="card-title">
+
+                    <div class="card-title-icon">
+
+                        <i class="fa fa-pie-chart"></i>
+
+                    </div>
+
+                    <div>
+
+                        <h2>
+                            Best Selling Categories
+                        </h2>
+
+                        <p>
+                            Top categories by quantity sold
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <span class="result-count">
+                    Top 10
+                </span>
+
+            </div>
+
+
+
+            <div class="ranking-list">
+
+
+                {% for category in best_selling_categories %}
+
+                    <div class="ranking-row">
+
+                        <div class="ranking-number">
+                            {{ forloop.counter }}
+                        </div>
+
+
+                        <div class="ranking-main">
+
+                            <strong>
+                                {{ category.product__category__name }}
+                            </strong>
+
+                            <span>
+                                {{ category.order_count }}
+                                order{{ category.order_count|pluralize }}
+                            </span>
+
+                        </div>
+
+
+                        <div class="ranking-stats">
+
+                            <strong>
+                                {{ category.quantity }}
+                            </strong>
+
+                            <span>
+                                sold
+                            </span>
+
+                        </div>
+
+
+                        <div class="ranking-revenue">
+
+                            ₹{{ category.revenue|floatformat:2 }}
+
+                        </div>
+
+                    </div>
+
+                {% empty %}
+
+                    <div class="empty-state">
+
+                        <i class="fa fa-pie-chart"></i>
+
+                        <p>
+                            No category sales data for this period.
+                        </p>
+
+                    </div>
+
+                {% endfor %}
+
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             BEST SELLING PRODUCTS
+             ================================================= -->
+
+        <div class="dashboard-card">
+
+
+            <div class="card-header">
+
+                <div class="card-title">
+
+                    <div class="card-title-icon">
+
+                        <i class="fa fa-star-o"></i>
+
+                    </div>
+
+                    <div>
+
+                        <h2>
+                            Best Selling Products
+                        </h2>
+
+                        <p>
+                            Top products by quantity sold
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <span class="result-count">
+                    Top 10
+                </span>
+
+            </div>
+
+
+
+            <div class="ranking-list">
+
+
+                {% for product in best_selling_products %}
+
+                    <div class="ranking-row">
+
+                        <div class="ranking-number">
+                            {{ forloop.counter }}
+                        </div>
+
+
+                        <div class="ranking-main">
+
+                            <strong>
+                                {{ product.product__name }}
+                            </strong>
+
+                            <span>
+                                {{ product.order_count }}
+                                order{{ product.order_count|pluralize }}
+                            </span>
+
+                        </div>
+
+
+                        <div class="ranking-stats">
+
+                            <strong>
+                                {{ product.quantity }}
+                            </strong>
+
+                            <span>
+                                sold
+                            </span>
+
+                        </div>
+
+
+                        <div class="ranking-revenue">
+
+                            ₹{{ product.revenue|floatformat:2 }}
+
+                        </div>
+
+                    </div>
+
+                {% empty %}
+
+                    <div class="empty-state">
+
+                        <i class="fa fa-star-o"></i>
+
+                        <p>
+                            No product sales data for this period.
+                        </p>
+
+                    </div>
+
+                {% endfor %}
+
+
+            </div>
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         ROW 3 — ORDERS
+         ===================================================== -->
+
+    <section class="dashboard-grid third-row">
+
+
+        <!-- =================================================
+             RECENT ORDERS
+             ================================================= -->
+
+        <div class="dashboard-card recent-orders-card">
+
+
+            <div class="card-header">
+
+                <div class="card-title">
+
+                    <div class="card-title-icon">
+
+                        <i class="fa fa-clock-o"></i>
+
+                    </div>
+
+                    <div>
+
+                        <h2>
+                            Recent Orders
+                        </h2>
+
+                        <p>
+                            Latest orders from the selected period
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <a
+                    href="{% url 'admin_order_list' %}"
+                    class="view-all-link"
+                >
+                    View All
+                    <i class="fa fa-angle-right"></i>
+                </a>
+
+            </div>
+
+
+
+            <div class="orders-table-wrapper">
+
+                <table class="dashboard-orders-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Order
+                            </th>
+
+                            <th>
+                                Type
+                            </th>
+
+                            <th>
+                                Customer
+                            </th>
+
+                            <th>
+                                Items
+                            </th>
+
+                            <th>
+                                Total
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th>
+                                Time
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                        {% for order in recent_orders %}
+
+                            <tr>
+
+
+                                <td>
+
+                                    <a
+                                        href="{% url 'admin_order_detail' order.id %}"
+                                        class="order-number"
+                                    >
+                                        #{{ order.order_no }}
+                                    </a>
+
+                                </td>
+
+
+                                <td>
+
+                                    <span class="order-type">
+
+                                        {% if order.order_type == "table" %}
+
+                                            <i class="fa fa-cutlery"></i>
+                                            Dine-in
+
+                                        {% elif order.order_type == "delivery" %}
+
+                                            <i class="fa fa-truck"></i>
+                                            Delivery
+
+                                        {% else %}
+
+                                            <i class="fa fa-shopping-bag"></i>
+                                            Pickup
+
+                                        {% endif %}
+
+                                    </span>
+
+                                </td>
+
+
+                                <td>
+
+                                    <span class="customer-name">
+
+                                        {{ order.user.name|default:"Guest" }}
+
+                                    </span>
+
+                                </td>
+
+
+                                <td>
+
+                                    {{ order.item_count }}
+
+                                </td>
+
+
+                                <td>
+
+                                    <strong>
+                                        ₹{{ order.total_amount|floatformat:2 }}
+                                    </strong>
+
+                                </td>
+
+
+                                <td>
+
+                                    <span
+                                        class="
+                                            status-badge
+                                            status-{{ order.status }}
+                                        "
+                                    >
+                                        {{ order.get_status_display }}
+                                    </span>
+
+                                </td>
+
+
+                                <td>
+
+                                    <span class="order-time">
+
+                                        {{ order.created_at|date:"d M, h:i A" }}
+
+                                    </span>
+
+                                </td>
+
+
+                            </tr>
+
+                        {% empty %}
+
+                            <tr>
+
+                                <td
+                                    colspan="7"
+                                    class="table-empty"
+                                >
+
+                                    No orders found for this period.
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             ORDERS BY TYPE
+             ================================================= -->
+
+        <div class="dashboard-card order-type-card">
+
+
+            <div class="card-header">
+
+                <div class="card-title">
+
+                    <div class="card-title-icon">
+
+                        <i class="fa fa-bar-chart"></i>
+
+                    </div>
+
+                    <div>
+
+                        <h2>
+                            Orders by Type
+                        </h2>
+
+                        <p>
+                            Distribution of orders
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="order-type-content">
+
+
+                <div class="order-type-total">
+
+                    <strong>
+                        {{ total_orders }}
+                    </strong>
+
+                    <span>
+                        Orders
+                    </span>
+
+                </div>
+
+
+
+                <div class="order-type-list">
+
+
+                    {% for item in orders_by_type %}
+
+                        <div class="order-type-row">
+
+
+                            <div class="order-type-name">
+
+                                <span
+                                    class="
+                                        order-type-dot
+                                        dot-{{ item.type }}
+                                    "
+                                ></span>
+
+
+                                <span>
+
+                                    {{ item.label }}
+
+                                </span>
+
+                            </div>
+
+
+                            <div class="order-type-value">
+
+                                <strong>
+                                    {{ item.count }}
+                                </strong>
+
+                                <span>
+                                    {{ item.percentage|floatformat:1 }}%
+                                </span>
+
+                            </div>
+
+
+                        </div>
+
+                    {% empty %}
+
+                        <div class="empty-state compact">
+
+                            <i class="fa fa-bar-chart"></i>
+
+                            <p>
+                                No order data for this period.
+                            </p>
+
+                        </div>
+
+                    {% endfor %}
+
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+
+</div>
+
+{% endblock %}
