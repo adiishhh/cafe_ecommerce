@@ -8,7 +8,7 @@ from django.db import transaction
 from django.views.decorators.http import require_POST
 from product.models import Product
 from users.models import Address
-from .models import Order, OrderItem
+from .models import Order, OrderItem, Tax
 from django.http import HttpResponse, JsonResponse
 from django.conf import settings
 from reportlab.lib import colors
@@ -25,10 +25,18 @@ from coupons.views import apply_coupon
 
 # Create your views here.
 
-GST_RATE = Decimal("0.05")
 MAX_CART_QUANTITY = 10
 ADMIN_ORDER_PAGE_SIZE = 10
 
+def _get_current_tax():
+    tax = Tax.objects.first()
+
+    if tax is None:
+        tax = Tax.objects.create(
+            percentage=Decimal("5.00")
+        )
+
+    return tax
 
 def _get_cart_item(cart, product_id):
     item = cart.get(str(product_id))
@@ -119,8 +127,13 @@ def _get_checkout_cart(request):
     if not cart_items:
         return None
 
+    tax = _get_current_tax()
+    tax_percentage = tax.percentage
+
+    tax_rate = tax_percentage / Decimal("100")
+
     gst = (
-        subtotal * GST_RATE
+        subtotal * tax_rate
     ).quantize(
         Decimal("0.01")
     )
@@ -132,6 +145,7 @@ def _get_checkout_cart(request):
         "cart_count": cart_count,
         "subtotal": subtotal,
         "gst": gst,
+        "tax_percentage": tax_percentage,
         "shipping": Decimal("0.00"),
         "discount": Decimal("0.00"),
         "total": total,
@@ -644,9 +658,33 @@ def place_order(request):
         table=None,
         status=Order.Status.CONFIRMED,
         subtotal=checkout["subtotal"],
-        coupon_code=coupon.code if coupon else "",
-        discount_amount=discount,
+
+        tax_percentage=checkout["tax_percentage"],
         tax_amount=gst,
+        
+        coupon_code=coupon.code if coupon else "",
+        coupon_discount_type=(
+            coupon.discount_type
+            if coupon
+            else ""
+        ),
+        coupon_discount_value=(
+            coupon.discount_value
+            if coupon
+            else None
+        ),
+        coupon_minimum_order_amount=(
+            coupon.minimum_order_amount
+            if coupon
+            else None
+        ),
+        coupon_maximum_discount_amount=(
+            coupon.maximum_discount_amount
+            if coupon
+            else None
+        ),
+        
+        discount_amount=discount,
         total_amount=total,
     )
 
@@ -1287,7 +1325,7 @@ def download_invoice(request, order_id):
         ],
         [
             Paragraph(
-                "GST (5%)",
+                f"GST ({order.tax_percentage:.2f}%)",
                 normal_style,
             ),
             Paragraph(
@@ -1311,7 +1349,7 @@ def download_invoice(request, order_id):
                 normal_style,
             ),
             Paragraph(
-                "₹0.00",
+                f"₹{order.discount_amount}",
                 right_style,
             ),
         ],
@@ -1536,7 +1574,7 @@ def admin_remove_order_item(request, order_id, item_id):
         ]
     )
 
-    subtotal, tax_amount, total_amount = _recalculate_order_totals(order)
+    subtotal, tax_amount, discount, total_amount = _recalculate_order_totals(order)
 
     remaining_items = order.items.filter(
         is_cancelled=False
@@ -1573,7 +1611,7 @@ def admin_remove_order_item(request, order_id, item_id):
             "subtotal": f"{subtotal:.2f}",
             "tax_amount": f"{tax_amount:.2f}",
             "total_amount": f"{total_amount:.2f}",
-            "discount_amount": f"{min(order.discount_amount, subtotal):.2f}",
+            "discount_amount": f"{discount:.2f}",
             "order_cancelled": order_cancelled,
             "status": order.status,
             "status_display": order.get_status_display(),
@@ -1584,7 +1622,6 @@ def admin_remove_order_item(request, order_id, item_id):
     )
 
 def _recalculate_order_totals(order):
-
     active_items = order.items.filter(
         is_cancelled=False
     )
@@ -1597,16 +1634,59 @@ def _recalculate_order_totals(order):
         Decimal("0.00")
     )
 
+    tax_rate = (
+        order.tax_percentage / Decimal("100")
+    )
+
     tax_amount = (
-        subtotal * GST_RATE
+        subtotal * tax_rate
     ).quantize(
         Decimal("0.01")
     )
 
-    discount = min(
-        order.discount_amount,
-        subtotal,
-    )
+    discount = Decimal("0.00")
+
+    if order.coupon_code:
+        minimum_order_amount = (
+            order.coupon_minimum_order_amount
+            or Decimal("0.00")
+        )
+
+        if subtotal >= minimum_order_amount:
+            discount_type = order.coupon_discount_type
+            discount_value = (
+                order.coupon_discount_value
+                or Decimal("0.00")
+            )
+
+            if discount_type == "percentage":
+                discount = (
+                    subtotal
+                    * discount_value
+                    / Decimal("100")
+                )
+
+            elif discount_type == "fixed":
+                discount = discount_value
+
+            maximum_discount = (
+                order.coupon_maximum_discount_amount
+            )
+
+            if (
+                maximum_discount is not None
+                and discount > maximum_discount
+            ):
+                discount = maximum_discount
+
+            discount = min(
+                discount,
+                subtotal,
+            )
+
+            discount = discount.quantize(
+                Decimal("0.01")
+            )
 
     total_amount = (
         subtotal
@@ -1616,12 +1696,14 @@ def _recalculate_order_totals(order):
 
     order.subtotal = subtotal
     order.tax_amount = tax_amount
+    order.discount_amount = discount
     order.total_amount = total_amount
 
     order.save(
         update_fields=[
             "subtotal",
             "tax_amount",
+            "discount_amount",
             "total_amount",
             "updated_at",
         ]
@@ -1630,6 +1712,7 @@ def _recalculate_order_totals(order):
     return (
         subtotal,
         tax_amount,
+        discount,
         total_amount,
     )
 
@@ -1826,6 +1909,61 @@ def _admin_staff_check(request):
             status=403,
         )
     return None
+
+@login_required(login_url="login")
+def admin_dashboard(request):
+    forbidden = _admin_staff_check(request)
+
+    if forbidden:
+        return forbidden
+
+    tax = _get_current_tax()
+
+    return render(
+        request,
+        "admin_panel/dashboard.html",
+        {
+            "tax": tax,
+        },
+    )
+
+
+@login_required(login_url="login")
+@require_POST
+def admin_update_tax(request):
+    forbidden = _admin_staff_check(request)
+
+    if forbidden:
+        return forbidden
+
+    percentage = request.POST.get("percentage", "").strip()
+
+    try:
+        percentage = Decimal(percentage)
+    except Exception:
+        messages.error(
+            request,
+            "Please enter a valid GST percentage.",
+        )
+        return redirect("admin_dashboard")
+
+    if percentage < 0 or percentage > 100:
+        messages.error(
+            request,
+            "GST percentage must be between 0 and 100.",
+        )
+        return redirect("admin_dashboard")
+
+    tax = _get_current_tax()
+    tax.percentage = percentage
+    tax.save(update_fields=["percentage"])
+
+    messages.success(
+        request,
+        f"GST updated to {percentage:.2f}%.",
+    )
+
+    return redirect("admin_dashboard")
 
 
 @login_required(login_url="login")

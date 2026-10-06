@@ -75,8 +75,8 @@
             
             
                 <a
-                    href="#"
-                    class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}"
+                    href="{% url "admin_dashboard" %}"
+                    class="nav-link {% if 'dashboard' in request.resolver_match.url_name %}active{% endif %}"
                 >
             
                     <span class="nav-icon">

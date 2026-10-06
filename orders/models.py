@@ -3,6 +3,12 @@ from django.conf import settings
 from product.models import Product
 
 # Create your models here.
+class Tax(models.Model):
+    percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=5.00,
+    )
 
 class Order(models.Model):
 
@@ -74,6 +80,12 @@ class Order(models.Model):
         decimal_places=2,
     )
 
+    tax_percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=5.00,
+    )
+
     tax_amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -85,16 +97,12 @@ class Order(models.Model):
         decimal_places=2,
     )
 
-    coupon_code = models.CharField(
-        max_length=50,
-        blank=True,
-    )
-    
-    discount_amount = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        default=0,
-    )
+    coupon_code = models.CharField(max_length=50, blank=True,)
+    coupon_discount_type = models.CharField(max_length=20, blank=True,)
+    coupon_discount_value = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,)
+    coupon_minimum_order_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,)
+    coupon_maximum_discount_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,)
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0,)
 
     created_at = models.DateTimeField(
         auto_now_add=True,

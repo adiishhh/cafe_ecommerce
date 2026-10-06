@@ -15,6 +15,16 @@ urlpatterns = [
         name="final_checkout",
     ),
     path(
+        "admin_panel/dashboard/",
+        views.admin_dashboard,
+        name="admin_dashboard",
+    ),
+    path(
+        "admin_panel/dashboard/tax/",
+        views.admin_update_tax,
+        name="admin_update_tax",
+    ),
+    path(
         "order/place/",
         views.place_order,
         name="place_order",
