@@ -7,9 +7,19 @@ from django.contrib import messages
 from django.views.decorators.http import require_POST
 from .forms import ProductForm, ProductImageFormSet
 from .models import Product
+from orders.models import Tax
 from category.models import Category
 from decimal import Decimal, InvalidOperation
 
+def _get_current_tax():
+    tax = Tax.objects.first()
+
+    if tax is None:
+        tax = Tax.objects.create(
+            percentage=Decimal("5.00")
+        )
+
+    return tax
 
 def customer_home(request):
 
@@ -428,8 +438,13 @@ def cart(request):
             }
         )
 
+    tax = _get_current_tax()
+    tax_percentage = tax.percentage
+
+    tax_rate = tax_percentage / Decimal("100")
+
     gst = (
-        subtotal * Decimal("0.05")
+        subtotal * tax_rate
     ).quantize(
         Decimal("0.01")
     )
@@ -503,8 +518,13 @@ def cart_totals(request):
         else:
             has_unavailable_items = True
 
+    tax = _get_current_tax()
+    tax_percentage = tax.percentage
+
+    tax_rate = tax_percentage / Decimal("100")
+
     gst = (
-        subtotal * Decimal("0.05")
+        subtotal * tax_rate
     ).quantize(
         Decimal("0.01")
     )

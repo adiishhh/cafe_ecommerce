@@ -20,6 +20,22 @@
 
 {% block content %}
 
+{% if messages %}
+
+    <div class="messages">
+
+        {% for message in messages %}
+
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+{% endif %}
+
 <div class="dashboard-page">
 
 
@@ -35,77 +51,155 @@
                 Dashboard
             </h1>
 
-            <p>
-                Overview of your café's performance and recent activity.
-            </p>
-
         </div>
 
 
         <div class="dashboard-header-actions">
 
-            <!-- Notifications -->
-
-            <button
-                type="button"
-                class="notification-button"
-                aria-label="Notifications"
-            >
-
-                <i class="fa fa-bell-o"></i>
-
-                <span class="notification-dot"></span>
-
-            </button>
-
-
+            
+            
             <!-- GST -->
-
+            
             <div class="gst-widget">
-
+                
+                
+                <!-- GST DISPLAY -->
+                
+                <div
+                class="gst-display"
+                id="gstDisplay"
+                >
+                
                 <div class="gst-info">
-
+                    
                     <div class="gst-label">
-
+                        
                         <span>
                             GST
                         </span>
-
+                        
                         <i class="fa fa-info-circle"></i>
-
+                        
                     </div>
-
-
+                    
+                    
                     <strong>
                         {{ tax_percentage|default:"5.00"|floatformat:2 }}%
                     </strong>
-
+                    
                 </div>
-
-
+                
+                
                 <button
-                    type="button"
-                    class="gst-change-button"
+                type="button"
+                class="gst-change-button"
+                id="gstChangeButton"
                 >
-
-                    <i class="fa fa-pencil"></i>
-
-                    Change
-
-                </button>
-
-            </div>
-
+                
+                <i class="fa fa-pencil"></i>
+                
+                Change
+                
+            </button>
+            
         </div>
-
+        
+        
+        
+        <!-- GST EDIT FORM -->
+        
+        <form
+        method="post"
+        action="{% url 'admin_update_tax' %}"
+        class="gst-edit-form"
+        id="gstEditForm"
+        >
+        
+        {% csrf_token %}
+        
+        
+        <div class="gst-edit-info">
+            
+            <div class="gst-label">
+                
+                <span>
+                    GST
+                </span>
+                
+                <i class="fa fa-info-circle"></i>
+                        
+                        </div>
+                    
+                        
+                        <div class="gst-input-wrapper">
+                            
+                            <input
+                            type="number"
+                            name="percentage"
+                            id="gstPercentage"
+                            value="{{ tax_percentage|default:'5.00'|floatformat:2 }}"
+                            min="0"
+                                max="100"
+                                step="0.01"
+                                required
+                                >
+                                
+                                <span>
+                                    %
+                                </span>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                        
+                        <div class="gst-edit-actions">
+                            
+                            <button
+                            type="submit"
+                            class="gst-save-button"
+                            >
+                            Save
+                        </button>
+                        
+                        
+                        <button
+                        type="button"
+                        class="gst-cancel-button"
+                        id="gstCancelButton"
+                        >
+                        Cancel
+                    </button>
+                    
+                </div>
+                
+            </form>
+            
+        </div>
+        <!-- Notifications -->
+        
+        <button
+            type="button"
+            class="notification-button"
+            aria-label="Notifications"
+        >
+        
+            <i class="fa fa-bell-o"></i>
+        
+            <span class="notification-dot"></span>
+        
+        </button>
+        
     </div>
+    
+</div>
 
 
 
-    <!-- =====================================================
-         DATE / PERIOD FILTER
-         ===================================================== -->
-
+<!-- =====================================================
+    DATE / PERIOD FILTER
+    ===================================================== -->
+    
     <div class="dashboard-filter-bar">
 
         <div class="period-title">
@@ -119,60 +213,96 @@
         </div>
 
 
-        <div class="period-buttons">
+        <form
+            method="get"
+            class="period-filter-form"
+        >
 
-            <a
-                href="?period=today"
-                class="
-                    period-button
-                    {% if period == 'today' or not period %}
-                        active
-                    {% endif %}
-                "
+            <select
+                name="period"
+                id="periodSelect"
+                class="period-select"
             >
-                Today
-            </a>
 
-
-            <a
-                href="?period=this_week"
-                class="
-                    period-button
-                    {% if period == 'this_week' %}
-                        active
+                <option
+                    value="today"
+                    {% if period == "today" %}
+                        selected
                     {% endif %}
-                "
-            >
-                This Week
-            </a>
+                >
+                    Today
+                </option>
 
-
-            <a
-                href="?period=this_month"
-                class="
-                    period-button
-                    {% if period == 'this_month' %}
-                        active
+                <option
+                    value="this_week"
+                    {% if period == "this_week" %}
+                        selected
                     {% endif %}
-                "
-            >
-                This Month
-            </a>
+                >
+                    This Week
+                </option>
 
-
-            <a
-                href="?period=this_year"
-                class="
-                    period-button
-                    {% if period == 'this_year' %}
-                        active
+                <option
+                    value="this_month"
+                    {% if period == "this_month" %}
+                        selected
                     {% endif %}
-                "
-            >
-                This Year
-            </a>
+                >
+                    This Month
+                </option>
 
-        </div>
+                <option
+                    value="this_year"
+                    {% if period == "this_year" %}
+                        selected
+                    {% endif %}
+                >
+                    This Year
+                </option>
+
+                <option
+                    value="custom"
+                    {% if period == "custom" %}
+                        selected
+                    {% endif %}
+                >
+                    Custom
+                </option>
+
+            </select>
+
+
+            <input
+                type="date"
+                name="start_date"
+                value="{{ start_date_value }}"
+                class="period-date"
+                aria-label="Start date"
+            >
+
+
+            <span class="date-arrow">
+                →
+            </span>
+
+
+            <input
+                type="date"
+                name="end_date"
+                value="{{ end_date_value }}"
+                class="period-date"
+                aria-label="End date"
+            >
+
+
+            <button
+                type="submit"
+                class="apply-period-button"
+            >
+                Apply
+            </button>
+
+        </form>
 
     </div>
 
@@ -206,10 +336,6 @@
                     ₹{{ total_sales|floatformat:2 }}
                 </strong>
 
-                <span class="kpi-note">
-                    Selected period
-                </span>
-
             </div>
 
         </div>
@@ -237,10 +363,6 @@
                     {{ total_orders }}
                 </strong>
 
-                <span class="kpi-note">
-                    Selected period
-                </span>
-
             </div>
 
         </div>
@@ -267,10 +389,6 @@
                 <strong class="kpi-value">
                     {{ pending_orders }}
                 </strong>
-
-                <span class="kpi-note">
-                    Not cancelled or delivered
-                </span>
 
             </div>
 
@@ -301,19 +419,11 @@
                         {{ unpaid_bills }}
                     </strong>
 
-                    <span class="kpi-note">
-                        Selected period
-                    </span>
-
                 {% else %}
 
                     <strong class="kpi-value">
                         —
                     </strong>
-
-                    <span class="kpi-note">
-                        Billing not available yet
-                    </span>
 
                 {% endif %}
 
@@ -337,7 +447,7 @@
              BEST SELLING CATEGORIES
              ================================================= -->
 
-        <div class="dashboard-card">
+        <div class="dashboard-card best-selling-card">
 
 
             <div class="card-header">
@@ -445,7 +555,7 @@
              BEST SELLING PRODUCTS
              ================================================= -->
 
-        <div class="dashboard-card">
+        <div class="dashboard-card best-selling-card">
 
 
             <div class="card-header">
@@ -894,5 +1004,47 @@
 
 
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+
+<script>
+
+    const gstDisplay = document.getElementById("gstDisplay");
+    const gstEditForm = document.getElementById("gstEditForm");
+    const gstChangeButton = document.getElementById("gstChangeButton");
+    const gstCancelButton = document.getElementById("gstCancelButton");
+    const gstPercentage = document.getElementById("gstPercentage");
+
+
+    gstChangeButton.addEventListener(
+        "click",
+        function () {
+
+            gstDisplay.style.display = "none";
+
+            gstEditForm.classList.add("active");
+
+            gstPercentage.focus();
+
+            gstPercentage.select();
+
+        }
+    );
+
+
+    gstCancelButton.addEventListener(
+        "click",
+        function () {
+
+            gstEditForm.classList.remove("active");
+
+            gstDisplay.style.display = "flex";
+
+        }
+    );
+
+</script>
 
 {% endblock %}

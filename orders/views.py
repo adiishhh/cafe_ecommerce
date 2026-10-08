@@ -19,7 +19,7 @@ from reportlab.lib.units import mm
 from reportlab.platypus import (SimpleDocTemplate,Paragraph,Spacer,Table,TableStyle,)
 from django.db.models import Q, Count, Sum
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, datetime
 from django.core.paginator import Paginator
 from coupons.views import apply_coupon
 
@@ -1919,54 +1919,54 @@ def admin_dashboard(request):
 
     tax = _get_current_tax()
 
-    period = request.GET.get(
-        "period",
-        "today",
-    ).strip()
+    period = request.GET.get("period", "today").strip()
 
-    now = timezone.localtime(
-        timezone.now()
-    )
+    start_date_param = request.GET.get("start_date", "").strip()
+    end_date_param = request.GET.get("end_date", "").strip()
 
+    now = timezone.localtime(timezone.now())
     today = now.date()
 
-    if period == "this_week":
+    if period == "custom":
+        try:
+            start_date = datetime.strptime(
+                start_date_param,
+                "%Y-%m-%d",
+            ).date()
 
-        start_date = (
-            today
-            - timedelta(
-                days=today.weekday()
-            )
-        )
+            end_date = datetime.strptime(
+                end_date_param,
+                "%Y-%m-%d",
+            ).date()
 
+            if start_date > end_date:
+                period = "today"
+                start_date = today
+                end_date = today
+
+        except ValueError:
+            period = "today"
+            start_date = today
+            end_date = today
+
+    elif period == "this_week":
+        start_date = today - timedelta(days=today.weekday())
         end_date = today
-
 
     elif period == "this_month":
-
-        start_date = today.replace(
-            day=1
-        )
-
+        start_date = today.replace(day=1)
         end_date = today
 
-
     elif period == "this_year":
-
         start_date = today.replace(
             month=1,
             day=1,
         )
-
         end_date = today
 
-
     else:
-
         period = "today"
-
         start_date = today
-
         end_date = today
 
     period_orders = (
@@ -2019,7 +2019,7 @@ def admin_dashboard(request):
         )
         .order_by(
             "-created_at"
-        )[:10]
+        )[:5]
     )
 
     best_selling_products = (
@@ -2090,16 +2090,13 @@ def admin_dashboard(request):
         order_type=Order.OrderType.PICKUP
     ).count()
 
-
     delivery_count = period_orders.filter(
         order_type=Order.OrderType.DELIVERY
     ).count()
 
-
     table_count = period_orders.filter(
         order_type=Order.OrderType.TABLE
     ).count()
-
 
     orders_by_type_counts = [
         {
@@ -2119,24 +2116,17 @@ def admin_dashboard(request):
         },
     ]
 
-
     orders_by_type = []
 
-
     for item in orders_by_type_counts:
-
         if total_orders:
-
             percentage = (
                 Decimal(item["count"])
                 * Decimal("100")
                 / Decimal(total_orders)
             )
-
         else:
-
             percentage = Decimal("0.00")
-
 
         orders_by_type.append(
             {
@@ -2154,31 +2144,21 @@ def admin_dashboard(request):
         "admin_panel/dashboard.html",
         {
             "period": period,
-
             "start_date": start_date,
             "end_date": end_date,
-
+            "start_date_value": start_date.strftime("%Y-%m-%d"),
+            "end_date_value": end_date.strftime("%Y-%m-%d"),
             "tax_percentage": tax.percentage,
-
             "total_sales": total_sales,
             "total_orders": total_orders,
             "pending_orders": pending_orders,
             "unpaid_bills": unpaid_bills,
-
-            "best_selling_products": (
-                best_selling_products
-            ),
-
-            "best_selling_categories": (
-                best_selling_categories
-            ),
-
+            "best_selling_products": best_selling_products,
+            "best_selling_categories": best_selling_categories,
             "recent_orders": recent_orders,
-
             "orders_by_type": orders_by_type,
         },
     )
-
 
 @login_required(login_url="login")
 @require_POST
