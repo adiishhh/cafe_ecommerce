@@ -169,8 +169,8 @@
             
             
                 <a
-                    href="#"
-                    class="nav-link {% if request.resolver_match.url_name == 'admin_bills' %}active{% endif %}"
+                    href="{% url "admin_bill_list" %}"
+                    class="nav-link {% if 'bill_' in request.resolver_match.url_name %}active{% endif %}"
                 >
             
                     <span class="nav-icon">

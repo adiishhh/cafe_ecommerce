@@ -1,0 +1,3415 @@
+{% extends "admin_panel/base.html" %}
+
+{% load static %}
+
+{% block title %}
+SmartCafe Admin - Bills
+{% endblock %}
+
+{% block extra_css %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'admin_panel/css/billing.css' %}"
+>
+
+{% endblock %}
+
+{% block content %}
+
+{% if messages %}
+
+<div class="messages">
+
+    {% for message in messages %}
+
+        <div class="message {{ message.tags }}">
+            {{ message }}
+        </div>
+
+    {% endfor %}
+
+</div>
+
+{% endif %}
+
+<div class="billing-page">
+
+<!-- =========================================================
+     PAGE HEADER
+     ========================================================= -->
+
+<div class="billing-page-header">
+
+    <div class="billing-title-area">
+
+        <h1>
+            Bills
+        </h1>
+
+        <p>
+            Manage orders, bills and payments.
+        </p>
+
+    </div>
+
+
+    <!-- DATE FILTER -->
+
+    <form
+        method="get"
+        class="billing-date-filter"
+    >
+
+        <input
+            type="hidden"
+            name="view"
+            value="{{ active_view }}"
+        >
+
+
+        <div class="date-filter-field">
+
+            <label for="billingDate">
+                Date
+            </label>
+
+            <input
+                type="date"
+                id="billingDate"
+                name="date"
+                value="{{ selected_date|date:'Y-m-d' }}"
+            >
+
+        </div>
+
+
+        <button
+            type="submit"
+            class="billing-filter-button"
+        >
+
+            <i class="fa fa-filter"></i>
+
+            Apply
+
+        </button>
+
+    </form>
+
+</div>
+
+
+
+<!-- =========================================================
+     SUMMARY CARDS
+     ========================================================= -->
+
+<div class="billing-summary-grid">
+
+
+    <!-- UNPAID ORDERS -->
+
+    <a
+        href="?view=unpaid_orders&date={{ selected_date|date:'Y-m-d' }}"
+        class="
+            billing-summary-card
+            {% if active_view == 'unpaid_orders' %}
+                active
+            {% endif %}
+        "
+    >
+
+        <div class="billing-summary-icon">
+
+            <i class="fa fa-shopping-basket"></i>
+
+        </div>
+
+
+        <div class="billing-summary-content">
+
+            <span>
+                Unpaid Orders
+            </span>
+
+            <strong>
+                {{ total_unpaid_orders }}
+            </strong>
+
+        </div>
+
+    </a>
+
+
+
+    <!-- UNPAID BILLS -->
+
+    <a
+        href="?view=unpaid_bills&date={{ selected_date|date:'Y-m-d' }}"
+        class="
+            billing-summary-card
+            {% if active_view == 'unpaid_bills' %}
+                active
+            {% endif %}
+        "
+    >
+
+        <div class="billing-summary-icon">
+
+            <i class="fa fa-file-text-o"></i>
+
+        </div>
+
+
+        <div class="billing-summary-content">
+
+            <span>
+                Unpaid Bills
+            </span>
+
+            <strong>
+                {{ total_unpaid_bills }}
+            </strong>
+
+        </div>
+
+    </a>
+
+
+
+    <!-- PAID BILLS -->
+
+    <a
+        href="?view=paid_bills&date={{ selected_date|date:'Y-m-d' }}"
+        class="
+            billing-summary-card
+            {% if active_view == 'paid_bills' %}
+                active
+            {% endif %}
+        "
+    >
+
+        <div class="billing-summary-icon">
+
+            <i class="fa fa-check-circle"></i>
+
+        </div>
+
+
+        <div class="billing-summary-content">
+
+            <span>
+                Paid Bills
+            </span>
+
+            <strong>
+                {{ total_paid_bills }}
+            </strong>
+
+        </div>
+
+    </a>
+
+
+
+    <!-- REFUNDS -->
+
+    <a
+        href="?view=refunds&date={{ selected_date|date:'Y-m-d' }}"
+        class="
+            billing-summary-card
+            {% if active_view == 'refunds' %}
+                active
+            {% endif %}
+        "
+    >
+
+        <div class="billing-summary-icon">
+
+            <i class="fa fa-undo"></i>
+
+        </div>
+
+
+        <div class="billing-summary-content">
+
+            <span>
+                Refunds
+            </span>
+
+            <strong>
+                {{ total_refunds }}
+            </strong>
+
+        </div>
+
+    </a>
+
+
+</div>
+
+
+
+<!-- =========================================================
+     SECTION NAVIGATION
+     ========================================================= -->
+
+<div class="billing-tabs">
+
+    <a
+        href="?view=unpaid_orders&date={{ selected_date|date:'Y-m-d' }}"
+        class="
+            {% if active_view == 'unpaid_orders' %}
+                active
+            {% endif %}
+        "
+    >
+
+        <i class="fa fa-shopping-basket"></i>
+
+        Unpaid Orders
+
+    </a>
+
+
+    <a
+        href="?view=unpaid_bills&date={{ selected_date|date:'Y-m-d' }}"
+        class="
+            {% if active_view == 'unpaid_bills' %}
+                active
+            {% endif %}
+        "
+    >
+
+        <i class="fa fa-file-text-o"></i>
+
+        Unpaid Bills
+
+    </a>
+
+
+    <a
+        href="?view=paid_bills&date={{ selected_date|date:'Y-m-d' }}"
+        class="
+            {% if active_view == 'paid_bills' %}
+                active
+            {% endif %}
+        "
+    >
+
+        <i class="fa fa-check-circle"></i>
+
+        Paid Bills
+
+    </a>
+
+
+    <a
+        href="?view=refunds&date={{ selected_date|date:'Y-m-d' }}"
+        class="
+            {% if active_view == 'refunds' %}
+                active
+            {% endif %}
+        "
+    >
+
+        <i class="fa fa-undo"></i>
+
+        Refunds
+
+    </a>
+
+</div>
+
+
+
+<!-- =========================================================
+     UNPAID ORDERS
+     ========================================================= -->
+
+{% if active_view == "unpaid_orders" %}
+
+
+    <div class="billing-workspace">
+
+
+        <!-- =====================================================
+             LEFT SIDE - ORDERS
+             ===================================================== -->
+
+        <section class="billing-orders-card">
+
+
+            <div class="billing-card-header">
+
+                <div>
+
+                    <h2>
+                        Unpaid Orders
+                    </h2>
+
+                    <p>
+                        Select orders to create a bill.
+                    </p>
+
+                </div>
+
+
+                {% if unpaid_orders %}
+
+                    <label class="select-all-control">
+
+                        <input
+                            type="checkbox"
+                            id="selectAllOrders"
+                        >
+
+                        <span>
+                            Select all
+                        </span>
+
+                    </label>
+
+                {% endif %}
+
+            </div>
+
+
+
+            {% if unpaid_orders %}
+
+
+                <div class="billing-order-list">
+
+
+                    {% for bill_order in unpaid_orders %}
+
+
+                        <article
+                            class="billing-order-card"
+                            data-id="{{ bill_order.id }}"
+                            data-subtotal="{{ bill_order.order.subtotal }}"
+                            data-tax="{{ bill_order.order.tax_amount }}"
+                            data-total="{{ bill_order.total }}"
+                        >
+
+
+                            <!-- ORDER HEADER -->
+
+                            <div class="billing-order-header">
+
+
+                                <div class="billing-order-select">
+
+                                    <input
+                                        type="checkbox"
+                                        class="bill-order-checkbox"
+                                        value="{{ bill_order.id }}"
+                                        aria-label="Select {{ bill_order.order.order_no }}"
+                                    >
+
+                                </div>
+
+
+
+                                <div class="billing-order-main">
+
+
+                                    <div class="billing-order-title-row">
+
+
+                                        <a
+                                            href="{% url 'admin_order_detail' bill_order.order.id %}"
+                                            class="billing-order-number"
+                                        >
+                                            {{ bill_order.order.order_no }}
+                                        </a>
+
+
+                                        <span class="billing-order-type">
+
+                                            {% if bill_order.order.order_type == "table" %}
+
+                                                Dine-in
+
+                                            {% else %}
+
+                                                {{ bill_order.order.get_order_type_display }}
+
+                                            {% endif %}
+
+                                        </span>
+
+                                    </div>
+
+
+
+                                    <!-- CUSTOMER -->
+
+                                    <div class="billing-customer-row">
+
+                                        <div class="customer-avatar">
+
+                                            {% if bill_order.order.user %}
+
+                                                {{ bill_order.order.user.name|first|upper }}
+
+                                            {% else %}
+
+                                                G
+
+                                            {% endif %}
+
+                                        </div>
+
+
+                                        <div class="customer-details">
+
+                                            <strong>
+
+                                                {% if bill_order.order.user %}
+
+                                                    {{ bill_order.order.user.name|default:"No name" }}
+
+                                                {% else %}
+
+                                                    Guest Customer
+
+                                                {% endif %}
+
+                                            </strong>
+
+
+                                            {% if bill_order.order.user.email %}
+
+                                                <span>
+                                                    {{ bill_order.order.user.email }}
+                                                </span>
+
+                                            {% endif %}
+
+                                        </div>
+
+                                    </div>
+
+
+
+                                    <!-- DATE / PAYMENT -->
+
+                                    <div class="billing-order-meta">
+
+
+                                        <span>
+
+                                            <i class="fa fa-clock-o"></i>
+
+                                            {{ bill_order.created_at|date:"d M Y, h:i A" }}
+
+                                        </span>
+
+
+                                        <span>
+
+                                            <i class="fa fa-credit-card"></i>
+
+                                            {{ bill_order.get_payment_method_display }}
+
+                                        </span>
+
+
+                                    </div>
+
+                                </div>
+
+
+
+                                <!-- ORDER TOTAL -->
+
+                                <div class="billing-order-total">
+
+                                    <span>
+                                        Order Total
+                                    </span>
+
+                                    <strong>
+                                        ₹ {{ bill_order.total }}
+                                    </strong>
+
+                                </div>
+
+
+                            </div>
+
+
+
+                            <!-- =================================================
+                                 COMPACT PRODUCT SUMMARY
+                                 ================================================= -->
+
+                            <div class="billing-product-summary">
+                            
+                                <span class="billing-product-count">
+                                    {{ bill_order.order.items.all|length }}
+                                    item{{ bill_order.order.items.all|length|pluralize }}
+                                </span>
+                            
+                                <span class="billing-product-names">
+                                
+                                    {% for item in bill_order.order.items.all %}
+                                
+                                        <span class="billing-product-chip">
+                                        
+                                            {{ item.product.name }}
+                                        
+                                            <small>
+                                                × {{ item.quantity }}
+                                            </small>
+                                        
+                                        </span>
+                                    
+                                    {% empty %}
+                                    
+                                        <span class="billing-no-products">
+                                            No products
+                                        </span>
+                                    
+                                    {% endfor %}
+                                    
+                                </span>
+                            
+                            </div>
+
+
+                        </article>
+
+
+                    {% endfor %}
+
+
+                </div>
+
+
+            {% else %}
+
+
+                <div class="billing-empty-state">
+
+                    <div class="billing-empty-icon">
+
+                        <i class="fa fa-shopping-basket"></i>
+
+                    </div>
+
+
+                    <h3>
+                        No unpaid orders
+                    </h3>
+
+
+                    <p>
+                        There are no unbilled COD orders for
+                        {{ selected_date|date:"d M Y" }}.
+                    </p>
+
+                </div>
+
+
+            {% endif %}
+
+
+        </section>
+
+
+
+        <!-- =====================================================
+             RIGHT SIDE - BILL BUILDER
+             ===================================================== -->
+
+        <aside class="bill-builder-card">
+
+
+            <div class="bill-builder-header">
+
+
+                <div>
+
+                    <span class="bill-builder-label">
+                        BILL
+                    </span>
+
+                </div>
+
+
+                <span
+                    id="billStatusBadge"
+                    class="bill-status-badge unpaid"
+                >
+                    Unpaid
+                </span>
+
+
+            </div>
+
+
+
+            <div class="bill-builder-body">
+
+
+                <!-- SELECTED ORDER COUNT -->
+
+                <div class="bill-selection-header">
+
+                    <span>
+                        Selected Orders
+                    </span>
+
+                    <strong id="selectedOrderCount">
+                        0
+                    </strong>
+
+                </div>
+
+
+
+                <!-- SELECTED ORDERS -->
+
+                <div
+                    id="selectedOrdersPreview"
+                    class="selected-orders-preview"
+                >
+
+                    <div class="bill-builder-empty">
+
+                        <p>
+                            Select orders to generate bill.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- BILL TOTALS -->
+
+                <div class="bill-totals">
+
+
+                    <div class="bill-total-row">
+
+                        <span>
+                            Subtotal
+                        </span>
+
+                        <strong id="billSubtotal">
+                            ₹ 0.00
+                        </strong>
+
+                    </div>
+
+
+                    <div class="bill-total-row">
+
+                        <span>
+                            Tax
+                        </span>
+
+                        <strong id="billTax">
+                            ₹ 0.00
+                        </strong>
+
+                    </div>
+
+
+                    <div class="bill-total-row grand-total">
+
+                        <span>
+                            Total
+                        </span>
+
+                        <strong id="billTotal">
+                            ₹ 0.00
+                        </strong>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- =================================================
+                     BILL FORM
+                     ================================================= -->
+
+                <form
+                    method="post"
+                    action="{% url 'admin_generate_bill' %}"
+                    id="billForm"
+                >
+
+                    {% csrf_token %}
+
+
+                    <div id="selectedOrderInputs"></div>
+
+
+
+                    <!-- STATUS -->
+
+                    <div class="billing-form-field">
+
+                        <label for="billStatus">
+                            Bill Status
+                        </label>
+
+
+                        <select
+                            id="billStatus"
+                            name="status"
+                        >
+
+                            <option value="unpaid">
+                                Unpaid
+                            </option>
+
+                            <option value="paid">
+                                Paid
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+
+                    <!-- TRANSACTION METHOD -->
+
+                    <div
+                        id="transactionMethodArea"
+                        class="billing-form-field"
+                        hidden
+                    >
+
+                        <label>
+                            Transaction Method
+                        </label>
+
+
+                        <div class="transaction-method-grid">
+
+
+                            <label class="transaction-option">
+
+                                <input
+                                    type="radio"
+                                    name="transaction_method"
+                                    value="cash"
+                                >
+
+                                <span>
+
+                                    <i class="fa fa-money"></i>
+
+                                    Cash
+
+                                </span>
+
+                            </label>
+
+
+
+                            <label class="transaction-option">
+
+                                <input
+                                    type="radio"
+                                    name="transaction_method"
+                                    value="upi"
+                                >
+
+                                <span>
+
+                                    <i class="fa fa-mobile"></i>
+
+                                    UPI
+
+                                </span>
+
+                            </label>
+
+
+
+                            <label class="transaction-option">
+
+                                <input
+                                    type="radio"
+                                    name="transaction_method"
+                                    value="card"
+                                >
+
+                                <span>
+
+                                    <i class="fa fa-credit-card"></i>
+
+                                    Card
+
+                                </span>
+
+                            </label>
+
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- PAYMENT REFERENCE -->
+
+                    <div
+                        id="paymentReferenceArea"
+                        class="billing-form-field"
+                        hidden
+                    >
+
+                        <label for="paymentReference">
+
+                            Payment Reference
+
+                        </label>
+
+
+                        <input
+                            type="text"
+                            id="paymentReference"
+                            name="payment_reference"
+                            placeholder="Transaction / reference number"
+                        >
+
+                    </div>
+
+
+
+                    <!-- AJAX ERROR -->
+
+                    <div
+                        id="billingError"
+                        class="billing-error"
+                        hidden
+                    ></div>
+
+
+
+                    <!-- ACTION BUTTONS -->
+
+                    <div class="bill-builder-actions">
+
+
+                        <button
+                            type="button"
+                            id="saveBillButton"
+                            class="bill-save-button"
+                            disabled
+                        >
+
+                            Save Bill
+
+                        </button>
+
+
+                        <button
+                            type="button"
+                            id="savePrintButton"
+                            class="bill-print-button"
+                            disabled
+                        >
+
+                            <i class="fa fa-print"></i>
+
+                            Save & Print
+
+                        </button>
+
+
+                    </div>
+
+
+                </form>
+
+
+            </div>
+
+
+        </aside>
+
+
+    </div>
+
+
+
+<!-- =========================================================
+     UNPAID BILLS
+     ========================================================= -->
+
+{% elif active_view == "unpaid_bills" %}
+
+
+    <div class="billing-list-card">
+
+
+        <div class="billing-list-header">
+
+            <div>
+
+                <h2>
+                    Unpaid Bills
+                </h2>
+
+                <p>
+                    Bills that have been generated but are still unpaid.
+                </p>
+
+            </div>
+
+
+            <span class="billing-count-badge">
+
+                {{ total_unpaid_bills }}
+
+                bill{{ total_unpaid_bills|pluralize }}
+
+            </span>
+
+        </div>
+
+
+        {% if unpaid_bills %}
+
+
+            <div class="billing-table-wrapper">
+
+                <table class="billing-table">
+
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Bill
+                            </th>
+
+                            <th>
+                                Orders
+                            </th>
+
+                            <th>
+                                Created
+                            </th>
+
+                            <th>
+                                Transaction
+                            </th>
+
+                            <th class="amount-column">
+                                Total
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                        {% for bill in unpaid_bills %}
+
+                        <tr
+                            class="billing-bill-row"
+                            data-bill-id="{{ bill.id }}"
+                            tabindex="0"
+                            role="button"
+                            aria-label="Edit bill {{ bill.bill_no }}"
+                        >
+
+                            <td>
+                                <span class="bill-number">
+                                    {{ bill.bill_no }}
+                                </span>
+                            </td>
+
+
+                            <td>
+                                <span class="order-count">
+                                    {{ bill.bill_orders.all|length }}
+                                    order{{ bill.bill_orders.all|length|pluralize }}
+                                </span>
+                            </td>
+
+
+                            <td>
+                                <span class="date-text">
+                                    {{ bill.created_at|date:"d M Y, h:i A" }}
+                                </span>
+                            </td>
+
+
+                            <td>
+                                {% if bill.payment_method %}
+                                    {{ bill.get_payment_method_display }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+
+                            <td class="amount-column">
+                                <strong class="bill-total">
+                                    ₹ {{ bill.total_amount }}
+                                </strong>
+                            </td>
+
+
+                            <td>
+                                <span class="bill-status unpaid">
+                                    Unpaid
+                                </span>
+                            </td>
+
+                        </tr>
+
+
+                        {% endfor %}
+
+
+                    </tbody>
+
+
+                </table>
+
+            </div>
+
+
+        {% else %}
+
+
+            <div class="billing-empty-state compact">
+
+                <div class="billing-empty-icon">
+
+                    <i class="fa fa-file-text-o"></i>
+
+                </div>
+
+
+                <h3>
+                    No unpaid bills
+                </h3>
+
+
+                <p>
+                    No unpaid bills were created on
+                    {{ selected_date|date:"d M Y" }}.
+                </p>
+
+            </div>
+
+
+        {% endif %}
+
+
+    </div>
+
+
+
+<!-- =========================================================
+     PAID BILLS
+     ========================================================= -->
+
+{% elif active_view == "paid_bills" %}
+
+
+    <div class="billing-list-card">
+
+
+        <div class="billing-list-header">
+
+            <div>
+
+                <h2>
+                    Paid Bills
+                </h2>
+
+                <p>
+                    Successfully completed bills and their payment details.
+                </p>
+
+            </div>
+
+
+            <span class="billing-count-badge">
+                {{ total_paid_bills }}
+                bill{{ total_paid_bills|pluralize }}
+            </span>
+
+        </div>
+
+
+        {% if paid_bills %}
+
+
+            <div class="billing-table-wrapper">
+
+                <table class="billing-table">
+
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Bill
+                            </th>
+
+                            <th>
+                                Orders
+                            </th>
+
+                            <th>
+                                Created
+                            </th>
+
+                            <th>
+                                Transaction
+                            </th>
+
+                            <th>
+                                Reference
+                            </th>
+
+                            <th class="amount-column">
+                                Total
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                        {% for bill in paid_bills %}
+
+                        <tr
+                            class="billing-bill-row"
+                            data-bill-id="{{ bill.id }}"
+                            tabindex="0"
+                            role="button"
+                            aria-label="Edit bill {{ bill.bill_no }}"
+                        >
+
+                            <td>
+                                <span class="bill-number">
+                                    {{ bill.bill_no }}
+                                </span>
+                            </td>
+
+
+                            <td>
+                                <span class="order-count">
+                                    {{ bill.bill_orders.all|length }}
+                                    order{{ bill.bill_orders.all|length|pluralize }}
+                                </span>
+                            </td>
+
+
+                            <td>
+                                <span class="date-text">
+                                    {{ bill.created_at|date:"d M Y, h:i A" }}
+                                </span>
+                            </td>
+
+
+                            <td>
+                                {% if bill.transaction_method %}
+                                    {{ bill.get_transaction_method_display }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+
+                            <td>
+                                {% with payment=bill.payments.all.0 %}
+
+                                    {% if payment and payment.payment_reference %}
+
+                                        <span class="payment-reference">
+                                            {{ payment.payment_reference }}
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="muted-text">
+                                            —
+                                        </span>
+
+                                    {% endif %}
+
+                                {% endwith %}
+                            </td>
+
+
+                            <td class="amount-column">
+
+                                <strong class="bill-total">
+                                    ₹ {{ bill.total_amount }}
+                                </strong>
+
+                            </td>
+
+
+                            <td>
+
+                                <span class="bill-status paid">
+                                    Paid
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+
+                        {% endfor %}
+
+
+                    </tbody>
+
+
+                </table>
+
+            </div>
+
+
+        {% else %}
+
+
+            <div class="billing-empty-state compact">
+
+                <div class="billing-empty-icon">
+
+                    <i class="fa fa-check-circle"></i>
+
+                </div>
+
+
+                <h3>
+                    No paid bills
+                </h3>
+
+
+                <p>
+                    No bills were marked as paid on
+                    {{ selected_date|date:"d M Y" }}.
+                </p>
+
+            </div>
+
+
+        {% endif %}
+
+
+    </div>
+
+
+
+<!-- =========================================================
+     REFUNDS
+     ========================================================= -->
+
+{% elif active_view == "refunds" %}
+
+
+    <div class="billing-list-card">
+
+
+        <div class="billing-list-header">
+
+            <div>
+
+                <h2>
+                    Refunds
+                </h2>
+
+                <p>
+                    Refund transactions recorded for bills.
+                </p>
+
+            </div>
+
+
+            <span class="billing-count-badge">
+
+                {{ total_refunds }}
+
+                refund{{ total_refunds|pluralize }}
+
+            </span>
+
+        </div>
+
+
+        {% if refunds %}
+
+
+            <div class="billing-table-wrapper">
+
+                <table class="billing-table">
+
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Bill
+                            </th>
+
+                            <th>
+                                Reference
+                            </th>
+
+                            <th>
+                                Transaction
+                            </th>
+
+                            <th>
+                                Date
+                            </th>
+
+                            <th class="amount-column">
+                                Amount
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                        {% for payment in refunds %}
+
+
+                            <tr>
+
+
+                                <td>
+
+                                    <span class="bill-number">
+
+                                        {{ payment.bill.bill_no }}
+
+                                    </span>
+
+                                </td>
+
+
+                                <td>
+
+                                    {% if payment.payment_reference %}
+
+                                        <span class="payment-reference">
+
+                                            {{ payment.payment_reference }}
+
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="muted-text">
+                                            —
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <td>
+
+                                    {% if payment.transaction_method %}
+
+                                        {{ payment.get_transaction_method_display }}
+
+                                    {% else %}
+
+                                        —
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <td>
+
+                                    <span class="date-text">
+
+                                        {{ payment.created_at|date:"d M Y, h:i A" }}
+
+                                    </span>
+
+                                </td>
+
+
+                                <td class="amount-column">
+
+                                    <strong class="refund-amount">
+
+                                        ₹ {{ payment.amount }}
+
+                                    </strong>
+
+                                </td>
+
+
+                                <td>
+
+                                    <span class="bill-status refunded">
+
+                                        Refunded
+
+                                    </span>
+
+                                </td>
+
+
+                            </tr>
+
+
+                        {% endfor %}
+
+
+                    </tbody>
+
+
+                </table>
+
+            </div>
+
+
+        {% else %}
+
+
+            <div class="billing-empty-state compact">
+
+                <div class="billing-empty-icon">
+
+                    <i class="fa fa-undo"></i>
+
+                </div>
+
+
+                <h3>
+                    No refunds
+                </h3>
+
+
+                <p>
+                    No refunds were recorded on
+                    {{ selected_date|date:"d M Y" }}.
+                </p>
+
+            </div>
+
+
+        {% endif %}
+
+
+    </div>
+
+
+{% endif %}
+
+<!-- =============================================================
+ EDIT BILL MODAL
+ ============================================================= -->
+
+<div
+    id="editBillModal"
+    class="billing-modal"
+    hidden
+>
+
+<div
+    class="billing-modal-backdrop"
+    data-close-bill-modal
+></div>
+
+
+<div
+    class="billing-modal-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="editBillModalTitle"
+>
+
+    <div class="billing-modal-header">
+
+        <div>
+
+            <span class="billing-modal-label">
+                BILL
+            </span>
+
+            <h2 id="editBillModalTitle">
+                Edit Bill
+            </h2>
+
+            <p id="editBillModalNumber">
+                —
+            </p>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="billing-modal-close"
+            id="closeBillModal"
+            aria-label="Close"
+        >
+            <i class="fa fa-times"></i>
+        </button>
+
+    </div>
+
+
+    <div class="billing-modal-body">
+
+        <!-- BILL ORDERS -->
+
+        <div class="billing-modal-section">
+
+            <div class="billing-modal-section-title">
+                Orders
+            </div>
+
+            <div
+                id="editBillOrders"
+                class="billing-modal-orders"
+            ></div>
+
+        </div>
+
+
+        <!-- TOTALS -->
+
+        <div class="billing-modal-totals">
+
+            <div>
+                <span>Subtotal</span>
+
+                <strong id="editBillSubtotal">
+                    ₹ 0.00
+                </strong>
+            </div>
+
+
+            <div>
+                <span>Tax</span>
+
+                <strong id="editBillTax">
+                    ₹ 0.00
+                </strong>
+            </div>
+
+
+            <div class="grand">
+
+                <span>Total</span>
+
+                <strong id="editBillTotal">
+                    ₹ 0.00
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- STATUS -->
+
+        <div class="billing-form-field">
+
+            <label for="editBillStatus">
+                Bill Status
+            </label>
+
+            <select id="editBillStatus">
+
+                <option value="unpaid">
+                    Unpaid
+                </option>
+
+                <option value="paid">
+                    Paid
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- TRANSACTION METHOD -->
+
+        <div
+            id="editTransactionMethodArea"
+            class="billing-form-field"
+        >
+
+            <label>
+                Transaction Method
+            </label>
+
+
+            <div class="transaction-method-grid">
+
+                <label class="transaction-option">
+
+                    <input
+                        type="radio"
+                        name="edit_transaction_method"
+                        value="cash"
+                    >
+
+                    <span>
+                        <i class="fa fa-money"></i>
+                        Cash
+                    </span>
+
+                </label>
+
+
+                <label class="transaction-option">
+
+                    <input
+                        type="radio"
+                        name="edit_transaction_method"
+                        value="upi"
+                    >
+
+                    <span>
+                        <i class="fa fa-mobile"></i>
+                        UPI
+                    </span>
+
+                </label>
+
+
+                <label class="transaction-option">
+
+                    <input
+                        type="radio"
+                        name="edit_transaction_method"
+                        value="card"
+                    >
+
+                    <span>
+                        <i class="fa fa-credit-card"></i>
+                        Card
+                    </span>
+
+                </label>
+
+            </div>
+
+        </div>
+
+
+        <!-- PAYMENT REFERENCE -->
+
+        <div
+            id="editPaymentReferenceArea"
+            class="billing-form-field"
+        >
+
+            <label for="editPaymentReference">
+                Payment Reference
+            </label>
+
+            <input
+                type="text"
+                id="editPaymentReference"
+                placeholder="Transaction / reference number"
+            >
+
+        </div>
+
+
+        <div
+            id="editBillError"
+            class="billing-error"
+            hidden
+        ></div>
+
+    </div>
+
+
+    <div class="billing-modal-footer">
+
+        <button
+            type="button"
+            class="billing-modal-cancel"
+            id="cancelBillEdit"
+        >
+            Cancel
+        </button>
+
+
+        <button
+            type="button"
+            class="bill-save-button"
+            id="updateBillButton"
+        >
+            Save Changes
+        </button>
+
+    </div>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- =============================================================
+     AJAX BILL BUILDER JAVASCRIPT
+     ============================================================= -->
+
+{% if active_view == "unpaid_orders" %}
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const checkboxes =
+            document.querySelectorAll(
+                ".bill-order-checkbox"
+            );
+
+        const orderCards =
+            document.querySelectorAll(
+                ".billing-order-card"
+            );
+
+        const selectAll =
+            document.getElementById(
+                "selectAllOrders"
+            );
+
+        const selectedOrderCount =
+            document.getElementById(
+                "selectedOrderCount"
+            );
+
+        const selectedOrdersPreview =
+            document.getElementById(
+                "selectedOrdersPreview"
+            );
+
+        const selectedOrderInputs =
+            document.getElementById(
+                "selectedOrderInputs"
+            );
+
+        const billSubtotal =
+            document.getElementById(
+                "billSubtotal"
+            );
+
+        const billTax =
+            document.getElementById(
+                "billTax"
+            );
+
+        const billTotal =
+            document.getElementById(
+                "billTotal"
+            );
+
+        const billStatus =
+            document.getElementById(
+                "billStatus"
+            );
+
+        const billStatusBadge =
+            document.getElementById(
+                "billStatusBadge"
+            );
+
+        const transactionMethodArea =
+            document.getElementById(
+                "transactionMethodArea"
+            );
+
+        const paymentReferenceArea =
+            document.getElementById(
+                "paymentReferenceArea"
+            );
+
+        const paymentReference =
+            document.getElementById(
+                "paymentReference"
+            );
+
+        const saveBillButton =
+            document.getElementById(
+                "saveBillButton"
+            );
+
+        const savePrintButton =
+            document.getElementById(
+                "savePrintButton"
+            );
+
+        const billingError =
+            document.getElementById(
+                "billingError"
+            );
+
+        const billForm =
+            document.getElementById(
+                "billForm"
+            );
+
+
+        /* =====================================================
+           FORMAT MONEY
+           ===================================================== */
+
+        function formatMoney(value) {
+
+            return (
+                "₹ " +
+                Number(value || 0).toFixed(2)
+            );
+
+        }
+
+
+        /* =====================================================
+           GET SELECTED CARDS
+           ===================================================== */
+
+        function getSelectedCards() {
+
+            return Array.from(
+                orderCards
+            ).filter(
+                function (card) {
+
+                    const checkbox =
+                        card.querySelector(
+                            ".bill-order-checkbox"
+                        );
+
+                    return (
+                        checkbox &&
+                        checkbox.checked
+                    );
+
+                }
+            );
+
+        }
+
+
+        /* =====================================================
+           UPDATE BILL PREVIEW
+           ===================================================== */
+
+        function updateBillPreview() {
+
+            const selectedCards =
+                getSelectedCards();
+
+
+            let subtotal = 0;
+
+            let tax = 0;
+
+            let total = 0;
+
+
+            selectedOrderInputs.innerHTML = "";
+
+
+            if (
+                selectedCards.length === 0
+            ) {
+
+                selectedOrdersPreview.innerHTML = `
+
+                    <div class="bill-builder-empty">
+
+                        <p>
+                            Select orders
+                            to generate the bill.
+                        </p>
+
+                    </div>
+
+                `;
+
+            } else {
+
+                selectedOrdersPreview.innerHTML = "";
+
+
+                selectedCards.forEach(
+                    function (card) {
+
+                        subtotal += Number(
+                            card.dataset.subtotal || 0
+                        );
+
+
+                        tax += Number(
+                            card.dataset.tax || 0
+                        );
+
+
+                        total += Number(
+                            card.dataset.total || 0
+                        );
+
+
+                        const orderId =
+                            card.dataset.id;
+
+
+                        const orderNumberElement =
+                            card.querySelector(
+                                ".billing-order-number"
+                            );
+
+
+                        const orderNumber =
+                            orderNumberElement
+                                ? orderNumberElement
+                                    .textContent
+                                    .trim()
+                                : "";
+
+
+                        /* =====================================
+                           HIDDEN BILL ORDER INPUT
+                           ===================================== */
+
+                        const input =
+                            document.createElement(
+                                "input"
+                            );
+
+
+                        input.type =
+                            "hidden";
+
+
+                        input.name =
+                            "bill_order_ids";
+
+
+                        input.value =
+                            orderId;
+
+
+                        selectedOrderInputs.appendChild(
+                            input
+                        );
+
+
+                        /* =====================================
+                           PRODUCT PREVIEW
+
+                           Current order cards use
+                           .billing-product-chip,
+                           not .billing-product-row.
+                           ===================================== */
+
+                        const products =
+                            card.querySelectorAll(
+                                ".billing-product-chip"
+                            );
+
+
+                        let productHTML = "";
+
+
+                        products.forEach(
+                            function (product) {
+
+                                const productText =
+                                    product
+                                        .textContent
+                                        .replace(
+                                            /\s+/g,
+                                            " "
+                                        )
+                                        .trim();
+
+
+                                if (!productText) {
+                                    return;
+                                }
+
+
+                                productHTML += `
+
+                                    <div class="selected-product">
+
+                                        <span>
+                                            ${productText}
+                                        </span>
+
+                                    </div>
+
+                                `;
+
+                            }
+                        );
+
+
+                        const preview =
+                            document.createElement(
+                                "div"
+                            );
+
+
+                        preview.className =
+                            "selected-order";
+
+
+                        preview.innerHTML = `
+
+                            <div class="selected-order-header">
+
+                                <strong>
+                                    ${orderNumber}
+                                </strong>
+
+                                <span>
+                                    ${formatMoney(
+                                        card.dataset.total
+                                    )}
+                                </span>
+
+                            </div>
+
+
+                            <div class="selected-order-products">
+
+                                ${productHTML}
+
+                            </div>
+
+                        `;
+
+
+                        selectedOrdersPreview.appendChild(
+                            preview
+                        );
+
+                    }
+                );
+
+            }
+
+
+            /* ================================================
+               UPDATE COUNTS / TOTALS
+               ================================================ */
+
+            selectedOrderCount.textContent =
+                selectedCards.length;
+
+
+            billSubtotal.textContent =
+                formatMoney(
+                    subtotal
+                );
+
+
+            billTax.textContent =
+                formatMoney(
+                    tax
+                );
+
+
+            billTotal.textContent =
+                formatMoney(
+                    total
+                );
+
+
+            saveBillButton.disabled =
+                selectedCards.length === 0;
+
+
+            savePrintButton.disabled =
+                selectedCards.length === 0;
+
+        }
+
+
+        /* =====================================================
+           SELECT ALL
+           ===================================================== */
+
+        if (selectAll) {
+
+            selectAll.addEventListener(
+                "change",
+                function () {
+
+                    checkboxes.forEach(
+                        function (checkbox) {
+
+                            checkbox.checked =
+                                selectAll.checked;
+
+
+                            const card =
+                                checkbox.closest(
+                                    ".billing-order-card"
+                                );
+
+
+                            if (card) {
+
+                                card.classList.toggle(
+                                    "selected",
+                                    checkbox.checked
+                                );
+
+                            }
+
+                        }
+                    );
+
+
+                    updateBillPreview();
+
+                }
+            );
+
+        }
+
+
+        /* =====================================================
+           INDIVIDUAL CHECKBOXES
+           ===================================================== */
+
+        checkboxes.forEach(
+            function (checkbox) {
+
+                checkbox.addEventListener(
+                    "change",
+                    function () {
+
+                        const card =
+                            checkbox.closest(
+                                ".billing-order-card"
+                            );
+
+
+                        if (card) {
+
+                            card.classList.toggle(
+                                "selected",
+                                checkbox.checked
+                            );
+
+                        }
+
+
+                        const selected =
+                            getSelectedCards().length;
+
+
+                        if (selectAll) {
+
+                            selectAll.checked =
+                                selected ===
+                                checkboxes.length;
+
+
+                            selectAll.indeterminate =
+                                selected > 0 &&
+                                selected < checkboxes.length;
+
+                        }
+
+
+                        updateBillPreview();
+
+                    }
+                );
+
+            }
+        );
+
+
+        /* =====================================================
+           BILL STATUS
+           ===================================================== */
+
+        if (billStatus) {
+
+            billStatus.addEventListener(
+                "change",
+                function () {
+
+                    const paid =
+                        billStatus.value === "paid";
+
+
+                    transactionMethodArea.hidden =
+                        !paid;
+
+
+                    paymentReferenceArea.hidden =
+                        !paid;
+
+
+                    billStatusBadge.textContent =
+                        paid
+                            ? "Paid"
+                            : "Unpaid";
+
+
+                    billStatusBadge.classList.toggle(
+                        "paid",
+                        paid
+                    );
+
+
+                    billStatusBadge.classList.toggle(
+                        "unpaid",
+                        !paid
+                    );
+
+
+                    if (!paid) {
+
+                        document
+                            .querySelectorAll(
+                                'input[name="transaction_method"]'
+                            )
+                            .forEach(
+                                function (radio) {
+
+                                    radio.checked =
+                                        false;
+
+                                }
+                            );
+
+
+                        paymentReference.value =
+                            "";
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        /* =====================================================
+           SAVE BILL
+           ===================================================== */
+
+        async function saveBill(
+            printAfterSave
+        ) {
+
+            billingError.hidden =
+                true;
+
+
+            const selected =
+                getSelectedCards();
+
+
+            if (!selected.length) {
+
+                billingError.textContent =
+                    "Please select at least one order.";
+
+                billingError.hidden =
+                    false;
+
+                return;
+
+            }
+
+
+            /* =================================================
+               PAID BILL VALIDATION
+               ================================================= */
+
+            if (
+                billStatus.value === "paid"
+            ) {
+
+                const method =
+                    document.querySelector(
+                        'input[name="transaction_method"]:checked'
+                    );
+
+
+                if (!method) {
+
+                    billingError.textContent =
+                        "Please select a transaction method.";
+
+                    billingError.hidden =
+                        false;
+
+                    return;
+
+                }
+
+
+                if (
+                    (
+                        method.value === "upi" ||
+                        method.value === "card"
+                    )
+                    &&
+                    !paymentReference.value.trim()
+                ) {
+
+                    billingError.textContent =
+                        "Payment reference is required for UPI or Card.";
+
+                    billingError.hidden =
+                        false;
+
+                    return;
+
+                }
+
+            }
+
+
+            const formData =
+                new FormData(
+                    billForm
+                );
+
+
+            saveBillButton.disabled =
+                true;
+
+
+            savePrintButton.disabled =
+                true;
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        billForm.action,
+                        {
+                            method: "POST",
+
+                            body: formData,
+
+                            headers: {
+                                "X-Requested-With":
+                                    "XMLHttpRequest"
+                            }
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (
+                    !response.ok ||
+                    !data.success
+                ) {
+
+                    throw new Error(
+                        data.message ||
+                        "Unable to save bill."
+                    );
+
+                }
+
+
+                /* =============================================
+                   OPTIONAL PRINT
+                   ============================================= */
+
+                if (printAfterSave) {
+
+                    const printWindow =
+                        window.open(
+                            "",
+                            "_blank"
+                        );
+
+
+                    if (printWindow) {
+
+                        printWindow.document.write(`
+
+                            <!DOCTYPE html>
+
+                            <html>
+
+                            <head>
+
+                                <title>
+                                    ${data.bill_no}
+                                </title>
+
+                                <style>
+
+                                    body {
+                                        font-family:
+                                            Arial,
+                                            sans-serif;
+                                        padding: 40px;
+                                        color: #332b25;
+                                    }
+
+                                    h1 {
+                                        margin-bottom: 5px;
+                                    }
+
+                                    .line {
+                                        margin: 8px 0;
+                                    }
+
+                                    .total {
+                                        margin-top: 25px;
+                                        padding-top: 15px;
+                                        border-top:
+                                            1px solid #ddd;
+                                        font-size: 20px;
+                                        font-weight: bold;
+                                    }
+
+                                </style>
+
+                            </head>
+
+                            <body>
+
+                                <h1>
+                                    SmartCafe
+                                </h1>
+
+                                <div class="line">
+                                    Bill:
+                                    ${data.bill_no}
+                                </div>
+
+                                <div class="line">
+                                    Status:
+                                    ${data.status}
+                                </div>
+
+                                <div class="line">
+                                    Transaction:
+                                    ${
+                                        data.transaction_method
+                                        || "—"
+                                    }
+                                </div>
+
+                                <div class="total">
+                                    Total:
+                                    ₹ ${
+                                        Number(
+                                            data.total_amount
+                                        ).toFixed(2)
+                                    }
+                                </div>
+
+                            </body>
+
+                            </html>
+
+                        `);
+
+
+                        printWindow.document.close();
+
+                        printWindow.focus();
+
+                        printWindow.print();
+
+                    }
+
+                }
+
+
+                /* =============================================
+                   MOVE TO CORRECT BILL TAB
+                   ============================================= */
+
+                const nextView =
+                    data.status === "paid"
+                        ? "paid_bills"
+                        : "unpaid_bills";
+
+
+                const url =
+                    new URL(
+                        window.location.href
+                    );
+
+
+                url.searchParams.set(
+                    "view",
+                    nextView
+                );
+
+
+                window.location.href =
+                    url.toString();
+
+
+            } catch (error) {
+
+                billingError.textContent =
+                    error.message;
+
+
+                billingError.hidden =
+                    false;
+
+
+                saveBillButton.disabled =
+                    false;
+
+
+                savePrintButton.disabled =
+                    false;
+
+            }
+
+        }
+
+
+        /* =====================================================
+           SAVE BUTTON
+           ===================================================== */
+
+        saveBillButton.addEventListener(
+            "click",
+            function () {
+
+                saveBill(false);
+
+            }
+        );
+
+
+        /* =====================================================
+           SAVE & PRINT BUTTON
+           ===================================================== */
+
+        savePrintButton.addEventListener(
+            "click",
+            function () {
+
+                saveBill(true);
+
+            }
+        );
+
+
+        /* =====================================================
+           INITIAL STATE
+           ===================================================== */
+
+        updateBillPreview();
+
+    }
+
+);
+
+</script>
+
+{% endif %}
+
+
+
+<!-- =============================================================
+     EDIT BILL MODAL JAVASCRIPT
+     ============================================================= -->
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+
+        const modal =
+            document.getElementById(
+                "editBillModal"
+            );
+
+
+        if (!modal) {
+            return;
+        }
+
+
+
+        const closeButton =
+            document.getElementById(
+                "closeBillModal"
+            );
+
+
+        const cancelButton =
+            document.getElementById(
+                "cancelBillEdit"
+            );
+
+
+        const updateButton =
+            document.getElementById(
+                "updateBillButton"
+            );
+
+
+        const modalNumber =
+            document.getElementById(
+                "editBillModalNumber"
+            );
+
+
+        const ordersContainer =
+            document.getElementById(
+                "editBillOrders"
+            );
+
+
+        const subtotal =
+            document.getElementById(
+                "editBillSubtotal"
+            );
+
+
+        const tax =
+            document.getElementById(
+                "editBillTax"
+            );
+
+
+        const total =
+            document.getElementById(
+                "editBillTotal"
+            );
+
+
+        const status =
+            document.getElementById(
+                "editBillStatus"
+            );
+
+
+        const reference =
+            document.getElementById(
+                "editPaymentReference"
+            );
+
+
+        const errorBox =
+            document.getElementById(
+                "editBillError"
+            );
+
+
+        let currentBillId =
+            null;
+
+
+
+        /* =====================================================
+           FORMAT MONEY
+           ===================================================== */
+
+        function formatMoney(value) {
+
+            return (
+                "₹ " +
+                Number(value || 0).toFixed(2)
+            );
+
+        }
+
+
+
+        /* =====================================================
+           CSRF COOKIE
+           ===================================================== */
+
+        function getCookie(name) {
+
+            const cookies =
+                document.cookie.split(";");
+
+
+            for (
+                const cookie of cookies
+            ) {
+
+                const trimmed =
+                    cookie.trim();
+
+
+                if (
+                    trimmed.startsWith(
+                        name + "="
+                    )
+                ) {
+
+                    return decodeURIComponent(
+                        trimmed.substring(
+                            name.length + 1
+                        )
+                    );
+
+                }
+
+            }
+
+
+            return null;
+
+        }
+
+
+
+        /* =====================================================
+           TRANSACTION METHOD
+           ===================================================== */
+
+        function setTransactionMethod(
+            method
+        ) {
+
+            document
+                .querySelectorAll(
+                    'input[name="edit_transaction_method"]'
+                )
+                .forEach(
+                    function (radio) {
+
+                        radio.checked =
+                            radio.value === method;
+
+                    }
+                );
+
+        }
+
+
+
+        function getTransactionMethod() {
+
+            const selected =
+                document.querySelector(
+                    'input[name="edit_transaction_method"]:checked'
+                );
+
+
+            return selected
+                ? selected.value
+                : "";
+
+        }
+
+
+
+        /* =====================================================
+           PAYMENT FIELD VISIBILITY
+           ===================================================== */
+
+        function updatePaymentFields() {
+
+            const paid =
+                status.value === "paid";
+
+
+            document
+                .getElementById(
+                    "editTransactionMethodArea"
+                )
+                .hidden = !paid;
+
+
+            document
+                .getElementById(
+                    "editPaymentReferenceArea"
+                )
+                .hidden = !paid;
+
+        }
+
+
+
+        /* =====================================================
+           OPEN / CLOSE MODAL
+           ===================================================== */
+
+        function openModal() {
+
+            modal.hidden = false;
+
+            document.body.style.overflow =
+                "hidden";
+
+        }
+
+
+
+        function closeModal() {
+
+            modal.hidden = true;
+
+            document.body.style.overflow =
+                "";
+
+            currentBillId =
+                null;
+
+            errorBox.hidden =
+                true;
+
+        }
+
+
+
+        /* =====================================================
+           LOAD BILL
+           ===================================================== */
+
+        async function loadBill(
+            billId
+        ) {
+
+            currentBillId =
+                billId;
+
+            errorBox.hidden =
+                true;
+
+            updateButton.disabled =
+                true;
+
+
+            try {
+
+
+                /*
+                 * IMPORTANT:
+                 * This is the actual bill-data URL.
+                 *
+                 * Do NOT append billId a second time.
+                 */
+
+                const response =
+                    await fetch(
+                        `/admin_panel/billing/${billId}/data/`,
+                        {
+                            headers: {
+                                "X-Requested-With":
+                                    "XMLHttpRequest"
+                            }
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (
+                    !response.ok ||
+                    !data.success
+                ) {
+
+                    throw new Error(
+                        data.message ||
+                        "Unable to load bill."
+                    );
+
+                }
+
+
+                const bill =
+                    data.bill;
+
+
+                modalNumber.textContent =
+                    bill.bill_no;
+
+
+                subtotal.textContent =
+                    formatMoney(
+                        bill.subtotal
+                    );
+
+
+                tax.textContent =
+                    formatMoney(
+                        bill.tax_amount
+                    );
+
+
+                total.textContent =
+                    formatMoney(
+                        bill.total_amount
+                    );
+
+
+                status.value =
+                    bill.status;
+
+
+                setTransactionMethod(
+                    bill.transaction_method
+                    || ""
+                );
+
+
+                reference.value =
+                    bill.payment_reference
+                    || "";
+
+
+                ordersContainer.innerHTML =
+                    "";
+
+
+                bill.orders.forEach(
+                    function (order) {
+
+
+                        const orderElement =
+                            document.createElement(
+                                "div"
+                            );
+
+
+                        orderElement.className =
+                            "billing-modal-order";
+
+
+                        const products =
+                            order.products
+                                .map(
+                                    function (product) {
+
+                                        return (
+                                            product.name +
+                                            " × " +
+                                            product.quantity
+                                        );
+
+                                    }
+                                )
+                                .join(" · ");
+
+
+                        orderElement.innerHTML = `
+
+                            <div
+                                class="billing-modal-order-header"
+                            >
+
+                                <span
+                                    class="billing-modal-order-number"
+                                >
+                                    ${order.order_no}
+                                </span>
+
+                                <span
+                                    class="billing-modal-order-total"
+                                >
+                                    ${formatMoney(order.total)}
+                                </span>
+
+                            </div>
+
+                            <div
+                                class="billing-modal-order-products"
+                            >
+                                ${products || "No products"}
+                            </div>
+
+                        `;
+
+
+                        ordersContainer.appendChild(
+                            orderElement
+                        );
+
+                    }
+                );
+
+
+                updatePaymentFields();
+
+
+                openModal();
+
+
+            } catch (error) {
+
+
+                errorBox.textContent =
+                    error.message;
+
+
+                errorBox.hidden =
+                    false;
+
+
+            } finally {
+
+
+                updateButton.disabled =
+                    false;
+
+            }
+
+        }
+
+
+
+        /* =====================================================
+           UPDATE BILL
+           ===================================================== */
+
+        async function updateBill() {
+
+            if (!currentBillId) {
+                return;
+            }
+
+
+            errorBox.hidden =
+                true;
+
+
+            const selectedMethod =
+                getTransactionMethod();
+
+
+            if (
+                status.value === "paid" &&
+                !selectedMethod
+            ) {
+
+                errorBox.textContent =
+                    "Please select a transaction method.";
+
+                errorBox.hidden =
+                    false;
+
+                return;
+
+            }
+
+
+            if (
+                status.value === "paid" &&
+                (
+                    selectedMethod === "upi" ||
+                    selectedMethod === "card"
+                ) &&
+                !reference.value.trim()
+            ) {
+
+                errorBox.textContent =
+                    "Payment reference is required for UPI or Card.";
+
+                errorBox.hidden =
+                    false;
+
+                return;
+
+            }
+
+
+            updateButton.disabled =
+                true;
+
+
+            updateButton.textContent =
+                "Saving...";
+
+
+            const formData =
+                new FormData();
+
+
+            formData.append(
+                "status",
+                status.value
+            );
+
+
+            formData.append(
+                "transaction_method",
+                selectedMethod
+            );
+
+
+            formData.append(
+                "payment_reference",
+                reference.value.trim()
+            );
+
+
+            try {
+
+
+                const response =
+                    await fetch(
+                        `/admin_panel/billing/${currentBillId}/update/`,
+                        {
+                            method: "POST",
+
+                            body: formData,
+
+                            headers: {
+                                "X-Requested-With":
+                                    "XMLHttpRequest",
+
+                                "X-CSRFToken":
+                                    getCookie(
+                                        "csrftoken"
+                                    )
+                            }
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (
+                    !response.ok ||
+                    !data.success
+                ) {
+
+                    throw new Error(
+                        data.message ||
+                        "Unable to update bill."
+                    );
+
+                }
+
+
+                closeModal();
+
+
+                /*
+                 * Reload the same billing page.
+                 *
+                 * The bill will now appear in the
+                 * correct Unpaid Bills or Paid Bills
+                 * section according to its status.
+                 */
+
+                window.location.reload();
+
+
+            } catch (error) {
+
+
+                errorBox.textContent =
+                    error.message;
+
+
+                errorBox.hidden =
+                    false;
+
+
+            } finally {
+
+
+                updateButton.disabled =
+                    false;
+
+
+                updateButton.textContent =
+                    "Save Changes";
+
+            }
+
+        }
+
+
+
+        /* =====================================================
+           BILL ROW CLICK
+           ===================================================== */
+
+        document
+            .querySelectorAll(
+                ".billing-bill-row"
+            )
+            .forEach(
+                function (row) {
+
+
+                    row.addEventListener(
+                        "click",
+                        function () {
+
+                            loadBill(
+                                row.dataset.billId
+                            );
+
+                        }
+                    );
+
+
+                    row.addEventListener(
+                        "keydown",
+                        function (event) {
+
+                            if (
+                                event.key === "Enter" ||
+                                event.key === " "
+                            ) {
+
+                                event.preventDefault();
+
+
+                                loadBill(
+                                    row.dataset.billId
+                                );
+
+                            }
+
+                        }
+                    );
+
+                }
+            );
+
+
+
+        /* =====================================================
+           MODAL CONTROLS
+           ===================================================== */
+
+        closeButton.addEventListener(
+            "click",
+            closeModal
+        );
+
+
+        cancelButton.addEventListener(
+            "click",
+            closeModal
+        );
+
+
+        const modalBackdrop =
+            modal.querySelector(
+                "[data-close-bill-modal]"
+            );
+
+
+        if (modalBackdrop) {
+
+            modalBackdrop.addEventListener(
+                "click",
+                closeModal
+            );
+
+        }
+
+
+        status.addEventListener(
+            "change",
+            updatePaymentFields
+        );
+
+
+        updateButton.addEventListener(
+            "click",
+            updateBill
+        );
+
+
+
+        /* =====================================================
+           ESCAPE KEY
+           ===================================================== */
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Escape" &&
+                    !modal.hidden
+                ) {
+
+                    closeModal();
+
+                }
+
+            }
+        );
+
+    }
+);
+
+</script>
+
+
+{% endblock %}                     
