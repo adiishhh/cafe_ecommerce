@@ -17,6 +17,7 @@ from django.contrib.auth import logout
 from django.core.paginator import Paginator
 from django.db.models import Q, Prefetch
 from django.views.decorators.http import require_POST
+from wallet.models import Wallet
 
 # Create your views here.
 
@@ -89,6 +90,10 @@ def verify_signup_otp(request):
                     email=signup_data['email'],
                     phone=signup_data['phone'],
                     password=signup_data['password'],
+                )
+
+                Wallet.objects.create(
+                    user=User
                 )
 
                 cache.delete(f'signup_{signup_id}')

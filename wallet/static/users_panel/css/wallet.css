@@ -1,0 +1,743 @@
+/* =========================================================
+   SMARTCAFE WALLET
+   ========================================================= */
+
+
+.wallet-page {
+    min-height: 100vh;
+}
+
+
+/* =========================================================
+   WALLET CONTENT
+   ========================================================= */
+
+
+.wallet-content {
+    width: 100%;
+
+    padding: 0 0 70px;
+}
+
+
+/* =========================================================
+   TOP GRID
+   ========================================================= */
+
+
+.wallet-top-grid {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 1fr);
+
+    gap: 18px;
+
+    margin-bottom: 40px;
+}
+
+
+/* =========================================================
+   BALANCE CARD
+   ========================================================= */
+
+
+.wallet-balance-card {
+    display: flex;
+    align-items: center;
+
+    gap: 20px;
+
+    min-height: 175px;
+
+    padding: 28px;
+
+    border-radius: 18px;
+
+    background: linear-gradient(
+        135deg,
+        #151515,
+        #292929
+    );
+
+    color: #fff;
+
+    box-shadow:
+        0 12px 30px rgba(0, 0, 0, 0.12);
+}
+
+
+.wallet-balance-icon {
+    width: 58px;
+    height: 58px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 15px;
+
+    background: rgba(255, 255, 255, 0.12);
+
+    font-size: 23px;
+}
+
+
+.wallet-balance-info {
+    display: flex;
+    flex-direction: column;
+
+    min-width: 0;
+}
+
+
+.wallet-balance-label {
+    margin-bottom: 5px;
+
+    font-size: 13px;
+
+    opacity: 0.72;
+}
+
+
+.wallet-balance-amount {
+    margin-bottom: 7px;
+
+    font-size: 32px;
+    line-height: 1.1;
+}
+
+
+.wallet-balance-description {
+    font-size: 13px;
+    line-height: 1.45;
+
+    opacity: 0.65;
+}
+
+
+/* =========================================================
+   REFER & EARN
+   ========================================================= */
+
+
+.wallet-referral-card {
+    display: flex;
+    align-items: center;
+
+    gap: 18px;
+
+    min-height: 175px;
+
+    padding: 28px;
+
+    border: 1px solid #ececec;
+    border-radius: 18px;
+
+    background: #fff;
+}
+
+
+.wallet-referral-icon {
+    width: 58px;
+    height: 58px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 15px;
+
+    background: #f5f5f5;
+
+    color: #333;
+
+    font-size: 22px;
+}
+
+
+.wallet-referral-content {
+    min-width: 0;
+}
+
+
+.wallet-referral-label {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #999;
+
+    font-size: 11px;
+    font-weight: 650;
+
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+}
+
+
+.wallet-referral-content h2 {
+    margin: 0 0 6px;
+
+    font-size: 20px;
+    font-weight: 700;
+}
+
+
+.wallet-referral-content p {
+    margin: 0;
+
+    color: #777;
+
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   WALLET SECTION
+   ========================================================= */
+
+
+.wallet-section {
+    margin-bottom: 40px;
+}
+
+
+.wallet-section-header {
+    margin-bottom: 18px;
+}
+
+
+.wallet-section-header h2 {
+    margin: 0 0 5px;
+
+    font-size: 22px;
+    font-weight: 700;
+}
+
+
+.wallet-section-header p {
+    margin: 0;
+
+    color: #777;
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   REFUND REQUEST GRID
+   ========================================================= */
+
+
+.wallet-refund-list {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 12px;
+}
+
+
+.wallet-refund-card {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 13px;
+
+    min-width: 0;
+
+    padding: 18px;
+
+    border: 1px solid #ececec;
+    border-radius: 15px;
+
+    background: #fff;
+
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+
+.wallet-refund-card:hover {
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 7px 20px rgba(0, 0, 0, 0.06);
+}
+
+
+.wallet-refund-icon {
+    width: 42px;
+    height: 42px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #f5f5f5;
+
+    color: #555;
+
+    font-size: 14px;
+}
+
+
+.wallet-refund-main {
+    flex: 1;
+
+    min-width: 0;
+}
+
+
+.wallet-refund-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    margin-bottom: 8px;
+}
+
+
+.wallet-refund-title-row h3 {
+    margin: 0 0 3px;
+
+    font-size: 14px;
+    font-weight: 650;
+
+    overflow-wrap: anywhere;
+}
+
+
+.wallet-refund-type {
+    color: #888;
+
+    font-size: 11px;
+}
+
+
+.wallet-refund-status {
+    flex-shrink: 0;
+
+    padding: 4px 8px;
+
+    border-radius: 20px;
+
+    font-size: 10px;
+    font-weight: 650;
+}
+
+
+.wallet-refund-status.pending {
+    background: #fff5df;
+    color: #9a6b16;
+}
+
+
+.wallet-refund-status.accepted {
+    background: #eaf7ee;
+    color: #20833b;
+}
+
+
+.wallet-refund-status.completed {
+    background: #e8f4ed;
+    color: #176b35;
+}
+
+
+.wallet-refund-status.rejected {
+    background: #f9eeee;
+    color: #b33a3a;
+}
+
+
+.wallet-refund-details {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 5px 14px;
+
+    color: #777;
+
+    font-size: 11px;
+}
+
+
+.wallet-refund-details span {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 3px;
+}
+
+
+.wallet-refund-details strong {
+    color: #555;
+
+    font-weight: 600;
+}
+
+
+.wallet-refund-amount {
+    margin-top: 10px;
+
+    color: #777;
+
+    font-size: 11px;
+}
+
+
+.wallet-refund-amount strong {
+    margin-left: 4px;
+
+    color: #222;
+
+    font-size: 13px;
+}
+
+
+.wallet-refund-note {
+    margin-top: 11px;
+    padding-top: 10px;
+
+    border-top: 1px solid #eeeeee;
+}
+
+
+.wallet-refund-note span {
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: #777;
+
+    font-size: 10px;
+    font-weight: 650;
+
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+
+.wallet-refund-note p {
+    margin: 0;
+
+    color: #555;
+
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+
+/* =========================================================
+   TRANSACTION GRID
+   ========================================================= */
+
+
+.wallet-transaction-list {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 12px;
+}
+
+
+.wallet-transaction-card {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 13px;
+
+    min-width: 0;
+
+    padding: 18px;
+
+    border: 1px solid #ececec;
+    border-radius: 15px;
+
+    background: #fff;
+
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+
+.wallet-transaction-card:hover {
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 7px 20px rgba(0, 0, 0, 0.06);
+}
+
+
+/* =========================================================
+   TRANSACTION ICON
+   ========================================================= */
+
+
+.wallet-transaction-icon {
+    width: 42px;
+    height: 42px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    font-size: 14px;
+}
+
+
+.wallet-transaction-icon.credit {
+    background: #eaf7ee;
+    color: #20833b;
+}
+
+
+.wallet-transaction-icon.debit {
+    background: #f9eeee;
+    color: #b33a3a;
+}
+
+
+/* =========================================================
+   TRANSACTION MAIN
+   ========================================================= */
+
+
+.wallet-transaction-main {
+    flex: 1;
+
+    min-width: 0;
+}
+
+
+.wallet-transaction-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    margin-bottom: 6px;
+}
+
+
+.wallet-transaction-title-row h3 {
+    margin: 0;
+
+    font-size: 14px;
+    font-weight: 650;
+}
+
+
+.wallet-transaction-amount {
+    flex-shrink: 0;
+
+    font-size: 14px;
+    font-weight: 700;
+}
+
+
+.wallet-transaction-amount.credit {
+    color: #20833b;
+}
+
+
+.wallet-transaction-amount.debit {
+    color: #b33a3a;
+}
+
+
+/* =========================================================
+   TRANSACTION DETAILS
+   ========================================================= */
+
+
+.wallet-transaction-details {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 5px 14px;
+
+    color: #777;
+
+    font-size: 11px;
+}
+
+
+.wallet-transaction-details span {
+    display: inline-flex;
+    align-items: center;
+}
+
+
+.transaction-order {
+    color: #555;
+
+    font-weight: 600;
+}
+
+
+.wallet-transaction-balance {
+    margin-top: 8px;
+
+    color: #999;
+
+    font-size: 11px;
+}
+
+
+.wallet-transaction-balance strong {
+    color: #555;
+}
+
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+
+.wallet-empty-state {
+    grid-column: 1 / -1;
+
+    padding: 45px 25px;
+
+    text-align: center;
+
+    border: 1px dashed #ddd;
+    border-radius: 16px;
+
+    background: #fafafa;
+}
+
+
+.wallet-empty-icon {
+    width: 50px;
+    height: 50px;
+
+    margin: 0 auto 14px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #f0f0f0;
+
+    color: #888;
+
+    font-size: 18px;
+}
+
+
+.wallet-empty-state h3 {
+    margin: 0 0 6px;
+
+    font-size: 16px;
+}
+
+
+.wallet-empty-state p {
+    margin: 0;
+
+    color: #888;
+
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+
+@media (max-width: 750px) {
+
+    .wallet-top-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .wallet-refund-list,
+    .wallet-transaction-list {
+        grid-template-columns: 1fr;
+    }
+
+
+    .wallet-balance-card,
+    .wallet-referral-card {
+        min-height: auto;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .wallet-balance-card,
+    .wallet-referral-card {
+        padding: 22px;
+    }
+
+
+    .wallet-balance-icon,
+    .wallet-referral-icon {
+        width: 52px;
+        height: 52px;
+
+        border-radius: 13px;
+    }
+
+
+    .wallet-balance-amount {
+        font-size: 28px;
+    }
+
+
+    .wallet-refund-card,
+    .wallet-transaction-card {
+        padding: 16px;
+    }
+
+
+    .wallet-refund-title-row {
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 6px;
+    }
+
+
+    .wallet-transaction-title-row {
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 4px;
+    }
+
+}

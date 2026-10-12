@@ -1,0 +1,594 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Wallet</title>
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="{% static 'common/images/favicon.png' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'users/css/profile.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'users_panel/css/wallet.css' %}"
+    >
+
+    <link
+        href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"
+        rel="stylesheet"
+    >
+
+</head>
+
+
+<body>
+
+
+{% if messages %}
+
+    <div class="messages">
+
+        {% for message in messages %}
+
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+{% endif %}
+
+
+
+<main class="profile-page wallet-page">
+
+    <div class="profile-container">
+
+
+        <!-- =====================================================
+             HEADER
+        ====================================================== -->
+
+        <header class="profile-header">
+
+            <a
+                href="{% url 'profile' %}"
+                class="back-button"
+            >
+                ←
+            </a>
+
+
+            <div>
+
+                <h1>
+                    Wallet
+                </h1>
+
+                <p>
+                    Manage your balance, refunds and transactions.
+                </p>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- =====================================================
+             WALLET CONTENT
+        ====================================================== -->
+
+        <div class="wallet-content">
+
+
+            <!-- =================================================
+                 TOP GRID
+            ================================================== -->
+
+            <div class="wallet-top-grid">
+
+
+                <!-- =============================================
+                     BALANCE
+                ============================================== -->
+
+                <section class="wallet-balance-card">
+
+                    <div class="wallet-balance-icon">
+
+                        <i class="fa fa-credit-card"></i>
+
+                    </div>
+
+
+                    <div class="wallet-balance-info">
+
+                        <span class="wallet-balance-label">
+                            Available Balance
+                        </span>
+
+                        <strong class="wallet-balance-amount">
+                            ₹{{ wallet.balance|floatformat:2 }}
+                        </strong>
+
+                        <span class="wallet-balance-description">
+                            Your available wallet balance.
+                        </span>
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- =============================================
+                     REFER & EARN
+                ============================================== -->
+
+                <section class="wallet-referral-card">
+
+                    <div class="wallet-referral-icon">
+
+                        <i class="fa fa-users"></i>
+
+                    </div>
+
+
+                    <div class="wallet-referral-content">
+
+                        <span class="wallet-referral-label">
+                            Rewards
+                        </span>
+
+                        <h2>
+                            Refer &amp; Earn
+                        </h2>
+
+                        <p>
+                            Invite your friends and earn wallet
+                            rewards.
+                        </p>
+
+                    </div>
+
+                </section>
+
+
+            </div>
+
+
+
+            <!-- =================================================
+                 REFUND REQUESTS
+            ================================================== -->
+
+            <section class="wallet-section">
+
+                <div class="wallet-section-header">
+
+                    <div>
+
+                        <h2>
+                            Refund Requests
+                        </h2>
+
+                        <p>
+                            Track the status of your refund requests.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+
+                {% if refund_requests %}
+
+                    <div class="wallet-refund-list">
+
+                        {% for refund in refund_requests %}
+
+                            <article class="wallet-refund-card">
+
+
+                                <div class="wallet-refund-icon">
+
+                                    {% if refund.status == "pending" %}
+
+                                        <i class="fa fa-clock-o"></i>
+
+                                    {% elif refund.status == "accepted" %}
+
+                                        <i class="fa fa-check"></i>
+
+                                    {% elif refund.status == "completed" %}
+
+                                        <i class="fa fa-check-circle"></i>
+
+                                    {% else %}
+
+                                        <i class="fa fa-times"></i>
+
+                                    {% endif %}
+
+                                </div>
+
+
+
+                                <div class="wallet-refund-main">
+
+
+                                    <div class="wallet-refund-title-row">
+
+                                        <div>
+
+                                            <h3>
+                                                {{ refund.request_no }}
+                                            </h3>
+
+                                            <span class="wallet-refund-type">
+
+                                                {% if refund.refund_type == "order" %}
+
+                                                    Full Order Refund
+
+                                                {% else %}
+
+                                                    Item Refund
+
+                                                {% endif %}
+
+                                            </span>
+
+                                        </div>
+
+
+                                        <span
+                                            class="
+                                                wallet-refund-status
+                                                {{ refund.status }}
+                                            "
+                                        >
+                                            {{ refund.get_status_display }}
+                                        </span>
+
+                                    </div>
+
+
+
+                                    <div class="wallet-refund-details">
+
+                                        <span>
+
+                                            Order
+
+                                            <strong>
+                                                {{ refund.order.order_no }}
+                                            </strong>
+
+                                        </span>
+
+
+                                        {% if refund.order_item %}
+
+                                            <span>
+
+                                                Item
+
+                                                <strong>
+                                                    {{ refund.order_item.product.name }}
+                                                </strong>
+
+                                            </span>
+
+                                        {% endif %}
+
+
+                                        <span>
+
+                                            Requested
+
+                                            <strong>
+                                                {{ refund.created_at|date:"d M Y, h:i A" }}
+                                            </strong>
+
+                                        </span>
+
+                                    </div>
+
+
+
+                                    <div class="wallet-refund-amount">
+
+                                        Refund Amount
+
+                                        <strong>
+                                            ₹{{ refund.amount|floatformat:2 }}
+                                        </strong>
+
+                                    </div>
+
+
+
+                                    {% if refund.admin_note %}
+
+                                        <div class="wallet-refund-note">
+
+                                            <span>
+
+                                                {% if refund.status == "rejected" %}
+
+                                                    Admin reason
+
+                                                {% else %}
+
+                                                    Admin note
+
+                                                {% endif %}
+
+                                            </span>
+
+
+                                            <p>
+                                                {{ refund.admin_note }}
+                                            </p>
+
+                                        </div>
+
+                                    {% endif %}
+
+
+                                </div>
+
+
+                            </article>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% else %}
+
+                    <div class="wallet-empty-state">
+
+                        <div class="wallet-empty-icon">
+
+                            <i class="fa fa-undo"></i>
+
+                        </div>
+
+
+                        <h3>
+                            No refund requests
+                        </h3>
+
+
+                        <p>
+                            Your refund requests will appear here.
+                        </p>
+
+                    </div>
+
+                {% endif %}
+
+            </section>
+
+
+
+            <!-- =================================================
+                 TRANSACTION HISTORY
+            ================================================== -->
+
+            <section class="wallet-section">
+
+                <div class="wallet-section-header">
+
+                    <div>
+
+                        <h2>
+                            Transaction History
+                        </h2>
+
+                        <p>
+                            Your wallet credits and debits.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+
+                {% if transactions %}
+
+                    <div class="wallet-transaction-list">
+
+                        {% for transaction in transactions %}
+
+                            <article class="wallet-transaction-card">
+
+
+                                <div
+                                    class="
+                                        wallet-transaction-icon
+                                        {% if transaction.direction == 'credit' %}
+                                            credit
+                                        {% else %}
+                                            debit
+                                        {% endif %}
+                                    "
+                                >
+
+                                    {% if transaction.direction == "credit" %}
+
+                                        <i class="fa fa-arrow-down"></i>
+
+                                    {% else %}
+
+                                        <i class="fa fa-arrow-up"></i>
+
+                                    {% endif %}
+
+                                </div>
+
+
+
+                                <div class="wallet-transaction-main">
+
+
+                                    <div class="wallet-transaction-title-row">
+
+                                        <h3>
+
+                                            {% if transaction.direction == "credit" %}
+
+                                                Credit
+
+                                            {% else %}
+
+                                                Debit
+
+                                            {% endif %}
+
+                                        </h3>
+
+
+                                        <span
+                                            class="
+                                                wallet-transaction-amount
+                                                {% if transaction.direction == 'credit' %}
+                                                    credit
+                                                {% else %}
+                                                    debit
+                                                {% endif %}
+                                            "
+                                        >
+
+                                            {% if transaction.direction == "credit" %}
+
+                                                +
+
+                                            {% else %}
+
+                                                -
+
+                                            {% endif %}
+
+                                            ₹{{ transaction.amount|floatformat:2 }}
+
+                                        </span>
+
+                                    </div>
+
+
+
+                                    <div class="wallet-transaction-details">
+
+                                        <span>
+                                            {{ transaction.created_at|date:"d M Y, h:i A" }}
+                                        </span>
+
+
+                                        {% if transaction.order %}
+
+                                            <span class="transaction-order">
+
+                                                Order
+
+                                                {{ transaction.order.order_no }}
+
+                                            </span>
+
+                                        {% endif %}
+
+
+                                        {% if transaction.description %}
+
+                                            <span>
+                                                {{ transaction.description }}
+                                            </span>
+
+                                        {% endif %}
+
+                                    </div>
+
+
+
+                                    <div class="wallet-transaction-balance">
+
+                                        Balance after transaction:
+
+                                        <strong>
+                                            ₹{{ transaction.balance_after|floatformat:2 }}
+                                        </strong>
+
+                                    </div>
+
+
+                                </div>
+
+
+                            </article>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% else %}
+
+                    <div class="wallet-empty-state">
+
+                        <div class="wallet-empty-icon">
+
+                            <i class="fa fa-credit-card"></i>
+
+                        </div>
+
+
+                        <h3>
+                            No transactions yet
+                        </h3>
+
+
+                        <p>
+                            Your wallet activity will appear here.
+                        </p>
+
+                    </div>
+
+                {% endif %}
+
+            </section>
+
+
+        </div>
+
+
+    </div>
+
+</main>
+
+
+</body>
+
+</html>

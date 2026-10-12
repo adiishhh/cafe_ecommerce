@@ -484,6 +484,49 @@ a {
 }
 
 /* =========================================================
+   Wallet
+   ========================================================= */
+
+.wallet-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 20px;
+
+    color: inherit;
+
+    transition: background 0.15s ease;
+}
+
+.wallet-link:hover {
+    background: #faf6ef;
+}
+
+.wallet-content h2 {
+    margin: 0 0 5px;
+
+    color: #30271f;
+
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.wallet-content p {
+    margin: 0;
+
+    color: #817568;
+
+    font-size: 13px;
+}
+
+.wallet-arrow {
+    color: #8b3f16;
+
+    font-size: 21px;
+}
+
+/* =========================================================
    SECURITY
    ========================================================= */
 
