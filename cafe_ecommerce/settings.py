@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'coupons',
     'tables',
     'billing',
+    'wallet',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
