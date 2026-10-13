@@ -130,7 +130,7 @@
     border: none;
     border-radius: 8px;
 
-    background: #e44700;
+    background: #8b3f16;
 
     color: white;
 
@@ -559,9 +559,9 @@
 
 .pagination .current {
 
-    background: #e44700;
+    background: #8b3f16;;
 
-    border-color: #e44700;
+    border-color: #8b3f16;;
 
     color: white;
 

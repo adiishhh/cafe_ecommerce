@@ -28,4 +28,22 @@ urlpatterns = [
         views.admin_update_bill,
         name="admin_update_bill",
     ),
+
+    path(
+        "payment/online/start/",
+        views.initiate_online_payment,
+        name="initiate_online_payment",
+    ),
+
+    path(
+        "payment/online/verify/",
+        views.verify_online_payment,
+        name="verify_online_payment",
+    ),
+
+    path(
+        "order/<int:order_id>/invoice/",
+        views.download_invoice,
+        name="download_invoice",
+    ),
 ]

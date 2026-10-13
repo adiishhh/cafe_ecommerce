@@ -351,83 +351,63 @@
 
 
                     <div class="payment-options">
-
-
+                    
                         <!-- ONLINE -->
-
-                        <label class="payment-option disabled">
-
+                    
+                        <label class="payment-option">
+                        
                             <input
                                 type="radio"
                                 name="payment_method_display"
                                 value="online"
-                                disabled
                             >
-
-
+                        
                             <div class="payment-method-icon">
                                 UPI
                             </div>
-
-
+                        
                             <div class="payment-method-content">
-
                                 <strong>
                                     Pay Online
                                 </strong>
-
+                            
                                 <span>
-                                    UPI / Card / Netbanking
+                                    UPI / Card / Wallet
                                 </span>
-
                             </div>
-
-
-                            <span class="coming-soon">
-                                Coming Soon
-                            </span>
-
+                        
                         </label>
-
-
-
+                    
+                    
                         <!-- CASH ON DELIVERY -->
-
+                    
                         <label class="payment-option selected">
-
+                        
                             <input
                                 type="radio"
                                 name="payment_method_display"
                                 value="cod"
                                 checked
-                                disabled
                             >
-
-
+                        
                             <div class="payment-method-icon">
                                 ₹
                             </div>
-
-
+                        
                             <div class="payment-method-content">
-
                                 <strong>
                                     Cash on Delivery
                                 </strong>
-
+                            
                                 <span>
-                                    Pay at counter
-                                    (Cash / UPI / Card)
+                                    Pay at counter (Cash / UPI / Card)
                                 </span>
-
                             </div>
-
-
+                        
                             <span class="selected-indicator"></span>
-
+                        
                         </label>
-
-
+                    
                     </div>
 
                 </section>
@@ -575,26 +555,20 @@
                         method="POST"
                         action="{% url 'place_order' %}"
                         class="place-order-form"
+                        id="place-order-form"
                     >
 
                         {% csrf_token %}
 
-                        <input
-                            type="hidden"
-                            name="payment_method"
-                            value="cod"
-                        >
-
-
                         <button
                             type="submit"
                             class="place-order-button"
+                            id="place-order-button"
                         >
                             Place Order
                         </button>
-
+                    
                     </form>
-
 
 
                     <a
@@ -615,6 +589,65 @@
     </div>
 
 </main>
+<script>
+(function () {
+    "use strict";
 
+    const form = document.getElementById("place-order-form");
+    const button = document.getElementById("place-order-button");
+
+    const paymentOptions = document.querySelectorAll(
+        'input[name="payment_method_display"]'
+    );
+
+    const codOption = document.querySelector(
+        'input[name="payment_method_display"][value="cod"]'
+    );
+
+    const onlineOption = document.querySelector(
+        'input[name="payment_method_display"][value="online"]'
+    );
+
+    function updatePaymentSelection() {
+        paymentOptions.forEach(function (option) {
+            const label = option.closest(".payment-option");
+
+            if (label) {
+                label.classList.toggle(
+                    "selected",
+                    option.checked
+                );
+            }
+        });
+
+        button.textContent = onlineOption.checked
+            ? "Continue to Payment"
+            : "Place Order";
+    }
+
+    paymentOptions.forEach(function (option) {
+        option.addEventListener(
+            "change",
+            updatePaymentSelection
+        );
+    });
+
+    form.addEventListener("submit", function (event) {
+        if (onlineOption.checked) {
+            form.action = "{% url 'initiate_online_payment' %}";
+        } else {
+            form.action = "{% url 'place_order' %}";
+        }
+
+        button.disabled = true;
+
+        button.textContent = onlineOption.checked
+            ? "Preparing Payment..."
+            : "Placing Order...";
+    });
+
+    updatePaymentSelection();
+})();
+</script>
 
 {% endblock %}

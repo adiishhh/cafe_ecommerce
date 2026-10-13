@@ -1,0 +1,236 @@
+{% extends "users_panel/users_base.html" %}
+
+{% block title %}
+    Secure Payment | SmartCafe
+{% endblock %}
+
+{% block content %}
+
+<main class="final-checkout-page">
+    <div class="final-checkout-container">
+
+        <section class="checkout-card">
+            <h1>Complete Your Payment</h1>
+
+            <p>
+                Your payment will be processed securely through Razorpay.
+            </p>
+
+            <h2>
+                Amount: ₹{{ total }}
+            </h2>
+
+            <p id="payment-message" role="status">
+                Preparing secure checkout...
+            </p>
+
+            <button
+                type="button"
+                id="retry-payment-button"
+                class="place-order-button"
+                hidden
+            >
+                Try Payment Again
+            </button>
+
+            <a
+                href="{% url 'final_checkout' %}"
+                class="cancel-order-link"
+            >
+                Return to Checkout
+            </a>
+
+            <form id="csrf-form" hidden>
+                {% csrf_token %}
+            </form>
+        </section>
+
+    </div>
+</main>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+(function () {
+    "use strict";
+
+    const paymentMessage = document.getElementById(
+        "payment-message"
+    );
+
+    const retryButton = document.getElementById(
+        "retry-payment-button"
+    );
+
+    const csrfToken = document.querySelector(
+        "#csrf-form [name=csrfmiddlewaretoken]"
+    ).value;
+
+    let checkoutInstance = null;
+
+    async function verifyPayment(response) {
+        paymentMessage.textContent =
+            "Verifying your payment. Please wait...";
+
+        retryButton.hidden = true;
+
+        try {
+            const formData = new FormData();
+
+            formData.append(
+                "razorpay_payment_id",
+                response.razorpay_payment_id
+            );
+
+            formData.append(
+                "razorpay_order_id",
+                response.razorpay_order_id
+            );
+
+            formData.append(
+                "razorpay_signature",
+                response.razorpay_signature
+            );
+
+            const result = await fetch(
+                "{% url 'verify_online_payment' %}",
+                {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-CSRFToken": csrfToken
+                    }
+                }
+            );
+
+            const data = await result.json();
+
+            if (!result.ok || !data.success) {
+                throw new Error(
+                    data.message || "Payment verification failed."
+                );
+            }
+
+            paymentMessage.textContent =
+                "Payment successful! Redirecting to your order...";
+
+            window.location.href = data.redirect_url;
+
+        } catch (error) {
+            console.error(
+                "SmartCafe payment verification error:",
+                error
+            );
+
+            paymentMessage.textContent =
+                error.message || "Payment verification failed.";
+
+            retryButton.hidden = false;
+        }
+    }
+
+    function openCheckout() {
+        if (typeof Razorpay === "undefined") {
+            paymentMessage.textContent =
+                "Unable to load Razorpay. Check your internet connection and try again.";
+
+            retryButton.hidden = false;
+            return;
+        }
+
+        paymentMessage.textContent =
+            "Opening secure payment checkout...";
+
+        retryButton.hidden = true;
+
+        // Track whether Razorpay has reported a payment failure.
+        let paymentFailed = false;
+
+        const options = {
+            key: "{{ razorpay_key_id|escapejs }}",
+            amount: "{{ amount_paise }}",
+            currency: "INR",
+            name: "SmartCafe",
+            description: "SmartCafe order payment",
+            order_id: "{{ gateway_order_id|escapejs }}",
+            remember_customer: false,
+
+            prefill: {
+                name: "{{ customer_name|escapejs }}",
+                email: "{{ customer_email|escapejs }}",
+                contact: "{{ customer_phone|escapejs }}"
+            },
+
+            theme: {
+                color: "#7A4A28"
+            },
+
+            handler: verifyPayment,
+
+            modal: {
+                ondismiss: function () {
+                    // Do not overwrite the actual payment failure.
+                    if (!paymentFailed) {
+                        paymentMessage.textContent =
+                            "Checkout closed. You can retry or return to checkout.";
+                    }
+
+                    retryButton.hidden = false;
+                }
+            }
+        };
+
+        checkoutInstance = new Razorpay(options);
+
+        checkoutInstance.on(
+            "payment.failed",
+            function (response) {
+                paymentFailed = true;
+
+                const error = response.error || {};
+
+                console.error(
+                    "Razorpay payment failure:",
+                    error
+                );
+
+                const description =
+                    error.description || "Unknown error";
+
+                const code =
+                    error.code || "N/A";
+
+                const step =
+                    error.step || "N/A";
+
+                const reason =
+                    error.reason || "N/A";
+
+                const source =
+                    error.source || "N/A";
+
+                paymentMessage.textContent =
+                    "Payment failed: " + description +
+                    " | Code: " + code +
+                    " | Step: " + step +
+                    " | Reason: " + reason +
+                    " | Source: " + source;
+
+                retryButton.hidden = false;
+            }
+        );
+
+        checkoutInstance.open();
+    }
+
+    retryButton.addEventListener(
+        "click",
+        openCheckout
+    );
+
+    openCheckout();
+
+})();
+</script>
+
+{% endblock %}

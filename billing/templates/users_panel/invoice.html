@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Invoice {{ order.order_no }} | SmartCafe</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 32px 16px;
+            background: #f5f3f0;
+            color: #29231f;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .invoice {
+            width: 100%;
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 42px;
+            background: #ffffff;
+            border: 1px solid #e8e1da;
+            border-radius: 12px;
+        }
+
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 24px;
+            align-items: flex-start;
+            padding-bottom: 24px;
+            border-bottom: 2px solid #7a4a28;
+        }
+
+        .brand {
+            margin: 0;
+            color: #7a4a28;
+            font-size: 30px;
+            letter-spacing: 1px;
+        }
+
+        .invoice-title {
+            margin: 8px 0 0;
+            font-size: 13px;
+            color: #77706a;
+            letter-spacing: 3px;
+        }
+
+        .invoice-number {
+            text-align: right;
+        }
+
+        .invoice-number strong {
+            display: block;
+            margin-top: 8px;
+            overflow-wrap: anywhere;
+        }
+
+        .section {
+            margin-top: 28px;
+        }
+
+        .section h2 {
+            margin: 0 0 14px;
+            font-size: 16px;
+            color: #7a4a28;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .detail-card {
+            padding: 16px;
+            background: #faf8f6;
+            border: 1px solid #eee8e2;
+            border-radius: 8px;
+            overflow-wrap: anywhere;
+        }
+
+        .detail-card p {
+            margin: 7px 0;
+            line-height: 1.5;
+        }
+
+        .muted {
+            color: #77706a;
+            font-size: 13px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #eee8e2;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #f7f0e9;
+            color: #56361f;
+            font-size: 13px;
+        }
+
+        .numeric {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .totals {
+            width: 100%;
+            max-width: 360px;
+            margin: 20px 0 0 auto;
+        }
+
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 9px 0;
+        }
+
+        .grand-total {
+            margin-top: 8px;
+            padding-top: 14px;
+            border-top: 2px solid #7a4a28;
+            font-size: 19px;
+            font-weight: bold;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 20px;
+            background: #e7f5e9;
+            color: #206a32;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .invoice-footer {
+            margin-top: 36px;
+            padding-top: 20px;
+            border-top: 1px solid #eee8e2;
+            text-align: center;
+            color: #77706a;
+            line-height: 1.6;
+        }
+
+        .invoice-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 24px auto;
+        }
+
+        .invoice-actions button,
+        .invoice-actions a {
+            display: inline-block;
+            padding: 12px 18px;
+            border: none;
+            border-radius: 6px;
+            background: #7a4a28;
+            color: white;
+            font: inherit;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .invoice-actions a {
+            background: #4b4540;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
+            }
+
+            .invoice {
+                padding: 20px;
+            }
+
+            .invoice-header {
+                flex-direction: column;
+            }
+
+            .invoice-number {
+                text-align: left;
+            }
+
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+
+            th,
+            td {
+                padding: 9px 5px;
+                font-size: 12px;
+            }
+        }
+
+        @media print {
+            body {
+                padding: 0;
+                background: white;
+            }
+
+            .invoice {
+                max-width: none;
+                padding: 0;
+                border: none;
+                border-radius: 0;
+            }
+
+            .invoice-actions {
+                display: none;
+            }
+
+            .detail-card {
+                background: white;
+            }
+
+            tr,
+            .detail-card {
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="invoice">
+
+        <header class="invoice-header">
+
+            <div>
+                <h1 class="brand">SMARTCAFE</h1>
+                <p class="invoice-title">INVOICE</p>
+            </div>
+
+            <div class="invoice-number">
+                <span class="muted">Order Number</span>
+                <strong>{{ order.order_no }}</strong>
+
+                {% if bill %}
+                    <span class="muted">Invoice Number</span>
+                    <strong>{{ bill.bill_no }}</strong>
+                {% endif %}
+
+                <p>
+                    <span class="muted">Date</span><br>
+                    {{ order.created_at|date:"d M Y, h:i A" }}
+                </p>
+            </div>
+
+        </header>
+
+
+        <section class="section details-grid">
+
+            <div class="detail-card">
+                <h2>Customer</h2>
+
+                <p>
+                    <strong>{{ order.user.name }}</strong>
+                </p>
+
+                <p>{{ order.user.email }}</p>
+                <p>{{ order.user.phone }}</p>
+            </div>
+
+
+            <div class="detail-card">
+                <h2>Order Details</h2>
+
+                <p>
+                    <span class="muted">Order Type:</span>
+                    {{ order.get_order_type_display }}
+                </p>
+
+                <p>
+                    <span class="muted">Payment Method:</span>
+                    {{ payment_method }}
+                </p>
+
+                {% if payment %}
+                    <p>
+                        <span class="muted">Payment Reference:</span>
+                        {{ payment.payment_reference }}
+                    </p>
+                {% endif %}
+
+                {% if bill and bill.status == "paid" %}
+                    <span class="status">PAID</span>
+                {% elif bill_order %}
+                    <span class="status">
+                        {{ bill_order.get_payment_method_display }}
+                    </span>
+                {% endif %}
+            </div>
+
+        </section>
+
+
+        {% if order.order_type == "delivery" %}
+            <section class="section">
+
+                <h2>Delivery Address</h2>
+
+                <div class="detail-card">
+                    <p>
+                        <strong>{{ order.address_name }}</strong>
+                    </p>
+
+                    <p>
+                        {{ order.address_flat_house }},
+                        {{ order.address_area_street }}
+                    </p>
+
+                    <p>
+                        {{ order.address_city }},
+                        {{ order.address_state }}
+                        - {{ order.address_pincode }}
+                    </p>
+
+                    <p>{{ order.address_contact_number }}</p>
+                </div>
+
+            </section>
+        {% endif %}
+
+
+        <section class="section">
+
+            <h2>Order Items</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th class="numeric">Qty</th>
+                        <th class="numeric">Unit Price</th>
+                        <th class="numeric">Total</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in order.items.all %}
+                        <tr>
+                            <td>
+                                {{ item.product.name }}
+
+                                {% if item.is_cancelled %}
+                                    <br>
+                                    <span class="muted">Cancelled</span>
+                                {% endif %}
+
+                                {% if item.instructions %}
+                                    <br>
+                                    <span class="muted">
+                                        Note: {{ item.instructions }}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td class="numeric">
+                                {{ item.quantity }}
+                            </td>
+
+                            <td class="numeric">
+                                ₹{{ item.unit_price|floatformat:2 }}
+                            </td>
+
+                            <td class="numeric">
+                                ₹{{ item.subtotal|floatformat:2 }}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4">
+                                No order items were found.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        </section>
+
+
+        <section class="section">
+
+            <h2>Payment Summary</h2>
+
+            <div class="totals">
+
+                <div class="totals-row">
+                    <span>Subtotal</span>
+                    <span>₹{{ order.subtotal|floatformat:2 }}</span>
+                </div>
+
+                <div class="totals-row">
+                    <span>GST ({{ order.tax_percentage|floatformat:2 }}%)</span>
+                    <span>₹{{ order.tax_amount|floatformat:2 }}</span>
+                </div>
+
+                <div class="totals-row">
+                    <span>Discount</span>
+                    <span>₹{{ order.discount_amount|floatformat:2 }}</span>
+                </div>
+
+                <div class="totals-row">
+                    <span>Shipping</span>
+                    <span>₹0.00</span>
+                </div>
+
+                <div class="totals-row grand-total">
+                    <span>Total</span>
+                    <span>₹{{ order.total_amount|floatformat:2 }}</span>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <footer class="invoice-footer">
+            <strong>Thank you for ordering from SmartCafe!</strong>
+            <br>
+            We appreciate your business.
+        </footer>
+
+    </div>
+
+
+    <div class="invoice-actions">
+        <button type="button" onclick="window.print()">
+            Print / Save as PDF
+        </button>
+
+        <a href="{% url 'order_detail' order.id %}">
+            Back to Order
+        </a>
+    </div>
+
+</body>
+</html>

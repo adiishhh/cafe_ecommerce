@@ -59,65 +59,57 @@
 
 .billing-date-filter {
     display: flex;
-
     align-items: flex-end;
-
     gap: 9px;
+    flex-wrap: wrap;
 }
-
 
 .date-filter-field {
     display: flex;
-
     flex-direction: column;
-
     gap: 5px;
 }
 
-
 .date-filter-field label {
     color: #756b62;
-
     font-size: 10px;
-
     font-weight: 700;
 }
 
-
 .date-filter-field input {
     height: 36px;
-
     min-width: 155px;
-
     padding: 0 11px;
-
     border: 1px solid #dcd2c8;
-
     border-radius: 7px;
-
     outline: none;
-
     background: #ffffff;
-
     color: #41382f;
-
     font-family: inherit;
-
     font-size: 11px;
 }
 
 
 .date-filter-field input:focus {
     border-color: #a4511e;
-
-    box-shadow:
-        0 0 0 3px rgba(
-            164,
-            81,
-            30,
-            0.08
-        );
+    box-shadow: 0 0 0 3px rgba(164, 81, 30, 0.08);
 }
+
+.billing-filter-button {
+    height: 36px;
+    padding: 0 15px;
+    background-color: #a4511e;
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.billing-filter-button:hover {
+    background-color: #8e3f14;
+}
+
 
 
 .billing-filter-button {

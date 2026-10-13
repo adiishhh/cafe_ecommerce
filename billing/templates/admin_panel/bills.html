@@ -53,49 +53,34 @@ SmartCafe Admin - Bills
 
     </div>
 
-
     <!-- DATE FILTER -->
 
-    <form
-        method="get"
-        class="billing-date-filter"
-    >
-
-        <input
-            type="hidden"
-            name="view"
-            value="{{ active_view }}"
-        >
-
+    <form method="get" class="billing-date-filter">
+        <input type="hidden" name="view" value="{{ active_view }}">
 
         <div class="date-filter-field">
-
-            <label for="billingDate">
-                Date
-            </label>
-
             <input
                 type="date"
-                id="billingDate"
-                name="date"
-                value="{{ selected_date|date:'Y-m-d' }}"
+                id="startDate"
+                name="start_date"
+                value="{{ start_date_value }}"
             >
-
+        </div>
+        <div class="date-filter-field">
+            <input
+                type="date"
+                id="endDate"
+                name="end_date"
+                value="{{ end_date_value }}"
+            >
         </div>
 
-
-        <button
-            type="submit"
-            class="billing-filter-button"
-        >
-
+        <button type="submit" class="billing-filter-button">
             <i class="fa fa-filter"></i>
-
             Apply
-
         </button>
-
     </form>
+
 
 </div>
 

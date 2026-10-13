@@ -510,6 +510,7 @@ def final_checkout(request):
         }
     )
 
+@login_required(login_url="login")
 @require_POST
 @transaction.atomic
 def place_order(request):
@@ -517,12 +518,10 @@ def place_order(request):
     checkout = _get_checkout_cart(request)
 
     if checkout is None:
-
         messages.error(
             request,
             "Your order is empty."
         )
-
         return redirect("cart")
 
     order_type = request.session.get(
@@ -533,10 +532,11 @@ def place_order(request):
         Order.OrderType.PICKUP,
         Order.OrderType.DELIVERY,
     }:
+        return redirect("order_type")
 
-        return redirect(
-            "order_type"
-        )
+    # ----------------------------------------------------------
+    # DELIVERY ADDRESS
+    # ----------------------------------------------------------
 
     address = None
 
@@ -547,15 +547,11 @@ def place_order(request):
         )
 
         if not address_id:
-
             messages.error(
                 request,
                 "Please select a delivery address."
             )
-
-            return redirect(
-                "order_type"
-            )
+            return redirect("order_type")
 
         address = (
             request.user.addresses
@@ -564,63 +560,137 @@ def place_order(request):
         )
 
         if address is None:
-
             messages.error(
                 request,
                 "The selected address is no longer available."
             )
+            return redirect("order_type")
 
-            return redirect(
-                "order_type"
+    # ----------------------------------------------------------
+    # COUPON
+    # ----------------------------------------------------------
+
+    coupon = None
+    discount = Decimal("0.00")
+
+    coupon_code = request.session.get(
+        "checkout_coupon_code",
+        ""
+    )
+
+    if coupon_code:
+
+        result = apply_coupon(
+            coupon_code,
+            checkout["subtotal"]
+        )
+
+        if not result["success"]:
+
+            request.session.pop(
+                "checkout_coupon_code",
+                None
             )
 
-    # ==========================================================
+            request.session.modified = True
+
+            messages.error(
+                request,
+                result["message"]
+            )
+
+            return redirect("final_checkout")
+
+        coupon = result["coupon"]
+        discount = result["discount"]
+
+    subtotal = checkout["subtotal"]
+    tax_amount = checkout["gst"]
+
+    total = (
+        subtotal
+        + tax_amount
+        - discount
+    ).quantize(Decimal("0.01"))
+
+    # ----------------------------------------------------------
     # CREATE ORDER
-    # ==========================================================
+    # ----------------------------------------------------------
 
     order = Order.objects.create(
+
         user=request.user,
+
         order_no=_generate_order_number(),
+
         tracking_no=None,
+
         order_type=order_type,
 
-        address_name=address.name if address else None,
+        address_name=(
+            address.name if address else None
+        ),
+
         address_contact_number=(
-            address.contact_number
-            if address else None
+            address.contact_number if address else None
         ),
+
         address_flat_house=(
-            address.flat_house
-            if address else None
+            address.flat_house if address else None
         ),
+
         address_area_street=(
-            address.area_street
-            if address else None
+            address.area_street if address else None
         ),
+
         address_city=(
-            address.city
-            if address else None
+            address.city if address else None
         ),
+
         address_state=(
-            address.state
-            if address else None
+            address.state if address else None
         ),
+
         address_pincode=(
-            address.pincode
-            if address else None
+            address.pincode if address else None
         ),
 
         table=None,
+
         status=Order.Status.CONFIRMED,
-        subtotal=checkout["subtotal"],
-        tax_amount=checkout["gst"],
-        total_amount=checkout["total"],
+
+        subtotal=subtotal,
+
+        tax_percentage=checkout["tax_percentage"],
+
+        tax_amount=tax_amount,
+
+        coupon_code=coupon.code if coupon else "",
+
+        coupon_discount_type=(
+            coupon.discount_type if coupon else ""
+        ),
+
+        coupon_discount_value=(
+            coupon.discount_value if coupon else None
+        ),
+
+        coupon_minimum_order_amount=(
+            coupon.minimum_order_amount if coupon else None
+        ),
+
+        coupon_maximum_discount_amount=(
+            coupon.maximum_discount_amount if coupon else None
+        ),
+
+        discount_amount=discount,
+
+        total_amount=total,
     )
 
-
-    # ==========================================================
+    # ----------------------------------------------------------
     # CREATE ORDER ITEMS
-    # ==========================================================
+    # ----------------------------------------------------------
 
     for item in checkout["cart_items"]:
 
@@ -635,10 +705,24 @@ def place_order(request):
             subtotal=item["item_total"],
         )
 
+    # ----------------------------------------------------------
+    # RECORD COUPON USAGE
+    # ----------------------------------------------------------
 
-    # ==========================================================
+    if coupon:
+
+        coupon.used_count += 1
+
+        coupon.save(
+            update_fields=[
+                "used_count",
+                "updated_at",
+            ]
+        )
+
+    # ----------------------------------------------------------
     # CREATE BILL ORDER
-    # ==========================================================
+    # ----------------------------------------------------------
 
     BillOrder.objects.create(
         order=order,
@@ -646,15 +730,11 @@ def place_order(request):
         payment_method=BillOrder.PaymentMethod.COD,
     )
 
-
-    # ==========================================================
+    # ----------------------------------------------------------
     # CLEAR CHECKOUT SESSION
-    # ==========================================================
+    # ----------------------------------------------------------
 
-    request.session.pop(
-        "cart",
-        None
-    )
+    request.session.pop("cart", None)
 
     request.session.pop(
         "checkout_order_type",
@@ -676,14 +756,14 @@ def place_order(request):
         None
     )
 
+    request.session.pop(
+        "razorpay_pending_checkout",
+        None
+    )
 
-    # ==========================================================
-    # ORDER DETAIL PAYMENT DISPLAY
-    # ==========================================================
-
-    request.session[
-        "last_order_payment_method"
-    ] = "Cash on Delivery"
+    request.session["last_order_payment_method"] = (
+        "Cash on Delivery"
+    )
 
     request.session.modified = True
 
@@ -738,645 +818,6 @@ def order_detail(request, order_id):
             "can_save_as_usual": bool(active_items),
         }
     )
-
-@login_required(login_url="login")
-def download_invoice(request, order_id):
-    order = get_object_or_404(
-        Order.objects.prefetch_related(
-            "items__product"
-        ),
-        id=order_id,
-        user=request.user,
-    )
-
-    response = HttpResponse(
-        content_type="application/pdf"
-    )
-
-    response[
-        "Content-Disposition"
-    ] = (
-        f'attachment; '
-        f'filename="SmartCafe_{order.order_no}.pdf"'
-    )
-
-    document = SimpleDocTemplate(
-        response,
-        pagesize=A4,
-        rightMargin=18 * mm,
-        leftMargin=18 * mm,
-        topMargin=18 * mm,
-        bottomMargin=18 * mm,
-    )
-
-    styles = getSampleStyleSheet()
-
-    brand_style = ParagraphStyle(
-        "Brand",
-        parent=styles["Title"],
-        fontSize=22,
-        leading=26,
-        alignment=TA_CENTER,
-        spaceAfter=6,
-    )
-
-    invoice_title_style = ParagraphStyle(
-        "InvoiceTitle",
-        parent=styles["Heading2"],
-        fontSize=15,
-        leading=18,
-        alignment=TA_CENTER,
-        spaceAfter=16,
-    )
-
-    normal_style = ParagraphStyle(
-        "NormalCustom",
-        parent=styles["Normal"],
-        fontSize=9,
-        leading=13,
-    )
-
-    small_style = ParagraphStyle(
-        "Small",
-        parent=styles["Normal"],
-        fontSize=8,
-        leading=11,
-    )
-
-    right_style = ParagraphStyle(
-        "Right",
-        parent=normal_style,
-        alignment=TA_RIGHT,
-    )
-
-    elements = []
-
-    elements.append(
-        Paragraph(
-            "SMARTCAFE",
-            brand_style,
-        )
-    )
-
-    elements.append(
-        Paragraph(
-            "INVOICE",
-            invoice_title_style,
-        )
-    )
-
-    elements.append(
-        Spacer(
-            1,
-            5 * mm,
-        )
-    )
-
-    order_type = order.get_order_type_display()
-
-    payment_method = (
-        "Cash on Delivery"
-    )
-
-    order_information = [
-        [
-            Paragraph(
-                "<b>Order Number</b>",
-                normal_style,
-            ),
-            Paragraph(
-                order.order_no,
-                normal_style,
-            ),
-        ],
-        [
-            Paragraph(
-                "<b>Order Date</b>",
-                normal_style,
-            ),
-            Paragraph(
-                order.created_at.strftime(
-                    "%d %b %Y, %I:%M %p"
-                ),
-                normal_style,
-            ),
-        ],
-        [
-            Paragraph(
-                "<b>Order Type</b>",
-                normal_style,
-            ),
-            Paragraph(
-                order_type,
-                normal_style,
-            ),
-        ],
-        [
-            Paragraph(
-                "<b>Payment Method</b>",
-                normal_style,
-            ),
-            Paragraph(
-                payment_method,
-                normal_style,
-            ),
-        ],
-    ]
-
-    order_table = Table(
-        order_information,
-        colWidths=[
-            45 * mm,
-            115 * mm,
-        ],
-    )
-
-    order_table.setStyle(
-        TableStyle(
-            [
-                (
-                    "BACKGROUND",
-                    (0, 0),
-                    (-1, -1),
-                    colors.whitesmoke,
-                ),
-                (
-                    "BOX",
-                    (0, 0),
-                    (-1, -1),
-                    0.5,
-                    colors.lightgrey,
-                ),
-                (
-                    "INNERGRID",
-                    (0, 0),
-                    (-1, -1),
-                    0.25,
-                    colors.lightgrey,
-                ),
-                (
-                    "VALIGN",
-                    (0, 0),
-                    (-1, -1),
-                    "MIDDLE",
-                ),
-                (
-                    "LEFTPADDING",
-                    (0, 0),
-                    (-1, -1),
-                    8,
-                ),
-                (
-                    "RIGHTPADDING",
-                    (0, 0),
-                    (-1, -1),
-                    8,
-                ),
-                (
-                    "TOPPADDING",
-                    (0, 0),
-                    (-1, -1),
-                    7,
-                ),
-                (
-                    "BOTTOMPADDING",
-                    (0, 0),
-                    (-1, -1),
-                    7,
-                ),
-            ]
-        )
-    )
-
-    elements.append(order_table)
-
-    elements.append(
-        Spacer(
-            1,
-            8 * mm,
-        )
-    )
-
-    elements.append(
-        Paragraph(
-            "<b>Customer Information</b>",
-            normal_style,
-        )
-    )
-
-    elements.append(
-        Spacer(
-            1,
-            2 * mm,
-        )
-    )
-
-    customer = order.user
-
-    customer_information = [
-        [
-            Paragraph(
-                "<b>Name</b>",
-                normal_style,
-            ),
-            Paragraph(
-                customer.name,
-                normal_style,
-            ),
-        ],
-        [
-            Paragraph(
-                "<b>Email</b>",
-                normal_style,
-            ),
-            Paragraph(
-                customer.email,
-                normal_style,
-            ),
-        ],
-        [
-            Paragraph(
-                "<b>Phone</b>",
-                normal_style,
-            ),
-            Paragraph(
-                customer.phone,
-                normal_style,
-            ),
-        ],
-    ]
-
-    customer_table = Table(
-        customer_information,
-        colWidths=[
-            45 * mm,
-            115 * mm,
-        ],
-    )
-
-    customer_table.setStyle(
-        TableStyle(
-            [
-                (
-                    "BOX",
-                    (0, 0),
-                    (-1, -1),
-                    0.5,
-                    colors.lightgrey,
-                ),
-                (
-                    "INNERGRID",
-                    (0, 0),
-                    (-1, -1),
-                    0.25,
-                    colors.lightgrey,
-                ),
-                (
-                    "LEFTPADDING",
-                    (0, 0),
-                    (-1, -1),
-                    8,
-                ),
-                (
-                    "RIGHTPADDING",
-                    (0, 0),
-                    (-1, -1),
-                    8,
-                ),
-                (
-                    "TOPPADDING",
-                    (0, 0),
-                    (-1, -1),
-                    7,
-                ),
-                (
-                    "BOTTOMPADDING",
-                    (0, 0),
-                    (-1, -1),
-                    7,
-                ),
-            ]
-        )
-    )
-
-    elements.append(customer_table)
-
-    if (
-        order.order_type
-        == Order.OrderType.DELIVERY
-        and order.address_name
-    ):
-        elements.append(
-            Spacer(
-                1,
-                8 * mm,
-            )
-        )
-    
-        elements.append(
-            Paragraph(
-                "<b>Delivery Address</b>",
-                normal_style,
-            )
-        )
-    
-        elements.append(
-            Spacer(
-                1,
-                2 * mm,
-            )
-        )
-
-    address_text = (
-        f"<b>{order.address_name}</b><br/>"
-        f"{order.address_flat_house}, "
-        f"{order.address_area_street}<br/>"
-        f"{order.address_city}, "
-        f"{order.address_state} - "
-        f"{order.address_pincode}<br/>"
-        f"{order.address_contact_number}"
-    )
-
-    elements.append(
-        Paragraph(
-            address_text,
-            normal_style,
-        )
-    )
-
-    elements.append(
-        Spacer(
-            1,
-            10 * mm,
-        )
-    )
-
-    elements.append(
-        Paragraph(
-            "<b>Order Items</b>",
-            normal_style,
-        )
-    )
-
-    elements.append(
-        Spacer(
-            1,
-            3 * mm,
-        )
-    )
-
-    item_rows = [
-        [
-            Paragraph(
-                "<b>Item</b>",
-                small_style,
-            ),
-            Paragraph(
-                "<b>Qty</b>",
-                small_style,
-            ),
-            Paragraph(
-                "<b>Unit Price</b>",
-                right_style,
-            ),
-            Paragraph(
-                "<b>Total</b>",
-                right_style,
-            ),
-        ]
-    ]
-
-    for item in order.items.all():
-
-        item_rows.append(
-            [
-                Paragraph(
-                    item.product.name,
-                    small_style,
-                ),
-                Paragraph(
-                    str(item.quantity),
-                    small_style,
-                ),
-                Paragraph(
-                    f"₹{item.unit_price}",
-                    right_style,
-                ),
-                Paragraph(
-                    f"₹{item.subtotal}",
-                    right_style,
-                ),
-            ]
-        )
-
-        if item.instructions:
-            item_rows.append(
-                [
-                    Paragraph(
-                        f"<i>Note: "
-                        f"{item.instructions}</i>",
-                        small_style,
-                    ),
-                    "",
-                    "",
-                    "",
-                ]
-            )
-
-    items_table = Table(
-        item_rows,
-        colWidths=[
-            80 * mm,
-            18 * mm,
-            32 * mm,
-            30 * mm,
-        ],
-        repeatRows=1,
-    )
-
-    items_table.setStyle(
-        TableStyle(
-            [
-                (
-                    "BACKGROUND",
-                    (0, 0),
-                    (-1, 0),
-                    colors.HexColor("#f1e6d8"),
-                ),
-                (
-                    "BOX",
-                    (0, 0),
-                    (-1, -1),
-                    0.5,
-                    colors.lightgrey,
-                ),
-                (
-                    "INNERGRID",
-                    (0, 0),
-                    (-1, -1),
-                    0.25,
-                    colors.lightgrey,
-                ),
-                (
-                    "VALIGN",
-                    (0, 0),
-                    (-1, -1),
-                    "TOP",
-                ),
-                (
-                    "LEFTPADDING",
-                    (0, 0),
-                    (-1, -1),
-                    7,
-                ),
-                (
-                    "RIGHTPADDING",
-                    (0, 0),
-                    (-1, -1),
-                    7,
-                ),
-                (
-                    "TOPPADDING",
-                    (0, 0),
-                    (-1, -1),
-                    7,
-                ),
-                (
-                    "BOTTOMPADDING",
-                    (0, 0),
-                    (-1, -1),
-                    7,
-                ),
-            ]
-        )
-    )
-
-    elements.append(items_table)
-
-    elements.append(
-        Spacer(
-            1,
-            8 * mm,
-        )
-    )
-
-    summary_rows = [
-        [
-            Paragraph(
-                "Subtotal",
-                normal_style,
-            ),
-            Paragraph(
-                f"₹{order.subtotal}",
-                right_style,
-            ),
-        ],
-        [
-            Paragraph(
-                f"GST ({order.tax_percentage:.2f}%)",
-                normal_style,
-            ),
-            Paragraph(
-                f"₹{order.tax_amount}",
-                right_style,
-            ),
-        ],
-        [
-            Paragraph(
-                "Shipping",
-                normal_style,
-            ),
-            Paragraph(
-                "₹0.00",
-                right_style,
-            ),
-        ],
-        [
-            Paragraph(
-                "Discount",
-                normal_style,
-            ),
-            Paragraph(
-                f"₹{order.discount_amount}",
-                right_style,
-            ),
-        ],
-        [
-            Paragraph(
-                "<b>Total</b>",
-                normal_style,
-            ),
-            Paragraph(
-                f"<b>₹{order.total_amount}</b>",
-                right_style,
-            ),
-        ],
-    ]
-
-    summary_table = Table(
-        summary_rows,
-        colWidths=[
-            130 * mm,
-            30 * mm,
-        ],
-    )
-
-    summary_table.setStyle(
-        TableStyle(
-            [
-                (
-                    "LINEABOVE",
-                    (0, 4),
-                    (-1, 4),
-                    0.8,
-                    colors.grey,
-                ),
-                (
-                    "TOPPADDING",
-                    (0, 0),
-                    (-1, -1),
-                    6,
-                ),
-                (
-                    "BOTTOMPADDING",
-                    (0, 0),
-                    (-1, -1),
-                    6,
-                ),
-                (
-                    "ALIGN",
-                    (1, 0),
-                    (1, -1),
-                    "RIGHT",
-                ),
-            ]
-        )
-    )
-
-    elements.append(summary_table)
-
-    elements.append(
-        Spacer(
-            1,
-            15 * mm,
-        )
-    )
-
-    elements.append(
-        Paragraph(
-            "Thank you for ordering from SmartCafe!",
-            ParagraphStyle(
-                "Footer",
-                parent=small_style,
-                alignment=TA_CENTER,
-                textColor=colors.grey,
-            ),
-        )
-    )
-
-    document.build(elements)
-
-    return response
 
 @login_required(login_url="login")
 @require_POST

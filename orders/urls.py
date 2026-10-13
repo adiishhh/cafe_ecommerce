@@ -45,11 +45,6 @@ urlpatterns = [
         name="cancel_order_item",
     ),
     path(
-        "order/<int:order_id>/invoice/",
-        views.download_invoice,
-        name="download_invoice",
-    ),
-    path(
         "placed_orders",
         views.placed_orders,
         name="placed_orders",
