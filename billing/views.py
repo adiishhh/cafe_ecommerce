@@ -12,10 +12,14 @@ from django.views.decorators.http import require_GET
 import uuid
 from django.conf import settings
 import razorpay
+from orders.models import Order, OrderItem
+from orders.views import _get_checkout_cart
+from coupons.views import apply_coupon
 from coupons.models import Coupon
-from orders.models import Order
 import logging
 from django.urls import reverse
+from orders.views import _generate_order_number
+from product.models import Product
 
 # Create you views here.
 
@@ -34,38 +38,12 @@ def _admin_staff_check(request):
 
     return None
 
-
-# def _get_selected_date(request):
-
-#     date_value = request.GET.get(
-#         "date",
-#         "",
-#     ).strip()
-
-#     if date_value:
-
-#         try:
-
-#             return timezone.datetime.strptime(
-#                 date_value,
-#                 "%Y-%m-%d",
-#             ).date()
-
-#         except ValueError:
-#             pass
-
-#     return timezone.localdate()
-
-
 @login_required(login_url="login")
 def admin_bill_list(request):
     forbidden = _admin_staff_check(request)
     if forbidden:
         return forbidden
 
-    # ----------------------------------------------------------
-    # DATE RANGE (start_date → end_date)
-    # ----------------------------------------------------------
     start_date_param = request.GET.get("start_date", "").strip()
     end_date_param = request.GET.get("end_date", "").strip()
 
@@ -86,17 +64,11 @@ def admin_bill_list(request):
         start_date = today
         end_date = today
 
-    # ----------------------------------------------------------
-    # ACTIVE SECTION
-    # ----------------------------------------------------------
     active_view = request.GET.get("view", "unpaid_orders")
     valid_views = {"unpaid_orders", "unpaid_bills", "paid_bills", "refunds"}
     if active_view not in valid_views:
         active_view = "unpaid_orders"
 
-    # ==========================================================
-    # UNPAID ORDERS
-    # ==========================================================
     unpaid_orders = (
         BillOrder.objects
         .filter(
@@ -189,10 +161,6 @@ def admin_generate_bill(request):
             status=403,
         )
 
-    # ----------------------------------------------------------
-    # SELECTED ORDERS
-    # ----------------------------------------------------------
-
     selected_ids = request.POST.getlist(
         "bill_order_ids"
     )
@@ -206,10 +174,6 @@ def admin_generate_bill(request):
             },
             status=400,
         )
-
-    # ----------------------------------------------------------
-    # STATUS
-    # ----------------------------------------------------------
 
     status = request.POST.get(
         "status",
@@ -228,10 +192,6 @@ def admin_generate_bill(request):
             },
             status=400,
         )
-
-    # ----------------------------------------------------------
-    # TRANSACTION METHOD
-    # ----------------------------------------------------------
 
     transaction_method = request.POST.get(
         "transaction_method",
@@ -282,17 +242,9 @@ def admin_generate_bill(request):
         transaction_method = None
         payment_reference = ""
 
-    # ----------------------------------------------------------
-    # REMOVE DUPLICATE IDS
-    # ----------------------------------------------------------
-
     selected_ids = list(
         dict.fromkeys(selected_ids)
     )
-
-    # ----------------------------------------------------------
-    # LOCK SELECTED BILL ORDERS
-    # ----------------------------------------------------------
 
     bill_orders = list(
         BillOrder.objects
@@ -320,10 +272,6 @@ def admin_generate_bill(request):
             },
             status=400,
         )
-
-    # ----------------------------------------------------------
-    # VALIDATE BILL ORDERS
-    # ----------------------------------------------------------
 
     for bill_order in bill_orders:
 
@@ -356,10 +304,6 @@ def admin_generate_bill(request):
                 status=400,
             )
 
-    # ==========================================================
-    # CALCULATE BILL TOTALS
-    # ==========================================================
-
     subtotal = sum(
         (
             bill_order.order.subtotal
@@ -384,10 +328,6 @@ def admin_generate_bill(request):
         Decimal("0.00"),
     )
 
-    # ==========================================================
-    # CREATE BILL
-    # ==========================================================
-
     bill = Bill.objects.create(
 
         subtotal=subtotal,
@@ -407,10 +347,6 @@ def admin_generate_bill(request):
         ),
     )
 
-    # ==========================================================
-    # ATTACH BILL ORDERS
-    # ==========================================================
-
     for bill_order in bill_orders:
 
         bill_order.bill = bill
@@ -420,10 +356,6 @@ def admin_generate_bill(request):
                 "bill",
             ],
         )
-
-    # ==========================================================
-    # CREATE PAYMENT ONLY WHEN BILL IS PAID
-    # ==========================================================
 
     if status == "paid":
 
@@ -448,10 +380,6 @@ def admin_generate_bill(request):
 
             paid_at=timezone.now(),
         )
-
-    # ==========================================================
-    # AJAX RESPONSE
-    # ==========================================================
 
     return JsonResponse(
         {
@@ -666,11 +594,6 @@ def admin_update_bill(request, bill_id):
                 status=400
             )
 
-
-    # ---------------------------------------------------------
-    # Prevent silently reversing an already completed payment.
-    # ---------------------------------------------------------
-
     existing_successful_payment = (
         Payment.objects
         .filter(
@@ -816,10 +739,6 @@ def _get_online_checkout(request):
     The snapshot is retained in the Django session while the
     customer completes the external payment.
     """
-
-    from orders.views import _get_checkout_cart, Order
-
-    from coupons.views import apply_coupon
 
     checkout = _get_checkout_cart(request)
 
@@ -1052,11 +971,6 @@ def verify_online_payment(request):
     The gateway order ID is trusted only when it matches the
     server-created ID retained in the user's session.
     """
-
-    from orders.models import Order, OrderItem
-    from orders.views import _generate_order_number
-    from product.models import Product
-
     payment_id = request.POST.get(
         "razorpay_payment_id",
         "",
@@ -1081,8 +995,7 @@ def verify_online_payment(request):
             status=400,
         )
 
-    # An already-recorded successful callback must not create
-    # another order.
+    # An already-recorded successful callback must not create another order.
     existing_payment = (
         Payment.objects
         .filter(gateway_payment_id=payment_id)
@@ -1365,6 +1278,17 @@ def verify_online_payment(request):
     except Exception:
         logger.exception(
             "Unexpected error during Razorpay payment processing."
+        )
+
+        return JsonResponse(
+            {
+                "success": False,
+                "message": (
+                    "Payment verification failed. "
+                    "Please contact support if money was deducted."
+                ),
+            },
+            status=500,
         )
 
 @login_required(login_url="login")

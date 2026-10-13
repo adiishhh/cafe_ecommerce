@@ -4,13 +4,10 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
 from decimal import Decimal
 from django.db import transaction
-
 from wallet.models import Wallet, WalletTransaction
 from billing.models import RefundRequest
 
-
 # Create your views here.
-
 
 User = get_user_model()
 

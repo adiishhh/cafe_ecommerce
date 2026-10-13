@@ -180,6 +180,13 @@
             }
         };
 
+        console.log("SmartCafe → Razorpay Checkout:", {
+            razorpayOrderId: options.order_id,
+            amountPaise: options.amount,
+            currency: options.currency,
+            keyIdPresent: Boolean(options.key)
+        });
+
         checkoutInstance = new Razorpay(options);
 
         checkoutInstance.on(
