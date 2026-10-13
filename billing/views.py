@@ -907,6 +907,7 @@ def initiate_online_payment(request):
                 f"sc_{request.user.id}_"
                 f"{uuid.uuid4().hex[:20]}"
             ),
+            # "config_id": settings.RAZORPAY_CONFIG_ID,
             "notes": {
                 "customer_id": str(request.user.id),
                 "order_type": snapshot["order_type"],
