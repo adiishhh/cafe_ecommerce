@@ -145,7 +145,11 @@
                      REFER & EARN
                 ============================================== -->
 
-                <section class="wallet-referral-card">
+                <button
+                    type="button"
+                    class="wallet-referral-card"
+                    id="openReferralModal"
+                >
 
                     <div class="wallet-referral-icon">
 
@@ -157,21 +161,64 @@
                     <div class="wallet-referral-content">
 
                         <span class="wallet-referral-label">
-                            Rewards
+                            REWARDS
                         </span>
 
-                        <h2>
-                            Refer &amp; Earn
-                        </h2>
 
-                        <p>
-                            Invite your friends and earn wallet
-                            rewards.
+                        <h3>
+                            Refer &amp; Earn
+                        </h3>
+
+
+                        <!--
+                            This row is hidden until the user
+                            has a referral code.
+                        -->
+
+                        <div
+                            class="wallet-referral-inline-code"
+                            id="referralCardCodeRow"
+                            {% if not referral_code %}
+                                style="display: none;"
+                            {% endif %}
+                        >
+
+                            <span class="wallet-referral-inline-label">
+                                Your code:
+                            </span>
+
+
+                            <span
+                                class="wallet-referral-inline-value"
+                                id="referralCardCode"
+                            >
+                                {% if referral_code %}
+                                    {{ referral_code.code }}
+                                {% endif %}
+                            </span>
+
+
+                            <span
+                                class="wallet-referral-copy"
+                                id="copyReferralCardCode"
+                                role="button"
+                                tabindex="0"
+                                title="Copy referral code"
+                                aria-label="Copy referral code"
+                            >
+                                <i class="fa fa-copy"></i>
+                            </span>
+
+                        </div>
+
+
+                        <p class="wallet-referral-description">
+                            Invite your friends and earn wallet rewards.
                         </p>
 
                     </div>
 
-                </section>
+                </button>
 
 
             </div>
@@ -589,6 +636,1022 @@
 </main>
 
 
+
+<!-- =========================================================
+     REFER & EARN MODAL
+========================================================== -->
+
+<div
+    class="wallet-referral-modal"
+    id="referralModal"
+    aria-hidden="true"
+>
+
+
+    <div
+        class="wallet-referral-modal-overlay"
+        id="referralModalOverlay"
+    ></div>
+
+
+    <div
+        class="wallet-referral-modal-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="referralModalTitle"
+    >
+
+
+        <!-- =================================================
+             MODAL HEADER
+        ================================================== -->
+
+        <div class="wallet-referral-modal-header">
+
+            <div>
+
+                <span class="wallet-referral-modal-label">
+                    Rewards
+                </span>
+
+                <h2 id="referralModalTitle">
+                    Refer &amp; Earn
+                </h2>
+
+            </div>
+
+
+            <button
+                type="button"
+                class="wallet-referral-modal-close"
+                id="closeReferralModal"
+                aria-label="Close"
+            >
+                <i class="fa fa-times"></i>
+            </button>
+
+        </div>
+
+
+
+        <!-- =================================================
+             MODAL CONTENT
+        ================================================== -->
+
+        <div class="wallet-referral-modal-body">
+
+
+            <!-- =============================================
+                 PROGRAM EXPLANATION
+            ============================================== -->
+
+            <div class="wallet-referral-intro">
+
+                <div class="wallet-referral-intro-icon">
+
+                    <i class="fa fa-users"></i>
+
+                </div>
+
+
+                <div>
+
+                    <h3>
+                        Share &amp; earn
+                    </h3>
+
+                    <p>
+                        Invite your friends to SmartCafe using your
+                        personal referral code.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="wallet-referral-rules">
+
+                <div class="wallet-referral-rule">
+
+                    <i class="fa fa-check-circle"></i>
+
+                    <span>
+                        Use a friend's referral code and receive
+                        <strong>5% cashback</strong> on your
+                        first order.
+                    </span>
+
+                </div>
+
+                <div class="wallet-referral-rule">
+
+                    <i class="fa fa-check-circle"></i>
+
+                    <span>
+                        Or generate your own code and send to a friend to recieve
+                        <strong>10% cashback</strong> for you on their first order.
+                    </span>
+
+                </div>
+
+
+                <div class="wallet-referral-rule">
+
+                    <i class="fa fa-check-circle"></i>
+
+                    <span>
+                        Your personal referral code is permanent
+                        once generated.
+                    </span>
+
+                </div>
+
+
+                <div class="wallet-referral-rule">
+
+                    <i class="fa fa-check-circle"></i>
+
+                    <span>
+                        Referral cashback is added to your wallet
+                        after the qualifying order is completed.
+                    </span>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- =============================================
+                 MY REFERRAL CODE
+            ============================================== -->
+
+            <div class="wallet-referral-modal-section">
+
+                <div class="wallet-referral-modal-section-heading">
+
+                    <div>
+
+                        <h3>
+                            My Referral Code
+                        </h3>
+
+                        <p>
+                            Share this code with your friends.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                {% if referral_code %}
+
+                    <div id="referralCodeDisplay">
+
+                        <div class="wallet-referral-code-row">
+
+                            <div class="wallet-referral-code">
+                                {{ referral_code.code }}
+                            </div>
+
+
+                            <button
+                                type="button"
+                                class="wallet-referral-copy-button"
+                                id="copyReferralCode"
+                                data-code="{{ referral_code.code }}"
+                            >
+                                <i class="fa fa-copy"></i>
+                                Copy
+                            </button>
+
+                        </div>
+
+
+                        <span
+                            class="wallet-referral-copy-message"
+                            id="referralCopyMessage"
+                        >
+                            Code copied.
+                        </span>
+
+                    </div>
+
+                {% else %}
+
+                    <form
+                        method="post"
+                        action="{% url 'generate_referral_code' %}"
+                        id="generateReferralForm"
+                    >
+
+                        {% csrf_token %}
+
+                        <button
+                            type="submit"
+                            class="wallet-referral-primary-button"
+                            id="generateReferralButton"
+                        >
+                            <i class="fa fa-magic"></i>
+                            Generate My Referral Code
+                        </button>
+
+                    </form>
+
+                {% endif %}
+
+            </div>
+
+
+
+            <!-- =============================================
+                 USE FRIEND'S CODE
+            ============================================== -->
+
+            <div class="wallet-referral-modal-section">
+
+                <div class="wallet-referral-modal-section-heading">
+
+                    <div>
+
+                        <h3>
+                            Have a friend's code?
+                        </h3>
+
+                        <p>
+                            Enter it below to apply the referral.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                {% if pending_referral %}
+
+                    <div class="wallet-referral-pending">
+
+                        <div class="wallet-referral-pending-icon">
+
+                            <i class="fa fa-clock-o"></i>
+
+                        </div>
+
+
+                        <div>
+
+                            <strong>
+                                Referral pending
+                            </strong>
+
+                            <p>
+                                You already have a pending referral.
+                                Complete an order before
+                                using another referral code.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                {% else %}
+
+                    <form
+                        method="post"
+                        action="{% url 'apply_referral_code' %}"
+                        class="wallet-referral-apply-form"
+                    >
+
+                        {% csrf_token %}
+
+                        <input
+                            type="text"
+                            name="referral_code"
+                            maxlength="20"
+                            placeholder="Enter referral code"
+                            autocomplete="off"
+                            required
+                        >
+
+
+                        <button
+                            type="submit"
+                            class="wallet-referral-primary-button"
+                        >
+                            Apply Code
+                        </button>
+
+                    </form>
+
+                {% endif %}
+
+            </div>
+
+
+
+            <!-- =============================================
+                 REFERRAL HISTORY
+            ============================================== -->
+
+            {% if referral_usages %}
+
+                <div class="wallet-referral-modal-section">
+
+                    <div class="wallet-referral-modal-section-heading">
+
+                        <div>
+
+                            <h3>
+                                Referral Activity
+                            </h3>
+
+                            <p>
+                                Your referral code usage history.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="wallet-referral-history">
+
+                        {% for usage in referral_usages %}
+
+                            <div class="wallet-referral-history-item">
+
+                                <div class="wallet-referral-history-main">
+
+                                    <strong>
+                                        {{ usage.code.code }}
+                                    </strong>
+
+                                    <span>
+                                        {{ usage.created_at|date:"d M Y, h:i A" }}
+                                    </span>
+
+                                </div>
+
+
+                                {% if usage.status == "pending" %}
+
+                                    <span class="wallet-referral-status pending">
+                                        Pending
+                                    </span>
+
+                                {% else %}
+
+                                    <div class="wallet-referral-history-reward">
+
+                                        <span class="wallet-referral-status rewarded">
+                                            Rewarded
+                                        </span>
+
+                                        <strong>
+                                            +₹{{ usage.customer_cashback|floatformat:2 }}
+                                        </strong>
+
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+
+    /* =====================================================
+       MODAL ELEMENTS
+    ====================================================== */
+
+    const modal =
+        document.getElementById("referralModal");
+
+    const openButton =
+        document.getElementById("openReferralModal");
+
+    const closeButton =
+        document.getElementById("closeReferralModal");
+
+    const overlay =
+        document.getElementById("referralModalOverlay");
+
+
+    /* =====================================================
+       OPEN / CLOSE MODAL
+    ====================================================== */
+
+    function openReferralModal() {
+
+        if (!modal) {
+            return;
+        }
+
+        modal.classList.add("is-open");
+
+        modal.setAttribute(
+            "aria-hidden",
+            "false"
+        );
+
+        document.body.classList.add(
+            "referral-modal-open"
+        );
+    }
+
+
+    function closeReferralModal() {
+
+        if (!modal) {
+            return;
+        }
+
+        modal.classList.remove("is-open");
+
+        modal.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+
+        document.body.classList.remove(
+            "referral-modal-open"
+        );
+    }
+
+
+    if (openButton) {
+
+        openButton.addEventListener(
+            "click",
+            openReferralModal
+        );
+
+    }
+
+
+    if (closeButton) {
+
+        closeButton.addEventListener(
+            "click",
+            closeReferralModal
+        );
+
+    }
+
+
+    if (overlay) {
+
+        overlay.addEventListener(
+            "click",
+            closeReferralModal
+        );
+
+    }
+
+
+    document.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (
+                event.key === "Escape" &&
+                modal &&
+                modal.classList.contains("is-open")
+            ) {
+
+                closeReferralModal();
+
+            }
+
+        }
+    );
+
+
+
+    /* =====================================================
+       REFERRAL CARD ELEMENTS
+    ====================================================== */
+
+    const referralCardCodeRow =
+        document.getElementById(
+            "referralCardCodeRow"
+        );
+
+    const referralCardCode =
+        document.getElementById(
+            "referralCardCode"
+        );
+
+    const referralCardCopy =
+        document.getElementById(
+            "copyReferralCardCode"
+        );
+
+
+
+    /* =====================================================
+       COPY CODE FROM REFERRAL CARD
+    ====================================================== */
+
+    async function copyCardReferralCode() {
+
+        if (!referralCardCode) {
+            return;
+        }
+
+        const code =
+            referralCardCode.textContent.trim();
+
+        if (!code) {
+            return;
+        }
+
+
+        try {
+
+            await navigator.clipboard.writeText(code);
+
+            if (referralCardCopy) {
+
+                const originalHTML =
+                    referralCardCopy.innerHTML;
+
+                referralCardCopy.innerHTML =
+                    '<i class="fa fa-check"></i>';
+
+                setTimeout(
+                    function () {
+
+                        referralCardCopy.innerHTML =
+                            originalHTML;
+
+                    },
+                    1500
+                );
+
+            }
+
+        } catch (error) {
+
+            const temporaryInput =
+                document.createElement("input");
+
+            temporaryInput.value = code;
+
+            document.body.appendChild(
+                temporaryInput
+            );
+
+            temporaryInput.select();
+
+            document.execCommand("copy");
+
+            temporaryInput.remove();
+
+        }
+    }
+
+
+    if (referralCardCopy) {
+
+        referralCardCopy.addEventListener(
+            "click",
+            function (event) {
+
+                /*
+                 * Prevent the card's click event
+                 * from opening the modal.
+                 */
+                event.stopPropagation();
+
+                copyCardReferralCode();
+
+            }
+        );
+
+
+        referralCardCopy.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Enter" ||
+                    event.key === " "
+                ) {
+
+                    event.preventDefault();
+
+                    event.stopPropagation();
+
+                    copyCardReferralCode();
+
+                }
+
+            }
+        );
+
+    }
+
+
+
+    /* =====================================================
+       MODAL COPY FUNCTION
+    ====================================================== */
+
+    function showCopyMessage(messageElement) {
+
+        if (!messageElement) {
+            return;
+        }
+
+        messageElement.classList.add("show");
+
+        setTimeout(
+            function () {
+
+                messageElement.classList.remove("show");
+
+            },
+            1800
+        );
+    }
+
+
+    function attachModalCopyHandler() {
+
+        const copyButton =
+            document.getElementById(
+                "copyReferralCode"
+            );
+
+        const copyMessage =
+            document.getElementById(
+                "referralCopyMessage"
+            );
+
+
+        if (!copyButton) {
+            return;
+        }
+
+
+        copyButton.addEventListener(
+            "click",
+            async function () {
+
+                const code =
+                    this.dataset.code;
+
+                if (!code) {
+                    return;
+                }
+
+
+                try {
+
+                    await navigator.clipboard.writeText(
+                        code
+                    );
+
+                    showCopyMessage(
+                        copyMessage
+                    );
+
+                } catch (error) {
+
+                    const temporaryInput =
+                        document.createElement("input");
+
+                    temporaryInput.value =
+                        code;
+
+                    document.body.appendChild(
+                        temporaryInput
+                    );
+
+                    temporaryInput.select();
+
+                    document.execCommand(
+                        "copy"
+                    );
+
+                    temporaryInput.remove();
+
+                    showCopyMessage(
+                        copyMessage
+                    );
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /*
+     * Attach the handler for an existing code
+     * when the page initially loads.
+     */
+    attachModalCopyHandler();
+
+
+
+    /* =====================================================
+       GENERATE REFERRAL CODE — AJAX
+    ====================================================== */
+
+    const generateReferralForm =
+        document.getElementById(
+            "generateReferralForm"
+        );
+
+
+    if (generateReferralForm) {
+
+        generateReferralForm.addEventListener(
+            "submit",
+            async function (event) {
+
+                event.preventDefault();
+
+
+                const button =
+                    document.getElementById(
+                        "generateReferralButton"
+                    );
+
+
+                if (!button) {
+                    return;
+                }
+
+
+                const originalHTML =
+                    button.innerHTML;
+
+
+                button.disabled = true;
+
+                button.innerHTML =
+                    '<i class="fa fa-spinner fa-spin"></i> Generating...';
+
+
+                const csrfInput =
+                    generateReferralForm.querySelector(
+                        'input[name="csrfmiddlewaretoken"]'
+                    );
+
+
+                if (!csrfInput) {
+
+                    button.disabled = false;
+
+                    button.innerHTML =
+                        originalHTML;
+
+                    return;
+                }
+
+
+                try {
+
+                    const response =
+                        await fetch(
+                            generateReferralForm.action,
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "X-CSRFToken":
+                                        csrfInput.value,
+
+                                    "X-Requested-With":
+                                        "XMLHttpRequest",
+
+                                    "Accept":
+                                        "application/json"
+                                },
+
+                                body:
+                                    new FormData(
+                                        generateReferralForm
+                                    )
+                            }
+                        );
+
+
+                    const data =
+                        await response.json();
+
+
+                    if (
+                        !response.ok ||
+                        !data.success ||
+                        !data.code
+                    ) {
+
+                        throw new Error(
+                            data.message ||
+                            "Unable to generate referral code."
+                        );
+
+                    }
+
+                    /* =====================================
+                       UPDATE EXISTING CARD
+                    ====================================== */
+
+                    if (referralCardCode) {
+
+                        referralCardCode.textContent =
+                            data.code;
+
+                    }
+
+
+                    if (referralCardCodeRow) {
+
+                        referralCardCodeRow.style.display =
+                            "flex";
+
+                    }
+
+                    /* =====================================
+                       UPDATE MODAL
+                    ====================================== */
+
+                    const codeSection =
+                        generateReferralForm.parentElement;
+
+
+                    if (codeSection) {
+
+                        codeSection.innerHTML = `
+
+                            <div
+                                id="referralCodeDisplay"
+                            >
+
+                                <div
+                                    class="wallet-referral-code-row"
+                                >
+
+                                    <div
+                                        class="wallet-referral-code"
+                                    >
+                                        ${escapeHtml(data.code)}
+                                    </div>
+
+
+                                    <button
+                                        type="button"
+                                        class="wallet-referral-copy-button"
+                                        id="copyReferralCode"
+                                        data-code="${escapeHtml(data.code)}"
+                                    >
+                                        <i class="fa fa-copy"></i>
+                                        Copy
+                                    </button>
+
+                                </div>
+
+
+                                <span
+                                    class="wallet-referral-copy-message"
+                                    id="referralCopyMessage"
+                                >
+                                    Code copied.
+                                </span>
+
+                            </div>
+
+                        `;
+
+                        attachModalCopyHandler();
+
+                    }
+
+                } catch (error) {
+
+                    /*
+                     * Do not create a Django message or
+                     * reload the page. Keep the user in
+                     * the modal and restore the button.
+                     */
+
+                    button.disabled = false;
+
+                    button.innerHTML =
+                        originalHTML;
+
+                    showReferralError(
+                        error.message ||
+                        "Something went wrong. Please try again."
+                    );
+
+                }
+
+            }
+        );
+
+    }
+
+    /* =====================================================
+       AJAX ERROR MESSAGE
+    ====================================================== */
+
+    function showReferralError(message) {
+
+        const modalBody =
+            document.querySelector(
+                ".wallet-referral-modal-body"
+            );
+
+
+        if (!modalBody) {
+            return;
+        }
+
+
+        const existing =
+            modalBody.querySelector(
+                ".referral-feedback"
+            );
+
+
+        if (existing) {
+            existing.remove();
+        }
+
+
+        const feedback =
+            document.createElement("div");
+
+
+        feedback.className =
+            "referral-feedback referral-feedback-error";
+
+
+        feedback.innerHTML = `
+
+            <i class="fa fa-exclamation-circle"></i>
+
+            <span>
+                ${escapeHtml(message)}
+            </span>
+
+        `;
+
+
+        modalBody.prepend(
+            feedback
+        );
+
+    }
+
+    /* =====================================================
+       HTML ESCAPING
+    ====================================================== */
+
+    function escapeHtml(value) {
+
+        const element =
+            document.createElement("div");
+
+        element.textContent =
+            value;
+
+        return element.innerHTML;
+    }
+
+
+});
+
+</script>
 </body>
 
 </html>

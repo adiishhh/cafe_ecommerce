@@ -387,6 +387,9 @@
                                 class="status-select status-{{ order.status }}"
                                 data-order-id="{{ order.id }}"
                                 data-current-status="{{ order.status }}"
+                                {% if order.status == "cancelled" %}
+                                    disabled
+                                {% endif %}
                             >
 
                                 {% for value, label in status_choices %}

@@ -9,6 +9,69 @@
 
 
 /* =========================================================
+   DJANGO MESSAGES
+   ========================================================= */
+
+
+.messages {
+    width: min(1100px, calc(100% - 40px));
+
+    margin: 18px auto 0;
+}
+
+
+.message {
+    display: flex;
+    align-items: center;
+
+    min-height: 44px;
+
+    padding: 11px 15px;
+
+    border-radius: 10px;
+
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+
+.message.success {
+    border: 1px solid #cfe8d5;
+
+    background: #f2faf4;
+
+    color: #28663a;
+}
+
+
+.message.error {
+    border: 1px solid #efd0d0;
+
+    background: #fff5f5;
+
+    color: #9a3030;
+}
+
+
+.message.warning {
+    border: 1px solid #f0dfbd;
+
+    background: #fff9ed;
+
+    color: #805d1d;
+}
+
+
+.message.info {
+    border: 1px solid #d2e2f0;
+
+    background: #f3f8fc;
+
+    color: #315d7a;
+}
+
+
+/* =========================================================
    WALLET CONTENT
    ========================================================= */
 
@@ -120,11 +183,13 @@
 
 
 /* =========================================================
-   REFER & EARN
+   REFER & EARN CARD
    ========================================================= */
 
 
 .wallet-referral-card {
+    width: 100%;
+
     display: flex;
     align-items: center;
 
@@ -138,6 +203,40 @@
     border-radius: 18px;
 
     background: #fff;
+
+    color: inherit;
+
+    text-align: left;
+
+    font: inherit;
+
+    cursor: pointer;
+
+    appearance: none;
+
+    box-sizing: border-box;
+
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease,
+        border-color 0.15s ease;
+}
+
+
+.wallet-referral-card:hover {
+    transform: translateY(-1px);
+
+    border-color: #dedede;
+
+    box-shadow:
+        0 8px 22px rgba(0, 0, 0, 0.06);
+}
+
+
+.wallet-referral-card:focus-visible {
+    outline: 2px solid #222;
+
+    outline-offset: 3px;
 }
 
 
@@ -181,8 +280,11 @@
 }
 
 
-.wallet-referral-content h2 {
+.wallet-referral-content h2,
+.wallet-referral-content h3 {
     margin: 0 0 6px;
+
+    color: #171717;
 
     font-size: 20px;
     font-weight: 700;
@@ -196,6 +298,104 @@
 
     font-size: 13px;
     line-height: 1.5;
+}
+
+
+/* =========================================================
+   REFERRAL CODE INSIDE CARD
+   ========================================================= */
+
+
+.wallet-referral-inline-code {
+    display: flex;
+
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 7px;
+
+    margin: 2px 0 7px;
+}
+
+
+.wallet-referral-inline-label {
+    color: #777;
+
+    font-size: 12px;
+}
+
+
+.wallet-referral-inline-value {
+    display: inline-flex;
+
+    align-items: center;
+
+    min-width: 0;
+
+    padding: 4px 8px;
+
+    border: 1px dashed #d4d4d4;
+
+    border-radius: 6px;
+
+    background: #fafafa;
+
+    color: #222;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    letter-spacing: 0.6px;
+
+    overflow-wrap: anywhere;
+}
+
+
+.wallet-referral-copy {
+    width: 30px;
+    height: 30px;
+
+    flex-shrink: 0;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: 1px solid #e5e5e5;
+
+    border-radius: 7px;
+
+    background: #f8f8f8;
+
+    color: #444;
+
+    font-size: 13px;
+
+    cursor: pointer;
+
+    transition:
+        background 0.15s ease,
+        color 0.15s ease,
+        border-color 0.15s ease;
+}
+
+
+.wallet-referral-copy:hover {
+    background: #eeeeee;
+
+    border-color: #d9d9d9;
+
+    color: #111;
+}
+
+
+.wallet-referral-copy:focus-visible {
+    outline: 2px solid #222;
+
+    outline-offset: 2px;
 }
 
 
@@ -670,6 +870,746 @@
 
 
 /* =========================================================
+   REFERRAL MODAL
+   ========================================================= */
+
+
+body.referral-modal-open {
+    overflow: hidden;
+}
+
+
+.wallet-referral-modal {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 9999;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+}
+
+
+.wallet-referral-modal.is-open {
+    display: flex;
+}
+
+
+.wallet-referral-modal-overlay {
+    position: absolute;
+
+    inset: 0;
+
+    background: rgba(0, 0, 0, 0.55);
+
+    backdrop-filter: blur(4px);
+}
+
+
+.wallet-referral-modal-dialog {
+    position: relative;
+
+    z-index: 1;
+
+    width: min(625px, 100%);
+
+    max-height: calc(100vh - 40px);
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+
+    border-radius: 20px;
+
+    background: #fff;
+
+    box-shadow:
+        0 25px 70px rgba(0, 0, 0, 0.22);
+}
+
+
+.wallet-referral-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 25px 28px 20px;
+
+    border-bottom: 1px solid #eeeeee;
+}
+
+
+.wallet-referral-modal-label {
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: #999;
+
+    font-size: 11px;
+    font-weight: 650;
+
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+}
+
+
+.wallet-referral-modal-header h2 {
+    margin: 0;
+
+    color: #222;
+
+    font-size: 27px;
+    font-weight: 700;
+}
+
+
+.wallet-referral-modal-close {
+    width: 40px;
+    height: 40px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: 0;
+    border-radius: 50%;
+
+    background: #f3f3f3;
+
+    color: #555;
+
+    cursor: pointer;
+
+    font-size: 16px;
+
+    transition:
+        background 0.15s ease,
+        color 0.15s ease;
+}
+
+
+.wallet-referral-modal-close:hover {
+    background: #e9e9e9;
+
+    color: #222;
+}
+
+
+.wallet-referral-modal-close:focus-visible {
+    outline: 2px solid #222;
+
+    outline-offset: 2px;
+}
+
+
+/* =========================================================
+   MODAL BODY
+   ========================================================= */
+
+
+.wallet-referral-modal-body {
+    overflow-y: auto;
+
+    padding: 25px 28px 30px;
+}
+
+
+/* =========================================================
+   REFERRAL FEEDBACK
+   ========================================================= */
+
+
+.referral-feedback {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 10px;
+
+    margin-bottom: 18px;
+
+    padding: 12px 14px;
+
+    border-radius: 10px;
+
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+
+.referral-feedback-success {
+    border: 1px solid #cfe8d5;
+
+    background: #f2faf4;
+
+    color: #28663a;
+}
+
+
+.referral-feedback-error {
+    border: 1px solid #efd0d0;
+
+    background: #fff5f5;
+
+    color: #9a3030;
+}
+
+
+.referral-feedback i {
+    flex-shrink: 0;
+
+    margin-top: 1px;
+
+    font-size: 15px;
+}
+
+
+/* =========================================================
+   REFERRAL INTRO
+   ========================================================= */
+
+
+.wallet-referral-intro {
+    display: flex;
+    align-items: center;
+
+    gap: 15px;
+
+    margin-bottom: 20px;
+
+    padding: 18px;
+
+    border-radius: 14px;
+
+    background: #f6f6f6;
+}
+
+
+.wallet-referral-intro-icon {
+    width: 48px;
+    height: 48px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background: #fff;
+
+    color: #333;
+
+    font-size: 18px;
+}
+
+
+.wallet-referral-intro h3 {
+    margin: 0 0 4px;
+
+    color: #222;
+
+    font-size: 16px;
+    font-weight: 700;
+}
+
+
+.wallet-referral-intro p {
+    margin: 0;
+
+    color: #777;
+
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   REFERRAL RULES
+   ========================================================= */
+
+
+.wallet-referral-rules {
+    display: flex;
+    flex-direction: column;
+
+    gap: 11px;
+
+    margin-bottom: 25px;
+}
+
+
+.wallet-referral-rule {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 9px;
+
+    color: #666;
+
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+
+.wallet-referral-rule i {
+    flex-shrink: 0;
+
+    margin-top: 2px;
+
+    color: #20833b;
+
+    font-size: 13px;
+}
+
+
+.wallet-referral-rule strong {
+    color: #333;
+
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   MODAL SECTIONS
+   ========================================================= */
+
+
+.wallet-referral-modal-section {
+    padding-top: 23px;
+
+    margin-top: 23px;
+
+    border-top: 1px solid #eeeeee;
+}
+
+
+.wallet-referral-modal-section-heading {
+    margin-bottom: 14px;
+}
+
+
+.wallet-referral-modal-section-heading h3 {
+    margin: 0 0 4px;
+
+    color: #222;
+
+    font-size: 16px;
+    font-weight: 700;
+}
+
+
+.wallet-referral-modal-section-heading p {
+    margin: 0;
+
+    color: #888;
+
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   MODAL REFERRAL CODE
+   ========================================================= */
+
+
+.wallet-referral-code-row {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+}
+
+
+.wallet-referral-code {
+    flex: 1;
+
+    min-width: 0;
+
+    padding: 13px 14px;
+
+    border: 1px dashed #d4d4d4;
+
+    border-radius: 9px;
+
+    background: #fafafa;
+
+    color: #222;
+
+    font-size: 18px;
+    font-weight: 700;
+
+    letter-spacing: 1px;
+
+    overflow-wrap: anywhere;
+}
+
+
+.wallet-referral-copy-button {
+    flex-shrink: 0;
+
+    min-height: 46px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    padding: 0 16px;
+
+    border: 0;
+    border-radius: 9px;
+
+    background: #222;
+
+    color: #fff;
+
+    font-size: 12px;
+    font-weight: 650;
+
+    cursor: pointer;
+
+    transition:
+        background 0.15s ease,
+        transform 0.15s ease;
+}
+
+
+.wallet-referral-copy-button:hover {
+    background: #333;
+}
+
+
+.wallet-referral-copy-button:active {
+    transform: translateY(1px);
+}
+
+
+.wallet-referral-copy-button:focus-visible {
+    outline: 2px solid #222;
+
+    outline-offset: 2px;
+}
+
+
+.wallet-referral-copy-message {
+    display: block;
+
+    height: 0;
+
+    margin-top: 0;
+
+    overflow: hidden;
+
+    color: #20833b;
+
+    font-size: 11px;
+
+    opacity: 0;
+
+    transition:
+        height 0.15s ease,
+        margin-top 0.15s ease,
+        opacity 0.15s ease;
+}
+
+
+.wallet-referral-copy-message.show {
+    height: 18px;
+
+    margin-top: 7px;
+
+    opacity: 1;
+}
+
+
+/* =========================================================
+   GENERATE REFERRAL BUTTON
+   ========================================================= */
+
+
+.wallet-referral-primary-button {
+    min-height: 46px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    padding: 0 18px;
+
+    border: 0;
+    border-radius: 9px;
+
+    background: #222;
+
+    color: #fff;
+
+    font-size: 12px;
+    font-weight: 650;
+
+    cursor: pointer;
+
+    transition:
+        background 0.15s ease,
+        opacity 0.15s ease,
+        transform 0.15s ease;
+}
+
+
+.wallet-referral-primary-button:hover {
+    background: #333;
+}
+
+
+.wallet-referral-primary-button:active {
+    transform: translateY(1px);
+}
+
+
+.wallet-referral-primary-button:disabled {
+    opacity: 0.6;
+
+    cursor: wait;
+}
+
+
+.wallet-referral-primary-button:focus-visible {
+    outline: 2px solid #222;
+
+    outline-offset: 2px;
+}
+
+
+/* =========================================================
+   FRIEND REFERRAL FORM
+   ========================================================= */
+
+
+.wallet-referral-apply-form {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+}
+
+
+.wallet-referral-apply-form input {
+    flex: 1;
+
+    min-width: 0;
+
+    height: 48px;
+
+    padding: 0 14px;
+
+    border: 1px solid #dedede;
+
+    border-radius: 9px;
+
+    background: #fff;
+
+    color: #222;
+
+    font: inherit;
+
+    font-size: 13px;
+
+    outline: none;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+
+.wallet-referral-apply-form input::placeholder {
+    color: #aaa;
+}
+
+
+.wallet-referral-apply-form input:focus {
+    border-color: #aaa;
+
+    box-shadow:
+        0 0 0 3px rgba(0, 0, 0, 0.05);
+}
+
+
+/* =========================================================
+   PENDING REFERRAL
+   ========================================================= */
+
+
+.wallet-referral-pending {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 11px;
+
+    padding: 13px 14px;
+
+    border: 1px solid #f0dfbd;
+
+    border-radius: 10px;
+
+    background: #fff9ed;
+
+    color: #805d1d;
+}
+
+
+.wallet-referral-pending-icon {
+    flex-shrink: 0;
+
+    margin-top: 2px;
+
+    font-size: 15px;
+}
+
+
+.wallet-referral-pending strong {
+    display: block;
+
+    margin-bottom: 3px;
+
+    color: #765619;
+
+    font-size: 12px;
+}
+
+
+.wallet-referral-pending p {
+    margin: 0;
+
+    color: #8a6a2d;
+
+    font-size: 11px;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   REFERRAL HISTORY
+   ========================================================= */
+
+
+.wallet-referral-history {
+    display: flex;
+    flex-direction: column;
+
+    border: 1px solid #eeeeee;
+
+    border-radius: 10px;
+
+    overflow: hidden;
+}
+
+
+.wallet-referral-history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    padding: 13px 14px;
+
+    border-bottom: 1px solid #eeeeee;
+}
+
+
+.wallet-referral-history-item:last-child {
+    border-bottom: 0;
+}
+
+
+.wallet-referral-history-main {
+    display: flex;
+    flex-direction: column;
+
+    gap: 3px;
+
+    min-width: 0;
+}
+
+
+.wallet-referral-history-main strong {
+    color: #333;
+
+    font-size: 12px;
+
+    letter-spacing: 0.5px;
+}
+
+
+.wallet-referral-history-main span {
+    color: #999;
+
+    font-size: 10px;
+}
+
+
+.wallet-referral-history-reward {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+}
+
+
+.wallet-referral-status {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 4px 8px;
+
+    border-radius: 20px;
+
+    font-size: 10px;
+    font-weight: 650;
+}
+
+
+.wallet-referral-status.pending {
+    background: #fff5df;
+
+    color: #9a6b16;
+}
+
+
+.wallet-referral-status.rewarded {
+    background: #eaf7ee;
+
+    color: #20833b;
+}
+
+
+.wallet-referral-history-reward > strong {
+    color: #20833b;
+
+    font-size: 12px;
+}
+
+
+/* =========================================================
    RESPONSIVE
    ========================================================= */
 
@@ -692,10 +1632,22 @@
         min-height: auto;
     }
 
+
+    .wallet-referral-modal-dialog {
+        width: 100%;
+    }
+
 }
 
 
 @media (max-width: 600px) {
+
+    .messages {
+        width: calc(100% - 30px);
+
+        margin-top: 15px;
+    }
+
 
     .wallet-balance-card,
     .wallet-referral-card {
@@ -738,6 +1690,83 @@
         flex-direction: column;
 
         gap: 4px;
+    }
+
+
+    .wallet-referral-modal {
+        padding: 10px;
+    }
+
+
+    .wallet-referral-modal-dialog {
+        max-height: calc(100vh - 20px);
+
+        border-radius: 16px;
+    }
+
+
+    .wallet-referral-modal-header {
+        padding: 20px;
+    }
+
+
+    .wallet-referral-modal-header h2 {
+        font-size: 23px;
+    }
+
+
+    .wallet-referral-modal-body {
+        padding: 20px;
+    }
+
+
+    .wallet-referral-intro {
+        padding: 15px;
+    }
+
+
+    .wallet-referral-code-row {
+        align-items: stretch;
+
+        flex-direction: column;
+    }
+
+
+    .wallet-referral-copy-button {
+        width: 100%;
+    }
+
+
+    .wallet-referral-apply-form {
+        align-items: stretch;
+
+        flex-direction: column;
+    }
+
+
+    .wallet-referral-apply-form input,
+    .wallet-referral-apply-form
+    .wallet-referral-primary-button {
+        width: 100%;
+    }
+
+
+    .wallet-referral-primary-button {
+        width: 100%;
+    }
+
+
+    .wallet-referral-history-item {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+
+    .wallet-referral-history-reward {
+        width: 100%;
+
+        justify-content: space-between;
     }
 
 }

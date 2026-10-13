@@ -127,17 +127,46 @@ class WalletTransaction(models.Model):
         return self.transaction_no
 
 class ReferralCode(models.Model):
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         related_name="referral_code",
     )
+
     code = models.CharField(
         max_length=20,
         unique=True,
         editable=False,
     )
-    created_at = models.DateTimeField(auto_now_add=True)
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    def save(self, *args, **kwargs):
+
+        if not self.code:
+
+            while True:
+
+                generated_code = (
+                    f"SC-{uuid.uuid4().hex[:8].upper()}"
+                )
+
+                if not ReferralCode.objects.filter(
+                    code=generated_code
+                ).exists():
+
+                    self.code = generated_code
+
+                    break
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+
+        return self.code
 
 class ReferralUsage(models.Model):
     class Status(models.TextChoices):

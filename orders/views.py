@@ -23,6 +23,7 @@ from datetime import timedelta, datetime
 from django.core.paginator import Paginator
 from coupons.views import apply_coupon
 from billing.models import BillOrder
+from wallet.views import reward_referral_for_order
 
 # Create your views here.
 
@@ -1802,6 +1803,21 @@ def admin_update_order_status(request, order_id):
             }
         )
 
+    if order.status == Order.Status.CANCELLED:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": (
+                    "A cancelled order cannot be updated."
+                ),
+                "order_id": order.id,
+                "order_no": order.order_no,
+                "status": order.status,
+                "status_display": order.get_status_display(),
+            },
+            status=400,
+        )
+
     status_order = {
         Order.Status.CONFIRMED: 0,
         Order.Status.PREPARING: 1,
@@ -1812,8 +1828,7 @@ def admin_update_order_status(request, order_id):
     current_status = order.status
 
     requires_confirmation = (
-        current_status == Order.Status.CANCELLED
-        or new_status == Order.Status.CANCELLED
+        new_status == Order.Status.CANCELLED
         or (
             current_status in status_order
             and new_status in status_order
@@ -1864,6 +1879,9 @@ def admin_update_order_status(request, order_id):
     order.save(
         update_fields=update_fields
     )
+
+    if new_status == Order.Status.DELIVERED:
+        reward_referral_for_order(order)
 
     return JsonResponse(
         {
