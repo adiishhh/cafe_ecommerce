@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from product.models import Product
 import random
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.views.decorators.http import require_POST
 from product.models import Product
@@ -11,19 +12,14 @@ from users.models import Address
 from .models import Order, OrderItem, Tax
 from django.http import HttpResponse, JsonResponse
 from django.conf import settings
-from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER, TA_RIGHT
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import mm
-from reportlab.platypus import (SimpleDocTemplate,Paragraph,Spacer,Table,TableStyle,)
 from django.db.models import Q, Count, Sum
 from django.utils import timezone
 from datetime import timedelta, datetime
 from django.core.paginator import Paginator
 from coupons.views import apply_coupon
-from billing.models import BillOrder
-from wallet.views import reward_referral_for_order
+from billing.models import Bill, BillOrder, Payment
+from wallet.models import WalletTransaction
+from wallet.views import reward_referral_for_order, debit_wallet, get_customer_wallet
 
 # Create your views here.
 
@@ -499,6 +495,8 @@ def final_checkout(request):
     checkout["discount"] = discount
     checkout["total"] = total
 
+    wallet = get_customer_wallet(request.user)
+
     return render(
         request,
         "users_panel/final_checkout.html",
@@ -507,6 +505,7 @@ def final_checkout(request):
             "order_type": order_type,
             "address": address,
             "payment_method": "cod",
+            "wallet": wallet,
             "applied_coupon": applied_coupon,
         }
     )
@@ -525,6 +524,29 @@ def place_order(request):
         )
         return redirect("cart")
 
+    # ----------------------------------------------------------
+    # PAYMENT METHOD
+    # ----------------------------------------------------------
+
+    payment_method = request.POST.get(
+        "payment_method",
+        "cod",
+    ).strip().lower()
+
+    if payment_method not in {
+        "cod",
+        "wallet",
+    }:
+        messages.error(
+            request,
+            "Please choose a valid payment method."
+        )
+        return redirect("final_checkout")
+
+    # ----------------------------------------------------------
+    # DELIVERY ADDRESS
+    # ----------------------------------------------------------
+
     order_type = request.session.get(
         "checkout_order_type"
     )
@@ -534,10 +556,6 @@ def place_order(request):
         Order.OrderType.DELIVERY,
     }:
         return redirect("order_type")
-
-    # ----------------------------------------------------------
-    # DELIVERY ADDRESS
-    # ----------------------------------------------------------
 
     address = None
 
@@ -612,10 +630,15 @@ def place_order(request):
         subtotal
         + tax_amount
         - discount
-    ).quantize(Decimal("0.01"))
+    ).quantize(
+        Decimal("0.01")
+    )
 
     # ----------------------------------------------------------
     # CREATE ORDER
+    #
+    # Everything is inside the same transaction.
+    # If wallet payment fails later, this order is rolled back.
     # ----------------------------------------------------------
 
     order = Order.objects.create(
@@ -666,22 +689,32 @@ def place_order(request):
 
         tax_amount=tax_amount,
 
-        coupon_code=coupon.code if coupon else "",
+        coupon_code=(
+            coupon.code if coupon else ""
+        ),
 
         coupon_discount_type=(
-            coupon.discount_type if coupon else ""
+            coupon.discount_type
+            if coupon
+            else ""
         ),
 
         coupon_discount_value=(
-            coupon.discount_value if coupon else None
+            coupon.discount_value
+            if coupon
+            else None
         ),
 
         coupon_minimum_order_amount=(
-            coupon.minimum_order_amount if coupon else None
+            coupon.minimum_order_amount
+            if coupon
+            else None
         ),
 
         coupon_maximum_discount_amount=(
-            coupon.maximum_discount_amount if coupon else None
+            coupon.maximum_discount_amount
+            if coupon
+            else None
         ),
 
         discount_amount=discount,
@@ -722,20 +755,115 @@ def place_order(request):
         )
 
     # ----------------------------------------------------------
-    # CREATE BILL ORDER
+    # WALLET PAYMENT
     # ----------------------------------------------------------
 
-    BillOrder.objects.create(
-        order=order,
-        total=order.total_amount,
-        payment_method=BillOrder.PaymentMethod.COD,
-    )
+    if payment_method == "wallet":
+
+        try:
+
+            debit_wallet(
+                user=request.user,
+                amount=total,
+                transaction_type=(
+                    WalletTransaction.TransactionType.PAYMENT
+                ),
+                order=order,
+                description=(
+                    f"Wallet payment for order "
+                    f"{order.order_no}."
+                ),
+            )
+
+        except ValidationError as exc:
+
+            messages.error(
+                request,
+                str(exc)
+            )
+
+            return redirect(
+                "final_checkout"
+            )
+
+        # ------------------------------------------------------
+        # PAID BILL
+        # ------------------------------------------------------
+
+        bill = Bill.objects.create(
+            subtotal=subtotal - discount,
+            tax_amount=tax_amount,
+            total_amount=total,
+            payment_method=Bill.PaymentMethod.ONLINE,
+            transaction_method=(
+                Bill.TransactionMethod.WALLET
+            ),
+            status=Bill.Status.PAID,
+            issued_at=timezone.now(),
+        )
+
+        # ------------------------------------------------------
+        # BILL ORDER
+        # ------------------------------------------------------
+
+        BillOrder.objects.create(
+            order=order,
+            bill=bill,
+            total=total,
+            payment_method=(
+                BillOrder.PaymentMethod.ONLINE
+            ),
+        )
+
+        # ------------------------------------------------------
+        # PAYMENT RECORD
+        # ------------------------------------------------------
+
+        Payment.objects.create(
+            bill=bill,
+            transaction_method=(
+                Payment.TransactionMethod.WALLET
+            ),
+            amount=total,
+            payment_reference=None,
+            status=Payment.Status.SUCCESSFUL,
+            gateway=None,
+            gateway_order_id=None,
+            gateway_payment_id=None,
+            gateway_event_id=None,
+            paid_at=timezone.now(),
+        )
+
+        request.session[
+            "last_order_payment_method"
+        ] = "Online - Wallet"
+
+    # ----------------------------------------------------------
+    # CASH ON DELIVERY
+    # ----------------------------------------------------------
+
+    else:
+
+        BillOrder.objects.create(
+            order=order,
+            total=order.total_amount,
+            payment_method=(
+                BillOrder.PaymentMethod.COD
+            ),
+        )
+
+        request.session[
+            "last_order_payment_method"
+        ] = "Cash on Delivery"
 
     # ----------------------------------------------------------
     # CLEAR CHECKOUT SESSION
     # ----------------------------------------------------------
 
-    request.session.pop("cart", None)
+    request.session.pop(
+        "cart",
+        None
+    )
 
     request.session.pop(
         "checkout_order_type",
@@ -760,10 +888,6 @@ def place_order(request):
     request.session.pop(
         "razorpay_pending_checkout",
         None
-    )
-
-    request.session["last_order_payment_method"] = (
-        "Cash on Delivery"
     )
 
     request.session.modified = True
@@ -1738,6 +1862,7 @@ def admin_order_detail(request, order_id):
         .select_related(
             "user",
             "table",
+            "bill_order__bill",
         )
         .prefetch_related(
             "items__product__images"
@@ -1747,6 +1872,33 @@ def admin_order_detail(request, order_id):
 
     can_remove_items = True
 
+    bill_order = getattr(
+        order,
+        "bill_order",
+        None,
+    )
+
+    payment_method = "—"
+
+    if bill_order:
+
+        payment_method = (
+            bill_order.get_payment_method_display()
+        )
+
+        bill = bill_order.bill
+
+        if (
+            bill
+            and bill.payment_method
+            == Bill.PaymentMethod.ONLINE
+            and bill.transaction_method
+        ):
+            payment_method = (
+                f"{bill.get_payment_method_display()} - "
+                f"{bill.get_transaction_method_display()}"
+            )
+
     return render(
         request,
         "admin_panel/order_detail.html",
@@ -1754,6 +1906,8 @@ def admin_order_detail(request, order_id):
             "order": order,
             "status_choices": Order.Status.choices,
             "can_remove_items": can_remove_items,
+            "bill_order": bill_order,
+            "payment_method": payment_method,
         },
     )
 

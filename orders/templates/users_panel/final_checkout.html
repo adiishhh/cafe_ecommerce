@@ -352,7 +352,7 @@
 
                     <div class="payment-options">
                     
-                        <!-- ONLINE -->
+                        <!-- ONLINE / RAZORPAY -->
                     
                         <label class="payment-option">
                         
@@ -367,13 +367,45 @@
                             </div>
                         
                             <div class="payment-method-content">
+                            
                                 <strong>
                                     Pay Online
                                 </strong>
                             
                                 <span>
-                                    UPI / Card / Wallet
+                                    UPI / Card / NetBanking
                                 </span>
+                            
+                            </div>
+                        
+                        </label>
+                    
+                    
+                        <!-- WALLET -->
+                    
+                        <label class="payment-option">
+                        
+                            <input
+                                type="radio"
+                                name="payment_method_display"
+                                value="wallet"
+                            >
+                        
+                            <div class="payment-method-icon">
+                                ₹
+                            </div>
+                        
+                            <div class="payment-method-content">
+                            
+                                <strong>
+                                    Wallet
+                                </strong>
+                            
+                                <span>
+                                    Balance:
+                                    ₹{{ wallet.balance|floatformat:2 }}
+                                </span>
+                            
                             </div>
                         
                         </label>
@@ -395,6 +427,7 @@
                             </div>
                         
                             <div class="payment-method-content">
+                            
                                 <strong>
                                     Cash on Delivery
                                 </strong>
@@ -402,9 +435,8 @@
                                 <span>
                                     Pay at counter (Cash / UPI / Card)
                                 </span>
+                            
                             </div>
-                        
-                            <span class="selected-indicator"></span>
                         
                         </label>
                     
@@ -560,6 +592,13 @@
 
                         {% csrf_token %}
 
+                        <input
+                            type="hidden"
+                            name="payment_method"
+                            id="selected-payment-method"
+                            value="cod"
+                        >
+
                         <button
                             type="submit"
                             class="place-order-button"
@@ -593,60 +632,150 @@
 (function () {
     "use strict";
 
-    const form = document.getElementById("place-order-form");
-    const button = document.getElementById("place-order-button");
-
-    const paymentOptions = document.querySelectorAll(
-        'input[name="payment_method_display"]'
+    const form = document.getElementById(
+        "place-order-form"
     );
 
-    const codOption = document.querySelector(
-        'input[name="payment_method_display"][value="cod"]'
+    const button = document.getElementById(
+        "place-order-button"
     );
 
-    const onlineOption = document.querySelector(
-        'input[name="payment_method_display"][value="online"]'
-    );
+    const hiddenPaymentMethod =
+        document.getElementById(
+            "selected-payment-method"
+        );
 
-    function updatePaymentSelection() {
-        paymentOptions.forEach(function (option) {
-            const label = option.closest(".payment-option");
+    const paymentOptions =
+        document.querySelectorAll(
+            'input[name="payment_method_display"]'
+        );
 
-            if (label) {
-                label.classList.toggle(
-                    "selected",
-                    option.checked
-                );
-            }
-        });
+    const onlineOption =
+        document.querySelector(
+            'input[name="payment_method_display"][value="online"]'
+        );
 
-        button.textContent = onlineOption.checked
-            ? "Continue to Payment"
-            : "Place Order";
+    const walletOption =
+        document.querySelector(
+            'input[name="payment_method_display"][value="wallet"]'
+        );
+
+    const codOption =
+        document.querySelector(
+            'input[name="payment_method_display"][value="cod"]'
+        );
+
+
+    function getSelectedPaymentMethod() {
+
+        const selected =
+            document.querySelector(
+                'input[name="payment_method_display"]:checked'
+            );
+
+        return selected
+            ? selected.value
+            : "cod";
     }
 
-    paymentOptions.forEach(function (option) {
-        option.addEventListener(
-            "change",
-            updatePaymentSelection
-        );
-    });
 
-    form.addEventListener("submit", function (event) {
-        if (onlineOption.checked) {
-            form.action = "{% url 'initiate_online_payment' %}";
+    function updatePaymentSelection() {
+
+        paymentOptions.forEach(
+            function (option) {
+
+                const label =
+                    option.closest(
+                        ".payment-option"
+                    );
+
+                if (label) {
+
+                    label.classList.toggle(
+                        "selected",
+                        option.checked
+                    );
+
+                }
+
+            }
+        );
+
+
+        const selectedMethod =
+            getSelectedPaymentMethod();
+
+
+        hiddenPaymentMethod.value =
+            selectedMethod;
+
+
+        if (selectedMethod === "online") {
+
+            button.textContent =
+                "Continue to Payment";
+
         } else {
-            form.action = "{% url 'place_order' %}";
+
+            button.textContent =
+                "Place Order";
+
         }
 
-        button.disabled = true;
+    }
 
-        button.textContent = onlineOption.checked
-            ? "Preparing Payment..."
-            : "Placing Order...";
-    });
+
+    paymentOptions.forEach(
+        function (option) {
+
+            option.addEventListener(
+                "change",
+                updatePaymentSelection
+            );
+
+        }
+    );
+
+
+    form.addEventListener(
+        "submit",
+        function (event) {
+
+            const selectedMethod =
+                getSelectedPaymentMethod();
+
+
+            hiddenPaymentMethod.value =
+                selectedMethod;
+
+
+            if (selectedMethod === "online") {
+
+                form.action =
+                    "{% url 'initiate_online_payment' %}";
+
+                button.textContent =
+                    "Preparing Payment...";
+
+            } else {
+
+                form.action =
+                    "{% url 'place_order' %}";
+
+                button.textContent =
+                    "Placing Order...";
+
+            }
+
+
+            button.disabled = true;
+
+        }
+    );
+
 
     updatePaymentSelection();
+
 })();
 </script>
 
