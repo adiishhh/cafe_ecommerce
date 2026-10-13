@@ -125,3 +125,82 @@ class WalletTransaction(models.Model):
 
     def __str__(self):
         return self.transaction_no
+
+class ReferralCode(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="referral_code",
+    )
+    code = models.CharField(
+        max_length=20,
+        unique=True,
+        editable=False,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class ReferralUsage(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        REWARDED = "rewarded", "Rewarded"
+
+    code = models.ForeignKey(
+        ReferralCode,
+        on_delete=models.PROTECT,
+        related_name="usages",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="referral_usages",
+    )
+
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+
+    qualifying_order = models.OneToOneField(
+        "orders.Order",
+        on_delete=models.PROTECT,
+        related_name="referral_usage",
+        null=True,
+        blank=True,
+    )
+
+    eligible_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+
+    customer_cashback = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0.00"),
+    )
+
+    owner_cashback = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal("0.00"),
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    rewarded_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["code", "user"],
+                name="unique_referral_code_per_user",
+            ),
+            models.UniqueConstraint(
+                fields=["user"],
+                condition=models.Q(status="pending"),
+                name="one_pending_referral_per_user",
+            ),
+        ]
+        ordering = ["-created_at", "-id"]
