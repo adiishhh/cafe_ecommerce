@@ -482,15 +482,34 @@
 
                                 {% elif can_cancel %}
 
-                                    <button
-                                        type="button"
-                                        class="remove-item-button"
-                                        data-item-id="{{ item.id }}"
-                                        data-item-name="{{ item.product.name|escapejs }}"
-                                    >
-                                        Remove Item
-                                    </button>
+                                    {% if is_paid_online %}
 
+                                        {% if item.can_request_refund %}
+                                            <button
+                                                type="button"
+                                                class="remove-item-button"
+                                                data-item-id="{{ item.id }}"
+                                                data-item-name="{{ item.product.name|escapejs }}"
+                                                data-refund-mode="true"
+                                            >
+                                                Remove item
+                                            </button>
+                                        {% endif %}
+                                        
+                                    {% else %}
+                                        
+                                        <button
+                                            type="button"
+                                            class="remove-item-button"
+                                            data-item-id="{{ item.id }}"
+                                            data-item-name="{{ item.product.name|escapejs }}"
+                                            data-refund-mode="false"
+                                        >
+                                            Remove Item
+                                        </button>
+                                    
+                                    {% endif %}
+                                    
                                 {% endif %}
 
 
@@ -777,13 +796,27 @@
 
                     <div class="cancellation-section">
 
+                    {% if is_paid_online %}
                     <button
                         type="button"
                         class="cancel-order-button"
                         id="open-cancel-order"
-                        >
+                        {% if not can_request_order_refund %}
+                            disabled
+                        {% endif %}
+                    >
+                        Cancel &amp; Request Refund
+                    </button>
+                
+                    {% else %}
+                    <button
+                        type="button"
+                        class="cancel-order-button"
+                        id="open-cancel-order"
+                    >
                         Cancel Order
                     </button>
+                    {% endif %}
                     
                     <div class="cancellation-warning">
 
@@ -808,7 +841,7 @@
 
                     </div>
 
-                    </div>
+            </div>
 
                 {% endif %}
 
@@ -946,38 +979,46 @@
                     ⚠
                 </div>
 
-
                 <h2>
-                    Cancel Order
+                    {% if is_paid_online %}
+                        Request Order Refund
+                    {% else %}
+                        Cancel Order
+                    {% endif %}
                 </h2>
 
-
                 <p class="modal-description">
-
-                    Are you sure you want to cancel
-                    <strong>{{ order.order_no }}</strong>?
-
-                    This action cannot be undone.
-
+                    {% if is_paid_online %}
+                        Request a refund for order
+                        <strong>{{ order.order_no }}</strong>?
+                
+                        Your order will remain active until an administrator
+                        reviews your request.
+                    {% else %}
+                        Are you sure you want to cancel
+                        <strong>{{ order.order_no }}</strong>?
+                
+                        This action cannot be undone.
+                    {% endif %}
                 </p>
 
 
                 <form
                     method="POST"
-                    action="{% url 'cancel_order' order.id %}"
+                    action="{% if is_paid_online %}{% url 'request_order_refund' order.id %}{% else %}{% url 'cancel_order' order.id %}{% endif %}"
                 >
 
                     {% csrf_token %}
 
 
                     <label for="order-cancel-reason">
-
                         Reason
 
-                        <span>
-                            Optional
-                        </span>
-
+                        {% if is_paid_online %}
+                            <span>Required</span>
+                        {% else %}
+                            <span>Optional</span>
+                        {% endif %}
                     </label>
 
 
@@ -985,7 +1026,8 @@
                         id="order-cancel-reason"
                         name="reason"
                         rows="4"
-                        placeholder="Tell us why you're cancelling..."
+                        placeholder="{% if is_paid_online %}Tell us why you are requesting a refund...{% else %}Tell us why you're cancelling...{% endif %}"
+                        {% if is_paid_online %}required{% endif %}
                     ></textarea>
 
 
@@ -1005,7 +1047,11 @@
                             type="submit"
                             class="confirm-cancel-button"
                         >
-                            Cancel Order
+                            {% if is_paid_online %}
+                                Submit Refund Request
+                            {% else %}
+                                Cancel Order
+                            {% endif %}
                         </button>
 
 
@@ -1046,17 +1092,21 @@
                 </div>
 
 
-                <h2>
+                <h2 id="cancel-item-heading">
                     Remove Item
                 </h2>
 
 
                 <p class="modal-description">
-
-                    Remove
+                    <span id="cancel-item-action-text">
+                        Remove
+                    </span>
+                
                     <strong id="cancel-item-name"></strong>
-                    from this order?
-
+                
+                    <span id="cancel-item-description">
+                        from this order?
+                    </span>
                 </p>
 
 
@@ -1069,15 +1119,12 @@
 
 
                     <label for="item-cancel-reason">
-
                         Reason
 
-                        <span>
+                        <span id="item-reason-label">
                             Optional
                         </span>
-
                     </label>
-
 
                     <textarea
                         id="item-cancel-reason"
@@ -1102,6 +1149,7 @@
                         <button
                             type="submit"
                             class="confirm-cancel-button"
+                            id="confirm-item-action"
                         >
                             Remove Item
                         </button>
@@ -1154,6 +1202,24 @@
                         "cancel-item-name"
                     );
 
+                const cancelItemHeading =
+                    document.getElementById("cancel-item-heading");
+
+                const cancelItemActionText =
+                    document.getElementById("cancel-item-action-text");
+
+                const cancelItemDescription =
+                    document.getElementById("cancel-item-description");
+
+                const itemReasonLabel =
+                    document.getElementById("item-reason-label");
+
+                const itemCancelReason =
+                    document.getElementById("item-cancel-reason");
+
+                const confirmItemAction =
+                    document.getElementById("confirm-item-action");
+
 
                 /*
                  * Open whole-order cancellation modal
@@ -1200,6 +1266,58 @@
                                     const itemName =
                                         button.dataset.itemName;
 
+                                    const refundMode =
+                                        button.dataset.refundMode === "true";
+                                                                    
+                                    if (cancelItemForm) {
+                                        const endpoint = refundMode
+                                            ? "{% url 'request_item_refund' 0 %}"
+                                            : "{% url 'cancel_order_item' 0 %}";
+                                    
+                                        cancelItemForm.action = endpoint.replace(
+                                            "/0/",
+                                            "/" + itemId + "/"
+                                        );
+                                    }
+                                    
+                                    if (cancelItemHeading) {
+                                        cancelItemHeading.textContent = refundMode
+                                            ? "Request Item Refund"
+                                            : "Remove Item";
+                                    }
+                                    
+                                    if (cancelItemActionText) {
+                                        cancelItemActionText.textContent = refundMode
+                                            ? "Request a refund for"
+                                            : "Remove";
+                                    }
+                                    
+                                    if (cancelItemDescription) {
+                                        cancelItemDescription.textContent = refundMode
+                                            ? "from this order? The item will remain until your request is approved."
+                                            : "from this order?";
+                                    }
+                                    
+                                    if (itemReasonLabel) {
+                                        itemReasonLabel.textContent = refundMode
+                                            ? "Required"
+                                            : "Optional";
+                                    }
+                                    
+                                    if (itemCancelReason) {
+                                        itemCancelReason.required = refundMode;
+                                    
+                                        itemCancelReason.placeholder = refundMode
+                                            ? "Tell us why you are requesting a refund..."
+                                            : "Tell us why you're removing this item...";
+                                    }
+                                    
+                                    if (confirmItemAction) {
+                                        confirmItemAction.textContent = refundMode
+                                            ? "Submit Refund Request"
+                                            : "Remove Item";
+                                    }
+
 
                                     if (cancelItemName) {
 
@@ -1207,19 +1325,6 @@
                                             itemName;
 
                                     }
-
-
-                                    if (cancelItemForm) {
-
-                                        cancelItemForm.action =
-                                            "{% url 'cancel_order_item' 0 %}"
-                                            .replace(
-                                                "/0/",
-                                                "/" + itemId + "/"
-                                            );
-
-                                    }
-
 
                                     if (cancelItemModal) {
 

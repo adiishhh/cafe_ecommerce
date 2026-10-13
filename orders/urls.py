@@ -64,9 +64,19 @@ urlpatterns = [
         views.admin_update_order_status,
         name="admin_update_order_status",
     ),
-        path(
+    path(
         "admin_panel/orders/<int:order_id>/items/<int:item_id>/remove/",
         views.admin_remove_order_item,
         name="admin_remove_order_item",
+    ),
+    path(
+        "order/<int:order_id>/refund-request/",
+        views.request_order_refund,
+        name="request_order_refund",
+    ),
+    path(
+        "order/item/<int:item_id>/refund-request/",
+        views.request_item_refund,
+        name="request_item_refund",
     ),
 ]

@@ -17,7 +17,7 @@ from django.utils import timezone
 from datetime import timedelta, datetime
 from django.core.paginator import Paginator
 from coupons.views import apply_coupon
-from billing.models import Bill, BillOrder, Payment
+from billing.models import Bill, BillOrder, Payment, RefundRequest
 from wallet.models import WalletTransaction
 from wallet.views import reward_referral_for_order, debit_wallet, get_customer_wallet
 
@@ -897,35 +897,160 @@ def place_order(request):
         order_id=order.id
     )
 
+def _is_paid_online_order(order):
+    """
+    Return True only when the order has an Online BillOrder,
+    its associated Bill is paid, and a successful original
+    payment exists.
+    """
+    bill_order = getattr(order, "bill_order", None)
+
+    if not bill_order:
+        return False
+
+    if bill_order.payment_method != BillOrder.PaymentMethod.ONLINE:
+        return False
+
+    bill = bill_order.bill
+
+    if not bill or bill.status != Bill.Status.PAID:
+        return False
+
+    return Payment.objects.filter(
+        bill=bill,
+        status=Payment.Status.SUCCESSFUL,
+        refund_request__isnull=True,
+        refund_of__isnull=True,
+    ).exists()
+
+
+def _has_active_refund_request(order):
+    """
+    An order-level request conflicts with every item-level
+    request, and vice versa.
+
+    Rejected requests do not block a new request.
+    """
+    return RefundRequest.objects.filter(
+        order=order,
+        status__in=[
+            RefundRequest.Status.PENDING,
+            RefundRequest.Status.ACCEPTED,
+            RefundRequest.Status.COMPLETED,
+        ],
+    ).exists()
+
+
+def _has_active_order_refund_request(order):
+    """
+    Check whether an order-level refund request is already
+    pending or has been accepted/completed.
+    """
+    return RefundRequest.objects.filter(
+        order=order,
+        refund_type=RefundRequest.RefundType.ORDER,
+        status__in=[
+            RefundRequest.Status.PENDING,
+            RefundRequest.Status.ACCEPTED,
+            RefundRequest.Status.COMPLETED,
+        ],
+    ).exists()
 
 @login_required(login_url="login")
 def order_detail(request, order_id):
-
     order = get_object_or_404(
-        Order.objects
-        .prefetch_related(
+        Order.objects.prefetch_related(
             "items__product__images"
         ),
         id=order_id,
         user=request.user,
     )
 
-    bill_order = getattr(
-        order,
-        "bill_order",
-        None
-    )
+    bill_order = getattr(order, "bill_order", None)
 
     can_cancel = order.status in {
         Order.Status.CONFIRMED,
         Order.Status.PREPARING,
     }
 
+    is_paid_online = _is_paid_online_order(order)
+
     active_items = [
         item
         for item in order.items.all()
         if not item.is_cancelled
     ]
+
+    refund_requests = list(
+        RefundRequest.objects.filter(
+            order=order
+        ).select_related(
+            "order_item",
+            "reviewed_by",
+        ).order_by("-created_at")
+    )
+
+    active_refund_statuses = {
+        RefundRequest.Status.PENDING,
+        RefundRequest.Status.ACCEPTED,
+        RefundRequest.Status.COMPLETED,
+    }
+
+    # Find the latest non-rejected order-level request.
+    active_order_refund = next(
+        (
+            refund
+            for refund in refund_requests
+            if refund.refund_type == RefundRequest.RefundType.ORDER
+            and refund.status in active_refund_statuses
+        ),
+        None,
+    )
+
+    # Find the latest non-rejected refund request for each item.
+    active_item_refunds = {}
+
+    for refund in refund_requests:
+        if (
+            refund.refund_type == RefundRequest.RefundType.ITEM
+            and refund.order_item_id
+            and refund.status in active_refund_statuses
+        ):
+            active_item_refunds.setdefault(
+                refund.order_item_id,
+                refund,
+            )
+
+    # Attach the relevant request to each item so the template
+    # can show its status without complicated dictionary lookups.
+    for item in order.items.all():
+        item.refund_request = next(
+            (
+                refund
+                for refund in refund_requests
+                if refund.order_item_id == item.id
+            ),
+            None,
+        )
+
+        item.active_refund_request = active_item_refunds.get(
+            item.id
+        )
+
+        item.can_request_refund = (
+            is_paid_online
+            and can_cancel
+            and not item.is_cancelled
+            and active_order_refund is None
+            and item.id not in active_item_refunds
+        )
+
+    can_request_order_refund = (
+        is_paid_online
+        and can_cancel
+        and active_order_refund is None
+        and not active_item_refunds
+    )
 
     return render(
         request,
@@ -941,7 +1066,15 @@ def order_detail(request, order_id):
             "can_cancel": can_cancel,
             "active_items": active_items,
             "can_save_as_usual": bool(active_items),
-        }
+
+            # Refund workflow context
+            "is_paid_online": is_paid_online,
+            "refund_requests": refund_requests,
+            "active_order_refund": active_order_refund,
+            "can_request_order_refund": (
+                can_request_order_refund
+            ),
+        },
     )
 
 @login_required(login_url="login")
@@ -990,6 +1123,14 @@ def cancel_order_item(request, item_id):
         "reason",
         ""
     ).strip()
+
+    if _is_paid_online_order(order):
+        messages.error(
+            request,
+            "Paid online items must be cancelled through a refund request. "
+            "Your item has not been cancelled.",
+        )
+        return redirect("order_detail", order_id=order.id)
 
     item.is_cancelled = True
     item.cancellation_reason = reason
@@ -1260,6 +1401,14 @@ def cancel_order(request, order_id):
         ""
     ).strip()
 
+    if _is_paid_online_order(order):
+        messages.error(
+            request,
+            "A paid online order requires an approved refund request "
+            "before it can be cancelled.",
+        )
+        return redirect("order_detail", order_id=order.id)
+
     order.status = Order.Status.CANCELLED
     order.cancellation_reason = reason
     order.cancelled_at = timezone.now()
@@ -1290,6 +1439,207 @@ def cancel_order(request, order_id):
         "order_detail",
         order_id=order.id
     )
+
+@login_required(login_url="login")
+@require_POST
+@transaction.atomic
+def request_item_refund(request, item_id):
+    item = get_object_or_404(
+        OrderItem.objects.select_related("order", "product"),
+        id=item_id,
+        order__user=request.user,
+    )
+
+    order = Order.objects.select_for_update().get(
+        id=item.order_id,
+    )
+
+    # Refresh the item state after obtaining the order lock.
+    item = OrderItem.objects.select_for_update().get(
+        id=item.id,
+        order=order,
+    )
+
+    if order.status not in {
+        Order.Status.CONFIRMED,
+        Order.Status.PREPARING,
+    }:
+        messages.error(
+            request,
+            "Items can no longer be removed from this order.",
+        )
+        return redirect("order_detail", order_id=order.id)
+
+    if not _is_paid_online_order(order):
+        messages.error(
+            request,
+            "This item is not eligible for an online-payment refund request.",
+        )
+        return redirect("order_detail", order_id=order.id)
+
+    if item.is_cancelled:
+        messages.info(
+            request,
+            "This item has already been cancelled.",
+        )
+        return redirect("order_detail", order_id=order.id)
+
+    reason = request.POST.get("reason", "").strip()
+
+    if not reason:
+        messages.error(
+            request,
+            "Please provide a reason for requesting an item refund.",
+        )
+        return redirect("order_detail", order_id=order.id)
+
+    bill_order = order.bill_order
+    bill = bill_order.bill
+
+    # A full-order refund conflicts with any item refund.
+    if _has_active_order_refund_request(order):
+        messages.error(
+            request,
+            "An active full-order refund request already exists.",
+        )
+        return redirect("order_detail", order_id=order.id)
+
+    # Do not allow a duplicate active request for this item.
+    duplicate_item_request = RefundRequest.objects.filter(
+        order=order,
+        order_item=item,
+        refund_type=RefundRequest.RefundType.ITEM,
+        status__in=[
+            RefundRequest.Status.PENDING,
+            RefundRequest.Status.ACCEPTED,
+            RefundRequest.Status.COMPLETED,
+        ],
+    ).exists()
+
+    if duplicate_item_request:
+        messages.error(
+            request,
+            "A refund request already exists for this item.",
+        )
+        return redirect("order_detail", order_id=order.id)
+
+    # The amount is based on the order's final total, allocated
+    # proportionally to this item's subtotal.
+    if order.subtotal <= Decimal("0.00"):
+        messages.error(
+            request,
+            "A refund request cannot be submitted for this item.",
+        )
+        return redirect("order_detail", order_id=order.id)
+
+    amount = (
+        order.total_amount * item.subtotal / order.subtotal
+    ).quantize(Decimal("0.01"))
+
+    if amount <= Decimal("0.00"):
+        messages.error(
+            request,
+            "A refund request cannot be submitted for a zero-value item.",
+        )
+        return redirect("order_detail", order_id=order.id)
+
+    RefundRequest.objects.create(
+        user=request.user,
+        order=order,
+        order_item=item,
+        bill=bill,
+        refund_type=RefundRequest.RefundType.ITEM,
+        amount=amount,
+        reason=reason,
+    )
+
+    # Important: the item remains active until admin approval.
+
+    messages.success(
+        request,
+        f"Your refund request for {item.product.name} has been submitted. "
+        "The item will remain in your order until the request is reviewed.",
+    )
+
+    return redirect("order_detail", order_id=order.id)
+
+@login_required(login_url="login")
+@require_POST
+@transaction.atomic
+def request_order_refund(request, order_id):
+    order = get_object_or_404(
+        Order.objects.select_for_update(),
+        id=order_id,
+        user=request.user,
+    )
+
+    # Refund requests are allowed only before the order reaches READY.
+    if order.status not in {
+        Order.Status.CONFIRMED,
+        Order.Status.PREPARING,
+    }:
+        messages.error(
+            request,
+            "A refund request can no longer be submitted for this order.",
+        )
+        return redirect("order_detail", order_id=order.id)
+
+    if not _is_paid_online_order(order):
+        messages.error(
+            request,
+            "This order is not eligible for an online-payment refund request.",
+        )
+        return redirect("order_detail", order_id=order.id)
+
+    reason = request.POST.get("reason", "").strip()
+
+    if not reason:
+        messages.error(
+            request,
+            "Please provide a reason for requesting a refund.",
+        )
+        return redirect("order_detail", order_id=order.id)
+
+    bill_order = order.bill_order
+    bill = bill_order.bill
+
+    # Prevent duplicate requests and conflicts with item requests.
+    if _has_active_refund_request(order):
+        messages.error(
+            request,
+            "A refund request already exists for this order or one of its items.",
+        )
+        return redirect("order_detail", order_id=order.id)
+
+    amount = order.total_amount
+
+    if amount is None or amount <= Decimal("0.00"):
+        messages.error(
+            request,
+            "A refund request cannot be submitted for a zero-value order.",
+        )
+        return redirect("order_detail", order_id=order.id)
+
+    RefundRequest.objects.create(
+        user=request.user,
+        order=order,
+        order_item=None,
+        bill=bill,
+        refund_type=RefundRequest.RefundType.ORDER,
+        amount=amount,
+        reason=reason,
+    )
+
+    # Important: the order is NOT cancelled here.
+    # Cancellation and wallet crediting happen only after admin approval.
+
+    messages.success(
+        request,
+        "Your refund request has been submitted. "
+        "Your order will remain active until the request is reviewed.",
+    )
+
+    return redirect("order_detail", order_id=order.id)
 
 @login_required(login_url="login")
 def placed_orders(request):

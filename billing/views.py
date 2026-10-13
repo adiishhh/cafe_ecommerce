@@ -1,5 +1,5 @@
 from django.shortcuts import redirect, render, get_object_or_404
-from .models import Bill, BillOrder, Payment
+from .models import Bill, BillOrder, Payment, RefundRequest
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from decimal import Decimal, ROUND_HALF_UP
@@ -20,6 +20,9 @@ import logging
 from django.urls import reverse
 from orders.views import _generate_order_number
 from product.models import Product
+from wallet.models import WalletTransaction
+from wallet.views import credit_wallet
+from django.core.exceptions import ValidationError
 
 # Create you views here.
 
@@ -110,13 +113,20 @@ def admin_bill_list(request):
     )
 
     refunds = (
-        Payment.objects
+        RefundRequest.objects
         .filter(
-            status=Payment.Status.REFUNDED,
             created_at__date__gte=start_date,
             created_at__date__lte=end_date,
         )
-        .select_related("bill")
+        .select_related(
+            "user",
+            "order",
+            "order_item",
+            "order_item__product",
+            "bill",
+            "reviewed_by",
+            "refund_payment",
+        )
         .order_by("-created_at", "-id")
     )
 
@@ -138,6 +148,307 @@ def admin_bill_list(request):
             "total_paid_bills": paid_bills.count(),
             "total_refunds": refunds.count(),
         },
+    )
+
+@login_required(login_url="login")
+@require_POST
+@transaction.atomic
+def admin_review_refund(request, refund_id):
+    forbidden = _admin_staff_check(request)
+
+    if forbidden:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "Permission denied.",
+            },
+            status=403,
+        )
+
+    action = request.POST.get("action", "").strip().lower()
+    admin_note = request.POST.get("admin_note", "").strip()
+
+    if action not in {"accept", "reject"}:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "Invalid refund action.",
+            },
+            status=400,
+        )
+
+    refund = get_object_or_404(
+        RefundRequest.objects.select_for_update(),
+        id=refund_id,
+    )
+
+    if refund.status != RefundRequest.Status.PENDING:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "This refund request has already been reviewed.",
+            },
+            status=409,
+        )
+
+    if action == "reject" and not admin_note:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "An explanation is required when rejecting a refund.",
+            },
+            status=400,
+        )
+
+    if action == "reject":
+        refund.status = RefundRequest.Status.REJECTED
+        refund.admin_note = admin_note
+        refund.reviewed_by = request.user
+        refund.reviewed_at = timezone.now()
+
+        refund.save(
+            update_fields=[
+                "status",
+                "admin_note",
+                "reviewed_by",
+                "reviewed_at",
+                "updated_at",
+            ]
+        )
+
+        return JsonResponse(
+            {
+                "success": True,
+                "message": "Refund request rejected.",
+                "status": refund.status,
+            }
+        )
+
+    # Lock the associated order before changing its status.
+    order = get_object_or_404(
+        Order.objects.select_for_update(),
+        id=refund.order_id,
+    )
+
+    # A full-order refund must not be processed if the order
+    # has already been cancelled or progressed beyond eligibility.
+    if order.status not in {
+        Order.Status.CONFIRMED,
+        Order.Status.PREPARING,
+    }:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": (
+                    "This order is no longer eligible for refund approval."
+                ),
+            },
+            status=409,
+        )
+
+    # A full-order request conflicts with any other active
+    # or completed refund request for the same order.
+    active_statuses = [
+        RefundRequest.Status.PENDING,
+        RefundRequest.Status.ACCEPTED,
+        RefundRequest.Status.COMPLETED,
+    ]
+
+    if refund.refund_type == RefundRequest.RefundType.ORDER:
+        other_requests = RefundRequest.objects.filter(
+            order=order,
+            status__in=active_statuses,
+        ).exclude(pk=refund.pk)
+
+        if other_requests.exists():
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": (
+                        "Another active or completed refund request "
+                        "exists for this order."
+                    ),
+                },
+                status=409,
+            )
+
+        amount = order.total_amount
+
+    else:
+        # Lock the requested item and verify that it is still active.
+        item = get_object_or_404(
+            OrderItem.objects.select_for_update(),
+            id=refund.order_item_id,
+            order=order,
+        )
+
+        if item.is_cancelled:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": "This item has already been cancelled.",
+                },
+                status=409,
+            )
+
+        if RefundRequest.objects.filter(
+            order=order,
+            refund_type=RefundRequest.RefundType.ORDER,
+            status__in=active_statuses,
+        ).exclude(pk=refund.pk).exists():
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": (
+                        "A full-order refund request already exists."
+                    ),
+                },
+                status=409,
+            )
+
+        other_item_requests = RefundRequest.objects.filter(
+            order=order,
+            order_item=item,
+            refund_type=RefundRequest.RefundType.ITEM,
+            status__in=active_statuses,
+        ).exclude(pk=refund.pk)
+
+        if other_item_requests.exists():
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": (
+                        "Another active or completed refund "
+                        "already exists for this item."
+                    ),
+                },
+                status=409,
+            )
+
+        amount = refund.amount
+
+    if amount <= 0:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "The refund amount must be greater than zero.",
+            },
+            status=400,
+        )
+
+    # Locate the original successful payment.
+    original_payment = (
+        Payment.objects
+        .select_for_update()
+        .filter(
+            bill_id=refund.bill_id,
+            status=Payment.Status.SUCCESSFUL,
+            refund_request__isnull=True,
+            refund_of__isnull=True,
+        )
+        .order_by("-created_at", "-id")
+        .first()
+    )
+
+    if original_payment is None:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "No successful original payment was found.",
+            },
+            status=409,
+        )
+
+    # Create the wallet refund payment record.
+    refund_payment = Payment.objects.create(
+        bill=refund.bill,
+        transaction_method=Payment.TransactionMethod.WALLET,
+        amount=amount,
+        status=Payment.Status.SUCCESSFUL,
+        refund_request=refund,
+        refund_of=original_payment,
+        paid_at=timezone.now(),
+    )
+
+    # Credit the customer's wallet in the same transaction.
+    # Any failure rolls back the payment and status changes.
+    credit_wallet(
+        user=refund.user,
+        amount=amount,
+        transaction_type=WalletTransaction.TransactionType.REFUND,
+        order=order,
+        payment=refund_payment,
+        refund_request=refund,
+        description=(
+            f"Refund for {refund.request_no}, "
+            f"order {order.order_no}."
+        ),
+    )
+
+    # Only now, after successful wallet credit, change the order/item.
+    if refund.refund_type == RefundRequest.RefundType.ORDER:
+        order.status = Order.Status.CANCELLED
+
+        update_fields = ["status", "updated_at"]
+
+        if hasattr(order, "cancelled_at"):
+            order.cancelled_at = timezone.now()
+            update_fields.append("cancelled_at")
+
+        order.save(update_fields=update_fields)
+
+        order.items.filter(is_cancelled=False).update(
+            is_cancelled=True,
+        )
+
+    else:
+        item.is_cancelled = True
+
+        item_update_fields = ["is_cancelled"]
+
+        if hasattr(item, "cancelled_at"):
+            item.cancelled_at = timezone.now()
+            item_update_fields.append("cancelled_at")
+
+        item.save(update_fields=item_update_fields)
+
+        # If all items have now been cancelled, mark the order cancelled.
+        if not order.items.filter(is_cancelled=False).exists():
+            order.status = Order.Status.CANCELLED
+
+            order_update_fields = ["status", "updated_at"]
+
+            if hasattr(order, "cancelled_at"):
+                order.cancelled_at = timezone.now()
+                order_update_fields.append("cancelled_at")
+
+            order.save(update_fields=order_update_fields)
+
+    refund.status = RefundRequest.Status.COMPLETED
+    refund.admin_note = admin_note
+    refund.reviewed_by = request.user
+    refund.reviewed_at = timezone.now()
+    refund.completed_at = timezone.now()
+
+    refund.save(
+        update_fields=[
+            "status",
+            "admin_note",
+            "reviewed_by",
+            "reviewed_at",
+            "completed_at",
+            "updated_at",
+        ]
+    )
+
+    return JsonResponse(
+        {
+            "success": True,
+            "message": "Refund approved and credited to the customer's wallet.",
+            "status": refund.status,
+            "refund_amount": str(amount),
+            "payment_id": refund_payment.id,
+        }
     )
 
 
@@ -497,6 +808,157 @@ def admin_bill_data(request, bill_id):
             "orders": orders,
         }
     })
+
+@login_required(login_url="login")
+@require_GET
+def admin_refund_data(request, refund_id):
+    """
+    Return the details of a completed refund for the
+    staff-only Payment Details modal.
+    """
+
+    forbidden = _admin_staff_check(request)
+
+    if forbidden:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": "Permission denied.",
+            },
+            status=403,
+        )
+
+    refund = get_object_or_404(
+        RefundRequest.objects.select_related(
+            "user",
+            "order",
+            "order_item",
+            "order_item__product",
+            "bill",
+            "reviewed_by",
+            "refund_payment",
+            "refund_payment__refund_of",
+        ),
+        id=refund_id,
+    )
+
+    # Only completed refunds have a completed payment record
+    # to display in this modal.
+    if refund.status != RefundRequest.Status.COMPLETED:
+        return JsonResponse(
+            {
+                "success": False,
+                "message": (
+                    "Payment details are available only "
+                    "for completed refunds."
+                ),
+            },
+            status=409,
+        )
+
+    refund_payment = refund.refund_payment
+
+    wallet_transaction = (
+        WalletTransaction.objects
+        .filter(refund_request=refund)
+        .select_related("wallet")
+        .first()
+    )
+
+    customer_name = (
+        getattr(refund.user, "name", "")
+        or getattr(refund.user, "username", "")
+        or str(refund.user)
+    )
+
+    return JsonResponse(
+        {
+            "success": True,
+            "refund": {
+                "id": refund.id,
+                "request_no": refund.request_no,
+                "status": refund.status,
+                "status_display": refund.get_status_display(),
+                "refund_type": refund.refund_type,
+                "refund_type_display": (
+                    refund.get_refund_type_display()
+                ),
+                "amount": str(refund.amount),
+                "reason": refund.reason,
+                "admin_note": refund.admin_note or "",
+                "created_at": (
+                    refund.created_at.strftime("%d %b %Y, %I:%M %p")
+                    if refund.created_at
+                    else ""
+                ),
+                "reviewed_at": (
+                    refund.reviewed_at.strftime("%d %b %Y, %I:%M %p")
+                    if refund.reviewed_at
+                    else ""
+                ),
+                "completed_at": (
+                    refund.completed_at.strftime("%d %b %Y, %I:%M %p")
+                    if refund.completed_at
+                    else ""
+                ),
+                "reviewed_by": (
+                    str(refund.reviewed_by)
+                    if refund.reviewed_by
+                    else "—"
+                ),
+                "customer_name": customer_name,
+                "customer_email": (
+                    getattr(refund.user, "email", "") or "—"
+                ),
+                "order_no": refund.order.order_no,
+                "item_name": (
+                    refund.order_item.product.name
+                    if refund.order_item
+                    else ""
+                ),
+                "bill_no": (
+                    refund.bill.bill_no
+                    if refund.bill
+                    else "—"
+                ),
+                "payment_reference": (
+                    refund_payment.payment_reference or ""
+                    if refund_payment
+                    else ""
+                ),
+                "transaction_method": (
+                    refund_payment.get_transaction_method_display()
+                    if refund_payment
+                    else "—"
+                ),
+                "payment_status": (
+                    refund_payment.get_status_display()
+                    if refund_payment
+                    else "—"
+                ),
+                "payment_id": (
+                    refund_payment.id
+                    if refund_payment
+                    else None
+                ),
+                "original_payment_id": (
+                    refund_payment.refund_of_id
+                    if refund_payment
+                    else None
+                ),
+                "wallet_credited": (
+                    str(wallet_transaction.amount)
+                    if wallet_transaction
+                    else "0.00"
+                ),
+                "wallet_balance_after": (
+                    str(wallet_transaction.balance_after)
+                    if wallet_transaction
+                    else ""
+                ),
+            },
+        }
+    )
 
 @login_required(login_url="login")
 @require_POST

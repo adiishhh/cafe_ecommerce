@@ -46,4 +46,16 @@ urlpatterns = [
         views.download_invoice,
         name="download_invoice",
     ),
+
+    path(
+        "admin_panel/billing/refunds/<int:refund_id>/review/",
+        views.admin_review_refund,
+        name="admin_review_refund",
+    ),
+
+    path(
+        "admin_panel/billing/refunds/<int:refund_id>/data/",
+        views.admin_refund_data,
+        name="admin_refund_data",
+    ),
 ]

@@ -381,24 +381,24 @@
 
                                         <div class="wallet-refund-note">
 
-                                            <span>
-
-                                                {% if refund.status == "rejected" %}
-
-                                                    Admin reason
-
-                                                {% else %}
-
-                                                    Admin note
-
-                                                {% endif %}
-
-                                            </span>
-
-
                                             <p>
                                                 {{ refund.admin_note }}
                                             </p>
+
+                                            <span>
+
+                                                {% if refund.status == "rejected" %}
+                                                    <div class="wallet-refund-note">
+                                                        <span>Need help?</span>
+                                                    
+                                                        <p>
+                                                            If you have concerns about this decision,
+                                                            please contact SmartCafe directly.
+                                                        </p>
+                                                    </div>
+                                                {% endif %}
+                                            </span>
+
 
                                         </div>
 

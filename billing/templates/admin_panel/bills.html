@@ -593,8 +593,7 @@ SmartCafe Admin - Bills
 
 
                     <p>
-                        There are no unbilled COD orders for
-                        {{ selected_date|date:"d M Y" }}.
+                        There are no unbilled COD orders for this date
                     </p>
 
                 </div>
@@ -1099,8 +1098,7 @@ SmartCafe Admin - Bills
 
 
                 <p>
-                    No unpaid bills were created on
-                    {{ selected_date|date:"d M Y" }}.
+                    No unpaid bills were created on this date
                 </p>
 
             </div>
@@ -1197,11 +1195,11 @@ SmartCafe Admin - Bills
                         {% for bill in paid_bills %}
 
                         <tr
-                            class="billing-bill-row"
+                            class="billing-bill-row billing-paid-bill-row"
                             data-bill-id="{{ bill.id }}"
                             tabindex="0"
                             role="button"
-                            aria-label="Edit bill {{ bill.bill_no }}"
+                            aria-label="View payment details for bill {{ bill.bill_no }}"
                         >
 
                             <td>
@@ -1305,8 +1303,7 @@ SmartCafe Admin - Bills
 
 
                 <p>
-                    No bills were marked as paid on
-                    {{ selected_date|date:"d M Y" }}.
+                    No bills were marked as paid on this date
                 </p>
 
             </div>
@@ -1361,139 +1358,125 @@ SmartCafe Admin - Bills
             <div class="billing-table-wrapper">
 
                 <table class="billing-table">
-
-
+                
                     <thead>
-
                         <tr>
-
-                            <th>
-                                Bill
-                            </th>
-
-                            <th>
-                                Reference
-                            </th>
-
-                            <th>
-                                Transaction
-                            </th>
-
-                            <th>
-                                Date
-                            </th>
-
-                            <th class="amount-column">
-                                Amount
-                            </th>
-
-                            <th>
-                                Status
-                            </th>
-
+                            <th>Request</th>
+                            <th>Order</th>
+                            <th>Customer</th>
+                            <th>Refund Type</th>
+                            <th>Item</th>
+                            <th class="amount-column">Amount</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Action</th>
                         </tr>
-
                     </thead>
-
-
+                
                     <tbody>
-
-
-                        {% for payment in refunds %}
-
-
+                    
+                        {% for refund in refunds %}
+                    
                             <tr>
-
-
+                            
                                 <td>
-
                                     <span class="bill-number">
-
-                                        {{ payment.bill.bill_no }}
-
+                                        {{ refund.request_no }}
                                     </span>
-
                                 </td>
-
-
+                            
                                 <td>
-
-                                    {% if payment.payment_reference %}
-
-                                        <span class="payment-reference">
-
-                                            {{ payment.payment_reference }}
-
-                                        </span>
-
+                                    {{ refund.order.order_no }}
+                                </td>
+                            
+                                <td>
+                                    {% if refund.user.name %}
+                                        {{ refund.user.name }}
                                     {% else %}
-
-                                        <span class="muted-text">
-                                            —
-                                        </span>
-
+                                        {{ refund.user.username }}
                                     {% endif %}
-
                                 </td>
-
-
+                            
                                 <td>
-
-                                    {% if payment.transaction_method %}
-
-                                        {{ payment.get_transaction_method_display }}
-
+                                    {% if refund.refund_type == "order" %}
+                                        Entire order
                                     {% else %}
-
+                                        Individual item
+                                    {% endif %}
+                                </td>
+                            
+                                <td>
+                                    {% if refund.order_item %}
+                                        {{ refund.order_item.product.name }}
+                                    {% else %}
                                         —
-
                                     {% endif %}
-
                                 </td>
-
-
-                                <td>
-
-                                    <span class="date-text">
-
-                                        {{ payment.created_at|date:"d M Y, h:i A" }}
-
-                                    </span>
-
-                                </td>
-
-
+                            
                                 <td class="amount-column">
-
                                     <strong class="refund-amount">
-
-                                        ₹ {{ payment.amount }}
-
+                                        ₹ {{ refund.amount|floatformat:2 }}
                                     </strong>
-
                                 </td>
-
-
+                            
                                 <td>
-
-                                    <span class="bill-status refunded">
-
-                                        Refunded
-
+                                    <span class="date-text">
+                                        {{ refund.created_at|date:"d M Y, h:i A" }}
                                     </span>
-
                                 </td>
-
-
+                            
+                                <td>
+                                    <span class="bill-status {{ refund.status }}">
+                                        {{ refund.get_status_display }}
+                                    </span>
+                                </td>
+                            
+                                <td>
+                                    {% if refund.status == "pending" %}
+                                
+                                        <button
+                                            type="button"
+                                            class="refund-review-button"
+                                            data-refund-id="{{ refund.id }}"
+                                            data-action="accept"
+                                        >
+                                            Accept
+                                        </button>
+                                    
+                                        <button
+                                            type="button"
+                                            class="refund-review-button"
+                                            data-refund-id="{{ refund.id }}"
+                                            data-action="reject"
+                                        >
+                                            Reject
+                                        </button>
+                                    
+                                    {% elif refund.status == "completed" %}
+                                    
+                                        <button
+                                            type="button"
+                                            class="refund-details-button"
+                                            data-refund-id="{{ refund.id }}"
+                                        >
+                                            View Details
+                                        </button>
+                                    
+                                    {% else %}
+                                    
+                                        <span class="muted-text">
+                                            No action
+                                        </span>
+                                    
+                                    {% endif %}
+                                </td>
+                            
                             </tr>
-
-
+                        
                         {% endfor %}
-
-
+                        
                     </tbody>
-
-
+                
                 </table>
 
             </div>
@@ -1517,8 +1500,7 @@ SmartCafe Admin - Bills
 
 
                 <p>
-                    No refunds were recorded on
-                    {{ selected_date|date:"d M Y" }}.
+                    No refunds were recorded on this date
                 </p>
 
             </div>
@@ -1784,7 +1766,259 @@ SmartCafe Admin - Bills
 
 </div>
 
+<!-- =============================================================
+     PAYMENT DETAILS MODAL
+     ============================================================= -->
 
+<div
+    id="paymentDetailsModal"
+    class="billing-modal"
+    hidden
+>
+    <div
+        class="billing-modal-backdrop"
+        data-close-payment-modal
+    ></div>
+
+    <div
+        class="billing-modal-dialog payment-details-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="paymentDetailsTitle"
+    >
+        <div class="billing-modal-header">
+            <div>
+                <span class="billing-modal-label">
+                    PAYMENT DETAILS
+                </span>
+
+                <h2 id="paymentDetailsTitle">
+                    Payment Details
+                </h2>
+
+                <p id="paymentDetailsSubtitle">—</p>
+            </div>
+
+            <button
+                type="button"
+                class="billing-modal-close"
+                id="closePaymentDetailsModal"
+                aria-label="Close payment details"
+            >
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+
+        <div class="billing-modal-body">
+
+            <div
+                id="paymentDetailsLoading"
+                class="payment-details-message"
+                hidden
+            >
+                Loading payment details…
+            </div>
+
+            <div
+                id="paymentDetailsError"
+                class="billing-error"
+                hidden
+            ></div>
+
+            <div id="paymentDetailsContent" hidden>
+
+                <div class="payment-details-hero">
+                    <span id="paymentDetailsType">Payment</span>
+
+                    <strong id="paymentDetailsAmount">
+                        ₹ 0.00
+                    </strong>
+
+                    <span
+                        id="paymentDetailsStatus"
+                        class="bill-status paid"
+                    >
+                        —
+                    </span>
+                </div>
+
+                <div class="payment-details-section">
+                    <h3>Transaction</h3>
+
+                    <div class="payment-details-grid">
+                        <div>
+                            <span>Bill / Request</span>
+                            <strong id="paymentDetailsReference">—</strong>
+                        </div>
+
+                        <div>
+                            <span>Order</span>
+                            <strong id="paymentDetailsOrder">—</strong>
+                        </div>
+
+                        <div>
+                            <span>Transaction method</span>
+                            <strong id="paymentDetailsMethod">—</strong>
+                        </div>
+
+                        <div>
+                            <span>Payment reference</span>
+                            <strong id="paymentDetailsGatewayReference">—</strong>
+                        </div>
+
+                        <div>
+                            <span>Payment record ID</span>
+                            <strong id="paymentDetailsPaymentId">—</strong>
+                        </div>
+
+                        <div>
+                            <span>Original payment ID</span>
+                            <strong id="paymentDetailsOriginalPaymentId">—</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="payment-details-section">
+                    <h3>Customer</h3>
+
+                    <div class="payment-details-grid">
+                        <div>
+                            <span>Name</span>
+                            <strong id="paymentDetailsCustomer">—</strong>
+                        </div>
+
+                        <div>
+                            <span>Email</span>
+                            <strong id="paymentDetailsEmail">—</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    id="paymentDetailsTotalsSection"
+                    class="payment-details-section"
+                >
+                    <h3>Bill breakdown</h3>
+
+                    <div class="payment-details-grid">
+                        <div>
+                            <span>Subtotal</span>
+                            <strong id="paymentDetailsSubtotal">—</strong>
+                        </div>
+
+                        <div>
+                            <span>Tax</span>
+                            <strong id="paymentDetailsTax">—</strong>
+                        </div>
+
+                        <div>
+                            <span>Bill total</span>
+                            <strong id="paymentDetailsBillTotal">—</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    id="paymentDetailsWalletSection"
+                    class="payment-details-section"
+                    hidden
+                >
+                    <h3>Wallet credit</h3>
+
+                    <div class="payment-details-grid">
+                        <div>
+                            <span>Amount credited</span>
+                            <strong id="paymentDetailsWalletCredit">—</strong>
+                        </div>
+
+                        <div>
+                            <span>Balance after credit</span>
+                            <strong id="paymentDetailsWalletBalance">—</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    id="paymentDetailsRefundSection"
+                    class="payment-details-section"
+                    hidden
+                >
+                    <h3>Refund decision</h3>
+
+                    <div class="payment-details-grid">
+                        <div>
+                            <span>Refund type</span>
+                            <strong id="paymentDetailsRefundType">—</strong>
+                        </div>
+
+                        <div>
+                            <span>Item</span>
+                            <strong id="paymentDetailsRefundItem">—</strong>
+                        </div>
+
+                        <div>
+                            <span>Requested on</span>
+                            <strong id="paymentDetailsRefundCreated">—</strong>
+                        </div>
+
+                        <div>
+                            <span>Completed on</span>
+                            <strong id="paymentDetailsRefundCompleted">—</strong>
+                        </div>
+
+                        <div>
+                            <span>Reviewed by</span>
+                            <strong id="paymentDetailsReviewedBy">—</strong>
+                        </div>
+
+                        <div>
+                            <span>Reviewed on</span>
+                            <strong id="paymentDetailsReviewedAt">—</strong>
+                        </div>
+                    </div>
+
+                    <div class="payment-details-note">
+                        <span>Customer's reason</span>
+                        <p id="paymentDetailsRefundReason">—</p>
+                    </div>
+
+                    <div
+                        id="paymentDetailsAdminNoteArea"
+                        class="payment-details-note"
+                        hidden
+                    >
+                        <span>Admin note</span>
+                        <p id="paymentDetailsAdminNote">—</p>
+                    </div>
+                </div>
+
+                <div
+                    id="paymentDetailsOrdersSection"
+                    class="payment-details-section"
+                    hidden
+                >
+                    <h3>Orders included in bill</h3>
+                    <div id="paymentDetailsOrders"></div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="billing-modal-footer">
+            <button
+                type="button"
+                class="billing-modal-cancel"
+                id="closePaymentDetailsFooter"
+            >
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<form id="refund-csrf-form" hidden>
+    {% csrf_token %}
+</form>
 
 <!-- =============================================================
      AJAX BILL BUILDER JAVASCRIPT
@@ -3393,7 +3627,504 @@ document.addEventListener(
 
     }
 );
+/* =========================================================
+   REFUND REQUEST REVIEW
+   ========================================================= */
 
+/* =========================================================
+   REFUND REQUEST REVIEW
+   ========================================================= */
+
+document.addEventListener("click", async function (event) {
+    const button = event.target.closest(
+        ".refund-review-button[data-refund-id][data-action]"
+    );
+
+    if (!button) {
+        return;
+    }
+
+    event.preventDefault();
+
+    const refundId = button.dataset.refundId;
+    const action = button.dataset.action;
+
+    if (!refundId || !["accept", "reject"].includes(action)) {
+        console.error("Invalid refund ID or action.", {
+            refundId,
+            action
+        });
+        return;
+    }
+
+    // Confirm acceptance or collect a mandatory rejection reason.
+    let adminNote = "";
+
+    if (action === "accept") {
+        const confirmed = window.confirm(
+            "Accept this refund request?\n\n" +
+            "The approved amount will be credited to the customer's " +
+            "wallet, and the relevant order or item will be cancelled."
+        );
+
+        if (!confirmed) {
+            return;
+        }
+    }
+
+    if (action === "reject") {
+        const enteredNote = window.prompt(
+            "Enter the reason for rejecting this refund request:"
+        );
+
+        if (enteredNote === null) {
+            return;
+        }
+
+        adminNote = enteredNote.trim();
+
+        if (!adminNote) {
+            window.alert("A rejection reason is required.");
+            return;
+        }
+    }
+
+    // Retrieve the token rendered by Django.
+    const csrfInput = document.querySelector(
+        '#refund-csrf-form input[name="csrfmiddlewaretoken"]'
+    );
+
+    const csrfToken = csrfInput
+        ? csrfInput.value
+        : "";
+
+    if (!csrfToken) {
+        window.alert(
+            "The security token could not be found. " +
+            "Please reload the page and try again."
+        );
+        console.error(
+            "CSRF token missing from #refund-csrf-form."
+        );
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("action", action);
+    formData.append("admin_note", adminNote);
+
+    const originalText = button.textContent.trim();
+
+    button.disabled = true;
+    button.classList.add("is-processing");
+    button.textContent =
+        action === "accept" ? "Accepting..." : "Rejecting...";
+
+    try {
+        const endpoint = "{% url 'admin_review_refund' 0 %}"
+            .replace("/0/", `/${encodeURIComponent(refundId)}/`);
+
+        const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": csrfToken,
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: formData,
+            credentials: "same-origin"
+        });
+
+        // Handle non-JSON responses without hiding the real error.
+        const responseText = await response.text();
+
+        let data;
+
+        try {
+            data = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error(
+                "Refund endpoint returned a non-JSON response:",
+                response.status,
+                responseText
+            );
+
+            throw new Error(
+                `The server returned an unexpected response ` +
+                `(HTTP ${response.status}). Check the Django terminal.`
+            );
+        }
+
+        if (!response.ok || !data.success) {
+            throw new Error(
+                data.message ||
+                `Unable to process the refund request ` +
+                `(HTTP ${response.status}).`
+            );
+        }
+
+        window.alert(
+            data.message ||
+            (
+                action === "accept"
+                    ? "Refund accepted successfully."
+                    : "Refund rejected successfully."
+            )
+        );
+
+        window.location.reload();
+
+    } catch (error) {
+        console.error("Refund review error:", error);
+
+        window.alert(
+            error.message || "Something went wrong."
+        );
+
+        button.disabled = false;
+        button.classList.remove("is-processing");
+        button.textContent = originalText;
+    }
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById("paymentDetailsModal");
+
+    if (!modal) {
+        return;
+    }
+
+    const loading = document.getElementById("paymentDetailsLoading");
+    const errorBox = document.getElementById("paymentDetailsError");
+    const content = document.getElementById("paymentDetailsContent");
+
+    const title = document.getElementById("paymentDetailsTitle");
+    const subtitle = document.getElementById("paymentDetailsSubtitle");
+
+    const type = document.getElementById("paymentDetailsType");
+    const amount = document.getElementById("paymentDetailsAmount");
+    const status = document.getElementById("paymentDetailsStatus");
+
+    const reference = document.getElementById("paymentDetailsReference");
+    const order = document.getElementById("paymentDetailsOrder");
+    const method = document.getElementById("paymentDetailsMethod");
+    const gatewayReference = document.getElementById("paymentDetailsGatewayReference");
+    const paymentId = document.getElementById("paymentDetailsPaymentId");
+    const originalPaymentId = document.getElementById("paymentDetailsOriginalPaymentId");
+
+    const customer = document.getElementById("paymentDetailsCustomer");
+    const email = document.getElementById("paymentDetailsEmail");
+
+    const subtotal = document.getElementById("paymentDetailsSubtotal");
+    const tax = document.getElementById("paymentDetailsTax");
+    const billTotal = document.getElementById("paymentDetailsBillTotal");
+
+    const totalsSection = document.getElementById("paymentDetailsTotalsSection");
+    const walletSection = document.getElementById("paymentDetailsWalletSection");
+    const refundSection = document.getElementById("paymentDetailsRefundSection");
+    const ordersSection = document.getElementById("paymentDetailsOrdersSection");
+
+    const walletCredit = document.getElementById("paymentDetailsWalletCredit");
+    const walletBalance = document.getElementById("paymentDetailsWalletBalance");
+
+    const refundType = document.getElementById("paymentDetailsRefundType");
+    const refundItem = document.getElementById("paymentDetailsRefundItem");
+    const refundCreated = document.getElementById("paymentDetailsRefundCreated");
+    const refundCompleted = document.getElementById("paymentDetailsRefundCompleted");
+    const reviewedBy = document.getElementById("paymentDetailsReviewedBy");
+    const reviewedAt = document.getElementById("paymentDetailsReviewedAt");
+    const refundReason = document.getElementById("paymentDetailsRefundReason");
+    const adminNoteArea = document.getElementById("paymentDetailsAdminNoteArea");
+    const adminNote = document.getElementById("paymentDetailsAdminNote");
+
+    const ordersContainer = document.getElementById("paymentDetailsOrders");
+
+    function formatMoney(value) {
+        return "₹ " + Number(value || 0).toFixed(2);
+    }
+
+    function setText(element, value) {
+        element.textContent =
+            value === null || value === undefined || value === ""
+                ? "—"
+                : String(value);
+    }
+
+    function openModal() {
+        modal.hidden = false;
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeModal() {
+        modal.hidden = true;
+        document.body.style.overflow = "";
+    }
+
+    function resetModal() {
+        errorBox.hidden = true;
+        content.hidden = true;
+        loading.hidden = false;
+
+        totalsSection.hidden = false;
+        walletSection.hidden = true;
+        refundSection.hidden = true;
+        ordersSection.hidden = true;
+
+        ordersContainer.replaceChildren();
+        adminNoteArea.hidden = true;
+
+        title.textContent = "Payment Details";
+        subtitle.textContent = "—";
+
+        setText(type, "Payment");
+        setText(amount, "₹ 0.00");
+        setText(status, "—");
+
+        [
+            reference,
+            order,
+            method,
+            gatewayReference,
+            paymentId,
+            originalPaymentId,
+            customer,
+            email,
+            subtotal,
+            tax,
+            billTotal,
+            walletCredit,
+            walletBalance,
+            refundType,
+            refundItem,
+            refundCreated,
+            refundCompleted,
+            reviewedBy,
+            reviewedAt,
+            refundReason,
+            adminNote
+        ].forEach(function (element) {
+            setText(element, "—");
+        });
+    }
+
+    async function requestJSON(url) {
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            credentials: "same-origin"
+        });
+
+        const responseText = await response.text();
+        let data;
+
+        try {
+            data = JSON.parse(responseText);
+        } catch (error) {
+            throw new Error(
+                `Unexpected server response (HTTP ${response.status}).`
+            );
+        }
+
+        if (!response.ok || !data.success) {
+            throw new Error(
+                data.message || `Request failed (HTTP ${response.status}).`
+            );
+        }
+
+        return data;
+    }
+
+    async function loadPaidBill(billId) {
+        resetModal();
+        title.textContent = "Payment Details";
+        subtitle.textContent = "Loading bill…";
+        openModal();
+
+        try {
+            const data = await requestJSON(
+                `/admin_panel/billing/${encodeURIComponent(billId)}/data/`
+            );
+
+            const bill = data.bill;
+
+            title.textContent = "Payment Details";
+            subtitle.textContent = bill.bill_no || "Paid bill";
+
+            setText(type, "Bill payment");
+            setText(amount, formatMoney(bill.total_amount));
+            setText(status, bill.status);
+
+            setText(reference, bill.bill_no);
+            setText(method, bill.transaction_method);
+            setText(gatewayReference, bill.payment_reference);
+
+            setText(subtotal, formatMoney(bill.subtotal));
+            setText(tax, formatMoney(bill.tax_amount));
+            setText(billTotal, formatMoney(bill.total_amount));
+
+            // Bill details don't currently return customer fields,
+            // so show the associated order numbers instead.
+            setText(
+                order,
+                bill.orders.map(function (item) {
+                    return item.order_no;
+                }).join(", ")
+            );
+
+            setText(customer, "See associated orders");
+            setText(email, "—");
+
+            ordersContainer.replaceChildren();
+
+            bill.orders.forEach(function (billOrder) {
+                const card = document.createElement("div");
+                card.className = "billing-modal-order";
+
+                const heading = document.createElement("div");
+                heading.className = "billing-modal-order-header";
+
+                const orderNumber = document.createElement("span");
+                orderNumber.className = "billing-modal-order-number";
+                orderNumber.textContent = billOrder.order_no;
+
+                const orderTotal = document.createElement("span");
+                orderTotal.className = "billing-modal-order-total";
+                orderTotal.textContent = formatMoney(billOrder.total);
+
+                heading.append(orderNumber, orderTotal);
+
+                const products = document.createElement("div");
+                products.className = "billing-modal-order-products";
+                products.textContent = billOrder.products.map(function (product) {
+                    return `${product.name} × ${product.quantity}`;
+                }).join(" · ") || "No products";
+
+                card.append(heading, products);
+                ordersContainer.appendChild(card);
+            });
+
+            ordersSection.hidden = bill.orders.length === 0;
+            loading.hidden = true;
+            content.hidden = false;
+
+        } catch (error) {
+            loading.hidden = true;
+            errorBox.textContent = error.message;
+            errorBox.hidden = false;
+        }
+    }
+
+    async function loadRefund(refundId) {
+        resetModal();
+        title.textContent = "Refund Details";
+        subtitle.textContent = "Loading refund…";
+        openModal();
+
+        try {
+            const data = await requestJSON(
+                `/admin_panel/billing/refunds/${encodeURIComponent(refundId)}/data/`
+            );
+
+            const refund = data.refund;
+
+            title.textContent = "Refund Details";
+            subtitle.textContent = refund.request_no;
+
+            setText(type, "Wallet refund");
+            setText(amount, formatMoney(refund.amount));
+            setText(status, refund.status_display);
+
+            setText(reference, refund.request_no);
+            setText(order, refund.order_no);
+            setText(method, refund.transaction_method);
+            setText(gatewayReference, refund.payment_reference);
+            setText(paymentId, refund.payment_id);
+            setText(originalPaymentId, refund.original_payment_id);
+
+            setText(customer, refund.customer_name);
+            setText(email, refund.customer_email);
+
+            // A refund is not a new bill, so hide bill totals.
+            totalsSection.hidden = true;
+
+            refundSection.hidden = false;
+            walletSection.hidden = false;
+
+            setText(walletCredit, formatMoney(refund.wallet_credited));
+            setText(
+                walletBalance,
+                refund.wallet_balance_after
+                    ? formatMoney(refund.wallet_balance_after)
+                    : "Not available"
+            );
+
+            setText(refundType, refund.refund_type_display);
+            setText(refundItem, refund.item_name);
+            setText(refundCreated, refund.created_at);
+            setText(refundCompleted, refund.completed_at);
+            setText(reviewedBy, refund.reviewed_by);
+            setText(reviewedAt, refund.reviewed_at);
+            setText(refundReason, refund.reason);
+
+            if (refund.admin_note) {
+                setText(adminNote, refund.admin_note);
+                adminNoteArea.hidden = false;
+            }
+
+            loading.hidden = true;
+            content.hidden = false;
+
+        } catch (error) {
+            loading.hidden = true;
+            errorBox.textContent = error.message;
+            errorBox.hidden = false;
+        }
+    }
+
+    // Close controls.
+    document.getElementById("closePaymentDetailsModal")
+        .addEventListener("click", closeModal);
+
+    document.getElementById("closePaymentDetailsFooter")
+        .addEventListener("click", closeModal);
+
+    const backdrop = modal.querySelector("[data-close-payment-modal]");
+
+    if (backdrop) {
+        backdrop.addEventListener("click", closeModal);
+    }
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && !modal.hidden) {
+            closeModal();
+        }
+    });
+
+    // Paid bills open payment details, not Edit Bill.
+    document.querySelectorAll(".billing-paid-bill-row").forEach(function (row) {
+        row.addEventListener("click", function () {
+            loadPaidBill(row.dataset.billId);
+        });
+
+        row.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                loadPaidBill(row.dataset.billId);
+            }
+        });
+    });
+
+    // Completed refund View Details buttons.
+    document.querySelectorAll(".refund-details-button").forEach(function (button) {
+        button.addEventListener("click", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            loadRefund(button.dataset.refundId);
+        });
+    });
+});
 </script>
 
 

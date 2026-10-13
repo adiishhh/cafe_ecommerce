@@ -1909,6 +1909,214 @@
     font-size: 8px;
 }
 
+/* ============================================================
+   REFUND REVIEW ACTIONS
+   ============================================================ */
+
+.refund-review-button,
+.refund-details-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+
+    min-height: 30px;
+    padding: 0 13px;
+
+    border: 1px solid transparent;
+    border-radius: 999px;
+
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+
+    white-space: nowrap;
+    cursor: pointer;
+
+    transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease,
+        transform 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+
+/* Accept */
+
+.refund-review-button[data-action="accept"] {
+    background: #e8f5ec;
+    border-color: #c9e7d1;
+    color: #287545;
+}
+
+.refund-review-button[data-action="accept"]:hover {
+    background: #d5eddd;
+    border-color: #a8d8b7;
+    box-shadow: 0 3px 8px rgba(40, 117, 69, 0.10);
+    transform: translateY(-1px);
+}
+
+
+/* Reject */
+
+.refund-review-button[data-action="reject"] {
+    background: #fff0ed;
+    border-color: #f2d0c9;
+    color: #b33f32;
+}
+
+.refund-review-button[data-action="reject"]:hover {
+    background: #ffe0da;
+    border-color: #eab6ad;
+    box-shadow: 0 3px 8px rgba(179, 63, 50, 0.10);
+    transform: translateY(-1px);
+}
+
+
+/* View details */
+
+.refund-details-button {
+    background: #f4eee8;
+    border-color: #e4d4c5;
+    color: #88502b;
+}
+
+.refund-details-button:hover {
+    background: #eadfd3;
+    border-color: #d4bba5;
+    color: #68391d;
+}
+
+
+/* Keyboard focus */
+
+.refund-review-button:focus-visible,
+.refund-details-button:focus-visible {
+    outline: 3px solid rgba(164, 81, 30, 0.22);
+    outline-offset: 2px;
+}
+
+
+/* Processing and disabled states */
+
+.refund-review-button:disabled,
+.refund-details-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.refund-review-button.is-processing {
+    pointer-events: none;
+}
+
+
+/* ============================================================
+   REFUND STATUS CAPSULES
+   ============================================================ */
+
+/*
+   Reuse the existing bill-status class so the refund table
+   retains its current markup.
+*/
+
+.billing-table .bill-status.pending,
+.billing-table .bill-status.accepted,
+.billing-table .bill-status.completed,
+.billing-table .bill-status.rejected {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+
+    min-height: 25px;
+    padding: 0 11px;
+
+    border: 1px solid transparent;
+    border-radius: 999px;
+
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.2;
+
+    white-space: nowrap;
+}
+
+
+/* Pending review */
+
+.billing-table .bill-status.pending {
+    background: #fff4dc;
+    border-color: #f1dfb1;
+    color: #96651a;
+}
+
+
+/* Accepted, if displayed as a separate state */
+
+.billing-table .bill-status.accepted {
+    background: #e9f1ff;
+    border-color: #d0dfff;
+    color: #355da7;
+}
+
+
+/* Successfully completed */
+
+.billing-table .bill-status.completed {
+    background: #e7f5eb;
+    border-color: #c8e7d0;
+    color: #287545;
+}
+
+
+/* Rejected */
+
+.billing-table .bill-status.rejected {
+    background: #fff0ed;
+    border-color: #f0cec7;
+    color: #b33f32;
+}
+
+
+/* ============================================================
+   REFUND TABLE ACTION LAYOUT
+   ============================================================ */
+
+.billing-table td:has(.refund-review-button),
+.billing-table td:has(.refund-details-button) {
+    white-space: nowrap;
+}
+
+.billing-table .refund-amount {
+    color: #342c26;
+    font-weight: 700;
+}
+
+
+/* Smaller screens */
+
+@media (max-width: 650px) {
+    .refund-review-button,
+    .refund-details-button {
+        min-height: 29px;
+        padding: 0 10px;
+        font-size: 9px;
+    }
+
+    .billing-table .bill-status.pending,
+    .billing-table .bill-status.accepted,
+    .billing-table .bill-status.completed,
+    .billing-table .bill-status.rejected {
+        min-height: 23px;
+        padding: 0 9px;
+        font-size: 8px;
+    }
+}
+
 
 /* On smaller screens, allow the product summary to wrap nicely. */
 
@@ -3024,4 +3232,126 @@
         grid-template-columns: 1fr;
     }
 
+}
+
+/* =========================================================
+   PAYMENT / REFUND DETAILS MODAL
+   ========================================================= */
+
+.payment-details-dialog {
+    width: min(760px, calc(100vw - 32px));
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+}
+
+.payment-details-hero {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 22px;
+    margin-bottom: 22px;
+    border: 1px solid #eaded2;
+    border-radius: 16px;
+    background: #faf5ef;
+}
+
+.payment-details-hero > span:first-child {
+    flex: 1 1 100%;
+    color: #806d5d;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.payment-details-hero > strong {
+    color: #a64b18;
+    font-size: clamp(25px, 4vw, 34px);
+    font-weight: 750;
+}
+
+.payment-details-section {
+    padding: 20px 0;
+    border-bottom: 1px solid #eee4db;
+}
+
+.payment-details-section:last-child {
+    border-bottom: 0;
+}
+
+.payment-details-section h3 {
+    margin: 0 0 16px;
+    color: #382b21;
+    font-size: 15px;
+    font-weight: 750;
+}
+
+.payment-details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 24px;
+}
+
+.payment-details-grid > div {
+    min-width: 0;
+}
+
+.payment-details-grid > div > span,
+.payment-details-note > span {
+    display: block;
+    margin-bottom: 6px;
+    color: #8a786a;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.payment-details-grid > div > strong {
+    display: block;
+    overflow-wrap: anywhere;
+    color: #342a23;
+    font-size: 14px;
+    font-weight: 650;
+}
+
+.payment-details-note {
+    margin-top: 18px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #f8f4ef;
+}
+
+.payment-details-note p {
+    margin: 0;
+    color: #514238;
+    font-size: 14px;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.payment-details-message {
+    padding: 24px 12px;
+    color: #7d6a5b;
+    text-align: center;
+}
+
+.payment-details-dialog .billing-modal-footer {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+}
+
+@media (max-width: 560px) {
+    .payment-details-dialog {
+        width: calc(100vw - 20px);
+        max-height: calc(100vh - 20px);
+    }
+
+    .payment-details-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 14px;
+    }
+
+    .payment-details-hero {
+        padding: 16px;
+    }
 }
