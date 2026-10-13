@@ -215,7 +215,7 @@ def admin_generate_bill(request):
                 {
                     "success": False,
                     "message": (
-                        "Please select Cash, UPI, or Card."
+                        "Please select Cash, UPI or Card."
                     ),
                 },
                 status=400,
@@ -556,6 +556,7 @@ def admin_update_bill(request, bill_id):
         Bill.TransactionMethod.CASH,
         Bill.TransactionMethod.UPI,
         Bill.TransactionMethod.CARD,
+        Bill.TransactionMethod.NETBANKING,
     }
 
 
@@ -1111,6 +1112,7 @@ def verify_online_payment(request):
         method_map = {
             "upi": Payment.TransactionMethod.UPI,
             "card": Payment.TransactionMethod.CARD,
+            "netbanking": Payment.TransactionMethod.NETBANKING,
         }
 
         transaction_method = method_map.get(gateway_method)

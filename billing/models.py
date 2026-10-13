@@ -15,6 +15,7 @@ class Bill(models.Model):
         CASH = "cash", "Cash"
         UPI = "upi", "UPI"
         CARD = "card", "Card"
+        NETBANKING = "netbanking", "NetBanking"
         WALLET = "wallet", "Wallet"
 
     class Status(models.TextChoices):
@@ -234,6 +235,7 @@ class Payment(models.Model):
         UPI = "upi", "UPI"
         CARD = "card", "Card"
         WALLET = "wallet", "Wallet"
+        NETBANKING = "netbanking", "NetBanking"
 
     class Status(models.TextChoices):
         PENDING = "pending", "Pending"
