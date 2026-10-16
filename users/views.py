@@ -85,21 +85,24 @@ def verify_signup_otp(request):
 
             if check_password(otp, signup_data['otp']):
 
-                User.objects.create(
-                    name=signup_data['name'],
-                    email=signup_data['email'],
-                    phone=signup_data['phone'],
-                    password=signup_data['password'],
-                )
+                with transaction.atomic():
 
-                Wallet.objects.create(
-                    user=User
-                )
-
-                cache.delete(f'signup_{signup_id}')
-                request.session.pop('signup_id', None)
-
-                return redirect('login')
+                    user = User.objects.create(
+                        name=signup_data['name'],
+                        email=signup_data['email'],
+                        phone=signup_data['phone'],
+                        password=signup_data['password'],
+                    )
+    
+                    Wallet.objects.create(
+                        user=user
+                    )
+    
+                    cache.delete(f'signup_{signup_id}')
+                    cache.delete(f'signup_resend_{signup_id}')
+                    request.session.pop('signup_id', None)
+    
+                    return redirect('login')
             else:
                 form.add_error('otp', 'Invalid OTP. Please try again.')
 

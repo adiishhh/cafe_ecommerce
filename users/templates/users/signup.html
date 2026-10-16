@@ -83,8 +83,16 @@
                     <div class="form-field">
                         <label for="{{ form.password1.id_for_label }}">PASSWORD</label>
 
-                        {{ form.password1 }}
-
+                        <div class="password-input-wrapper">
+                            {{ form.password1 }}
+                        
+                            <button type="button"
+                                    class="password-toggle"
+                                    aria-label="Show password">
+                                <i class="fa fa-eye"></i>
+                            </button>
+                        </div>
+                    
                         {% for error in form.password1.errors %}
                             <p class="field-error">{{ error }}</p>
                         {% endfor %}
@@ -93,9 +101,17 @@
 
                     <div class="form-field">
                         <label for="{{ form.password2.id_for_label }}">CONFIRM PASSWORD</label>
-
-                        {{ form.password2 }}
-
+                                        
+                        <div class="password-input-wrapper">
+                            {{ form.password2 }}
+                        
+                            <button type="button"
+                                    class="password-toggle"
+                                    aria-label="Show password">
+                                <i class="fa fa-eye"></i>
+                            </button>
+                        </div>
+                    
                         {% for error in form.password2.errors %}
                             <p class="field-error">{{ error }}</p>
                         {% endfor %}
