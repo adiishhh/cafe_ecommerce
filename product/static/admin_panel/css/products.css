@@ -748,3 +748,44 @@
 .pagination-button:hover {
     background: #f0e9df;
 }
+
+/* =========================
+   PRODUCT OFFER PRICING
+========================= */
+
+.admin-product-pricing {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.admin-offer-badge {
+    display: inline-block;
+    padding: 3px 6px;
+    border-radius: 5px;
+    background: #fce8e2;
+    color: #b63d20;
+    font-size: 9px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.admin-offer-prices {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+}
+
+.admin-original-price {
+    color: #96877a;
+    font-size: 10px;
+    font-weight: 400;
+}
+
+.admin-product-pricing .product-price {
+    color: #8b431c;
+    font-size: 13px;
+    font-weight: 700;
+}

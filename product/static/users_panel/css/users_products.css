@@ -650,3 +650,72 @@
     }
 
 }
+
+/* =========================
+   PRODUCT PRICING
+========================= */
+
+.product-pricing {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-width: 0;
+}
+
+.offer-badge {
+    display: inline-block;
+    padding: 3px 6px;
+    border-radius: 5px;
+    background: #fce8e2;
+    color: #b63d20;
+    font-size: 9px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.offer-prices {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.original-price {
+    color: #96877a;
+    font-size: 10px;
+    font-weight: 400;
+}
+
+.offered-price {
+    color: #8b3f16;
+    font-family: Georgia, serif;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.regular-price {
+    color: #8b3f16;
+    font-family: Georgia, serif;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+@media (max-width: 600px) {
+    .offer-badge {
+        font-size: 8px;
+    }
+
+    .original-price {
+        font-size: 9px;
+    }
+
+    .offered-price,
+    .regular-price {
+        font-size: 12px;
+    }
+
+    .offer-prices {
+        gap: 4px;
+    }
+}

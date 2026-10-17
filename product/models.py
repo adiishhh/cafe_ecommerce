@@ -2,6 +2,8 @@ from django.db import models
 from category.models import Category
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
+from decimal import Decimal, ROUND_HALF_UP
+from django.utils import timezone
 
 # Create your models here.
 
@@ -19,9 +21,25 @@ class Product(models.Model):
 
     description = models.TextField()
 
-    price = models.DecimalField(
+    # Original price stored in the database.
+    base_price = models.DecimalField(
         max_digits=10,
         decimal_places=2
+    )
+
+    offer_percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        validators=[
+            MinValueValidator(0),
+            MaxValueValidator(100),
+        ],
+    )
+
+    offer_valid_until = models.DateField(
+        null=True,
+        blank=True,
     )
 
     is_active = models.BooleanField(
@@ -35,6 +53,39 @@ class Product(models.Model):
     updated_at = models.DateTimeField(
         auto_now=True
     )
+
+    @property
+    def has_active_offer(self):
+        return (
+            self.offer_percentage > Decimal("0")
+            and self.offer_valid_until is not None
+            and self.offer_valid_until >= timezone.localdate()
+        )
+
+    @property
+    def discounted_price(self):
+        discount = (
+            self.base_price
+            * self.offer_percentage
+            / Decimal("100")
+        )
+
+        return (
+            self.base_price - discount
+        ).quantize(
+            Decimal("0.01"),
+            rounding=ROUND_HALF_UP
+        )
+
+    @property
+    def price(self):
+        if self.has_active_offer:
+            return self.discounted_price
+
+        return self.base_price
+
+    def __str__(self):
+        return self.name
 
 
 

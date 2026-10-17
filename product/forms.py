@@ -1,20 +1,23 @@
 import re
 from django import forms
 from django.forms import inlineformset_factory
-
 from .models import Product, ProductImage
+from django.utils import timezone
 
 
 class ProductForm(forms.ModelForm):
 
     class Meta:
         model = Product
+
         fields = [
             'category',
             'name',
             'description',
-            'price',
-            'is_active'
+            'base_price',
+            'offer_percentage',
+            'offer_valid_until',
+            'is_active',
         ]
 
         widgets = {
@@ -23,12 +26,14 @@ class ProductForm(forms.ModelForm):
                     'class': 'form-input',
                 }
             ),
+
             'name': forms.TextInput(
                 attrs={
                     'class': 'form-input',
                     'placeholder': 'Enter product name',
                 }
             ),
+
             'description': forms.Textarea(
                 attrs={
                     'class': 'form-input',
@@ -36,13 +41,33 @@ class ProductForm(forms.ModelForm):
                     'rows': 4,
                 }
             ),
-            'price': forms.NumberInput(
+
+            'base_price': forms.NumberInput(
                 attrs={
                     'class': 'form-input',
                     'placeholder': 'Enter price',
                     'step': '0.01',
+                    'min': '0.01',
                 }
             ),
+
+            'offer_percentage': forms.NumberInput(
+                attrs={
+                    'class': 'form-input',
+                    'placeholder': 'Enter offer percentage',
+                    'step': '0.01',
+                    'min': '0',
+                    'max': '100',
+                }
+            ),
+
+            'offer_valid_until': forms.DateInput(
+                attrs={
+                    'class': 'form-input',
+                    'type': 'date',
+                }
+            ),
+
             'is_active': forms.CheckboxInput(
                 attrs={
                     'class': 'form-checkbox',
@@ -68,7 +93,9 @@ class ProductForm(forms.ModelForm):
         )
 
         if self.instance.pk:
-            queryset = queryset.exclude(pk=self.instance.pk)
+            queryset = queryset.exclude(
+                pk=self.instance.pk
+            )
 
         if queryset.exists():
             raise forms.ValidationError(
@@ -91,7 +118,7 @@ class ProductForm(forms.ModelForm):
         return description
 
     def clean_price(self):
-        price = self.cleaned_data['price']
+        price = self.cleaned_data['base_price']
 
         if price <= 0:
             raise forms.ValidationError(
@@ -99,6 +126,42 @@ class ProductForm(forms.ModelForm):
             )
 
         return price
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        offer_percentage = cleaned_data.get(
+            'offer_percentage'
+        )
+
+        offer_valid_until = cleaned_data.get(
+            'offer_valid_until'
+        )
+
+        if offer_percentage is None:
+            return cleaned_data
+
+        if offer_percentage > 0:
+
+            if not offer_valid_until:
+                self.add_error(
+                    'offer_valid_until',
+                    'A validity date is required when an offer is applied.'
+                )
+
+            elif offer_valid_until < timezone.localdate():
+                self.add_error(
+                    'offer_valid_until',
+                    'The offer validity date cannot be in the past.'
+                )
+
+        elif offer_valid_until and offer_valid_until < timezone.localdate():
+            self.add_error(
+                'offer_valid_until',
+                'The validity date cannot be in the past.'
+            )
+
+        return cleaned_data
 
 
 class ProductImageForm(forms.ModelForm):

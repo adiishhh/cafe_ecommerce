@@ -48,14 +48,38 @@
 
                                 <div class="product-bottom">
 
-                                    <strong>
-                                        ₹{{ product.price }}
-                                    </strong>
-
+                                    <div class="product-pricing">
+                                    
+                                        {% if product.has_active_offer %}
+                                    
+                                            <span class="offer-badge">
+                                                {{ product.offer_percentage|floatformat:"-2" }}% OFF
+                                            </span>
+                                        
+                                            <div class="offer-prices">
+                                                <del class="original-price">
+                                                    ₹{{ product.base_price }}
+                                                </del>
+                                            
+                                                <strong class="offered-price">
+                                                    ₹{{ product.discounted_price|floatformat:2 }}
+                                                </strong>
+                                            </div>
+                                        
+                                        {% else %}
+                                        
+                                            <strong class="regular-price">
+                                                ₹{{ product.price }}
+                                            </strong>
+                                        
+                                        {% endif %}
+                                        
+                                    </div>
+                                
                                     <span class="add-button">
                                         Add +
                                     </span>
-
+                                
                                 </div>
 
                             </div>

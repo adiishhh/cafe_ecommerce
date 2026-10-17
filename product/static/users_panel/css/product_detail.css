@@ -2184,3 +2184,40 @@ textarea {
         transform: none;
     }
 }
+
+.product-pricing {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.offer-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 6px;
+    background: #e8f5e9;
+    color: #237a3b;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.offer-prices {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.original-price {
+    color: #888;
+    font-size: 0.95rem;
+    font-weight: 400;
+}
+
+.offered-price,
+.regular-price {
+    color: #71300f;
+    font-size: 1.4rem;
+    font-weight: 700;
+}   

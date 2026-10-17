@@ -14,6 +14,22 @@
 
 {% block content %}
 
+{% if messages %}
+
+    <div class="messages">
+
+        {% for message in messages %}
+
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+{% endif %}
+
 <div class="product-detail-page">
 
     <!-- Header -->
@@ -110,8 +126,39 @@
             <div class="product-meta">
 
                 <div class="meta-card">
+
                     <span>Price</span>
-                    <strong>₹{{ product.price }}</strong>
+
+                    <div class="admin-product-pricing">
+                    
+                        {% if product.has_active_offer %}
+                    
+                            <span class="admin-offer-badge">
+                                {{ product.offer_percentage|floatformat:"-2" }}% OFF
+                            </span>
+                        
+                            <div class="admin-offer-prices">
+                            
+                                <del class="admin-original-price">
+                                    ₹{{ product.base_price }}
+                                </del>
+                            
+                                <strong class="admin-offered-price">
+                                    ₹{{ product.price|floatformat:2 }}
+                                </strong>
+                            
+                            </div>
+                        
+                        {% else %}
+                        
+                            <strong>
+                                ₹{{ product.price|floatformat:2 }}
+                            </strong>
+                        
+                        {% endif %}
+                        
+                    </div>
+                
                 </div>
 
                 <div class="meta-card">

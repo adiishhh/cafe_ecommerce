@@ -1099,3 +1099,53 @@ body.review-modal-open {
     }
 
 }
+
+.admin-product-pricing {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.admin-offered-price {
+    color: var(--admin-primary, #934116);
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+/* =========================
+   MESSAGES
+   ========================= */
+
+.messages {
+    margin-bottom: 20px;
+}
+
+.message {
+    padding: 14px 18px;
+    margin-bottom: 8px;
+
+    border-radius: 8px;
+
+    font-size: 14px;
+}
+
+.message.success {
+    background: #e8f8ef;
+    color: #008542;
+}
+
+.message.error {
+    background: #fff0f0;
+    color: #c62828;
+}
+
+.message.warning {
+    background: #fff8e5;
+    color: #9a6700;
+}
+
+.message.info {
+    background: #eef6ff;
+    color: #1769aa;
+}

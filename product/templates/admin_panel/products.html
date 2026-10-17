@@ -225,10 +225,36 @@
 
                         <td>
 
-                            <span class="product-price">
-                                ₹{{ product.price }}
-                            </span>
-
+                            <div class="admin-product-pricing">
+                            
+                                {% if product.has_active_offer %}
+                            
+                                    <span class="admin-offer-badge">
+                                        {{ product.offer_percentage|floatformat:"-2" }}% OFF
+                                    </span>
+                                
+                                    <div class="admin-offer-prices">
+                                    
+                                        <del class="admin-original-price">
+                                            ₹{{ product.base_price }}
+                                        </del>
+                                    
+                                        <span class="product-price">
+                                            ₹{{ product.discounted_price|floatformat:2 }}
+                                        </span>
+                                    
+                                    </div>
+                                
+                                {% else %}
+                                
+                                    <span class="product-price">
+                                        ₹{{ product.price }}
+                                    </span>
+                                
+                                {% endif %}
+                                
+                            </div>
+                        
                         </td>
 
 

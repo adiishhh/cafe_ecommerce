@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Avg, Count, F, Value, Case, When, ExpressionWrapper, DecimalField
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 from .forms import ProductForm, ProductImageFormSet
@@ -10,7 +10,6 @@ from .models import Product
 from orders.models import Tax
 from category.models import Category
 from decimal import Decimal, InvalidOperation
-from django.db.models import Avg, Count
 from django.utils import timezone
 from .models import ReviewRating
 from django.http import HttpResponseBadRequest
@@ -36,11 +35,36 @@ def customer_home(request):
     min_price = request.GET.get('min_price', '').strip()
     max_price = request.GET.get('max_price', '').strip()
 
+    today = timezone.localdate()
+
+    price_field = DecimalField(
+        max_digits=10,
+        decimal_places=2,
+    )
+
     products = Product.objects.select_related(
         'category'
     ).prefetch_related(
         'images'
-    ).all()
+    ).annotate(
+        effective_price=Case(
+            When(
+                offer_percentage__gt=0,
+                offer_valid_until__gte=today,
+                then=ExpressionWrapper(
+                    F('base_price')
+                    * (
+                        Value(Decimal('100.00'), output_field=price_field)
+                        - F('offer_percentage')
+                    )
+                    / Value(Decimal('100.00'), output_field=price_field),
+                    output_field=price_field,
+                ),
+            ),
+            default=F('base_price'),
+            output_field=price_field,
+        )
+    )
 
     if query:
         products = products.filter(
@@ -60,7 +84,7 @@ def customer_home(request):
 
             if min_price_value >= 0:
                 products = products.filter(
-                    price__gte=min_price_value
+                    effective_price__gte=min_price_value
                 )
             else:
                 min_price = ''
@@ -74,7 +98,7 @@ def customer_home(request):
 
             if max_price_value >= 0:
                 products = products.filter(
-                    price__lte=max_price_value
+                    effective_price__lte=max_price_value    
                 )
             else:
                 max_price = ''
@@ -84,11 +108,11 @@ def customer_home(request):
 
     if sort == 'price_low':
 
-        products = products.order_by('price')
+        products = products.order_by('effective_price')
 
     elif sort == 'price_high':
 
-        products = products.order_by('-price')
+        products = products.order_by('-effective_price')
 
     elif sort == 'name_az':
 
@@ -162,6 +186,7 @@ def customer_home(request):
             'max_price': max_price,
             'cart_count': cart_count,
             'cart_total': cart_total,
+            'today': timezone.localdate(),
         }
     )
 
@@ -1285,6 +1310,7 @@ def product_list(request):
             'active_products': Product.objects.filter(
                 is_active=True
             ).count(),
+            'today': timezone.localdate(),
         }
     )
 
