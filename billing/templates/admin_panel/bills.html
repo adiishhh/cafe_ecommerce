@@ -64,14 +64,17 @@ SmartCafe Admin - Bills
                 id="startDate"
                 name="start_date"
                 value="{{ start_date_value }}"
+                aria-label="Start date"
             >
         </div>
+
         <div class="date-filter-field">
             <input
                 type="date"
                 id="endDate"
                 name="end_date"
                 value="{{ end_date_value }}"
+                aria-label="End date"
             >
         </div>
 
@@ -79,6 +82,14 @@ SmartCafe Admin - Bills
             <i class="fa fa-filter"></i>
             Apply
         </button>
+
+        <a
+            href="?view={{ active_view }}&clear_dates=1"
+            class="billing-clear-button"
+        >
+            <i class="fa fa-refresh"></i>
+            Clear
+        </a>
     </form>
 
 
@@ -96,7 +107,7 @@ SmartCafe Admin - Bills
     <!-- UNPAID ORDERS -->
 
     <a
-        href="?view=unpaid_orders&date={{ selected_date|date:'Y-m-d' }}"
+        href="?view=unpaid_orders&start_date={{ start_date_value|urlencode }}&end_date={{ end_date_value|urlencode }}"
         class="
             billing-summary-card
             {% if active_view == 'unpaid_orders' %}
@@ -131,7 +142,7 @@ SmartCafe Admin - Bills
     <!-- UNPAID BILLS -->
 
     <a
-        href="?view=unpaid_bills&date={{ selected_date|date:'Y-m-d' }}"
+        href="?view=unpaid_bills&start_date={{ start_date_value|urlencode }}&end_date={{ end_date_value|urlencode }}"
         class="
             billing-summary-card
             {% if active_view == 'unpaid_bills' %}
@@ -166,7 +177,7 @@ SmartCafe Admin - Bills
     <!-- PAID BILLS -->
 
     <a
-        href="?view=paid_bills&date={{ selected_date|date:'Y-m-d' }}"
+        href="?view=paid_bills&start_date={{ start_date_value|urlencode }}&end_date={{ end_date_value|urlencode }}"
         class="
             billing-summary-card
             {% if active_view == 'paid_bills' %}
@@ -201,7 +212,7 @@ SmartCafe Admin - Bills
     <!-- REFUNDS -->
 
     <a
-        href="?view=refunds&date={{ selected_date|date:'Y-m-d' }}"
+        href="?view=refunds&start_date={{ start_date_value|urlencode }}&end_date={{ end_date_value|urlencode }}"
         class="
             billing-summary-card
             {% if active_view == 'refunds' %}
@@ -243,7 +254,7 @@ SmartCafe Admin - Bills
 <div class="billing-tabs">
 
     <a
-        href="?view=unpaid_orders&date={{ selected_date|date:'Y-m-d' }}"
+        href="?view=unpaid_orders&start_date={{ start_date_value|urlencode }}&end_date={{ end_date_value|urlencode }}"
         class="
             {% if active_view == 'unpaid_orders' %}
                 active
@@ -253,13 +264,19 @@ SmartCafe Admin - Bills
 
         <i class="fa fa-shopping-basket"></i>
 
-        Unpaid Orders
+        <span>Unpaid Orders</span>
+
+        {% if unread_unpaid_orders %}
+            <span class="billing-unread-badge">
+                {{ unread_unpaid_orders }}
+            </span>
+        {% endif %}
 
     </a>
 
 
     <a
-        href="?view=unpaid_bills&date={{ selected_date|date:'Y-m-d' }}"
+        href="?view=unpaid_bills&start_date={{ start_date_value|urlencode }}&end_date={{ end_date_value|urlencode }}"
         class="
             {% if active_view == 'unpaid_bills' %}
                 active
@@ -269,13 +286,19 @@ SmartCafe Admin - Bills
 
         <i class="fa fa-file-text-o"></i>
 
-        Unpaid Bills
+        <span>Unpaid Bills</span>
+
+        {% if unread_unpaid_bills %}
+            <span class="billing-unread-badge">
+                {{ unread_unpaid_bills }}
+            </span>
+        {% endif %}
 
     </a>
 
 
     <a
-        href="?view=paid_bills&date={{ selected_date|date:'Y-m-d' }}"
+        href="?view=paid_bills&start_date={{ start_date_value|urlencode }}&end_date={{ end_date_value|urlencode }}"
         class="
             {% if active_view == 'paid_bills' %}
                 active
@@ -285,13 +308,19 @@ SmartCafe Admin - Bills
 
         <i class="fa fa-check-circle"></i>
 
-        Paid Bills
+        <span>Paid Bills</span>
+
+        {% if unread_paid_bills %}
+            <span class="billing-unread-badge">
+                {{ unread_paid_bills }}
+            </span>
+        {% endif %}
 
     </a>
 
 
     <a
-        href="?view=refunds&date={{ selected_date|date:'Y-m-d' }}"
+        href="?view=refunds&start_date={{ start_date_value|urlencode }}&end_date={{ end_date_value|urlencode }}"
         class="
             {% if active_view == 'refunds' %}
                 active
@@ -301,7 +330,13 @@ SmartCafe Admin - Bills
 
         <i class="fa fa-undo"></i>
 
-        Refunds
+        <span>Refunds</span>
+
+        {% if unread_refunds %}
+            <span class="billing-unread-badge">
+                {{ unread_refunds }}
+            </span>
+        {% endif %}
 
     </a>
 
@@ -3957,8 +3992,37 @@ document.addEventListener("DOMContentLoaded", function () {
             setText(status, bill.status);
 
             setText(reference, bill.bill_no);
-            setText(method, bill.transaction_method);
-            setText(gatewayReference, bill.payment_reference);
+
+            const payments = Array.isArray(data.payments)
+                ? data.payments
+                : [];
+                    
+            if (payments.length) {
+                const payment = payments[0];
+            
+                setText(
+                    method,
+                    payment.transaction_method_display || payment.transaction_method
+                );
+            
+                setText(
+                    gatewayReference,
+                    payment.payment_reference ||
+                    payment.gateway_payment_id ||
+                    payment.gateway_order_id ||
+                    "Not available"
+                );
+            
+                setText(paymentId, payment.id);
+                setText(status, payment.status_display || payment.status);
+                setText(amount, formatMoney(payment.amount));
+            } else {
+                setText(method, "No successful payment record");
+                setText(gatewayReference, "Not available");
+                setText(paymentId, "—");
+                setText(status, bill.status_display || bill.status);
+                setText(amount, formatMoney(bill.total_amount));
+            }
 
             setText(subtotal, formatMoney(bill.subtotal));
             setText(tax, formatMoney(bill.tax_amount));
@@ -4029,33 +4093,81 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const refund = data.refund;
 
-            title.textContent = "Refund Details";
-            subtitle.textContent = refund.request_no;
+            // Actual Payment records returned by the backend.
+            const refundPayment = refund.refund_payment;
+            const originalPayment = refund.original_payment;
 
+            title.textContent = "Refund Details";
+            subtitle.textContent = refund.request_no || "Refund";
+
+            // Refund information.
             setText(type, "Wallet refund");
             setText(amount, formatMoney(refund.amount));
             setText(status, refund.status_display);
 
             setText(reference, refund.request_no);
             setText(order, refund.order_no);
-            setText(method, refund.transaction_method);
-            setText(gatewayReference, refund.payment_reference);
-            setText(paymentId, refund.payment_id);
-            setText(originalPaymentId, refund.original_payment_id);
 
+            // Details of the actual refund Payment record.
+            setText(
+                method,
+                refundPayment
+                    ? (
+                        refundPayment.transaction_method_display ||
+                        refundPayment.transaction_method ||
+                        "Not available"
+                    )
+                    : "Not available"
+            );
+
+            setText(
+                gatewayReference,
+                refundPayment
+                    ? (
+                        refundPayment.payment_reference ||
+                        refundPayment.gateway_payment_id ||
+                        refundPayment.gateway_order_id ||
+                        "Not available"
+                    )
+                    : "Not available"
+            );
+
+            setText(
+                paymentId,
+                refundPayment
+                    ? refundPayment.id
+                    : "Not available"
+            );
+
+            // ID of the original Payment record being refunded.
+            setText(
+                originalPaymentId,
+                originalPayment
+                    ? originalPayment.id
+                    : "Not available"
+            );
+
+            // Customer information.
             setText(customer, refund.customer_name);
             setText(email, refund.customer_email);
 
             // A refund is not a new bill, so hide bill totals.
             totalsSection.hidden = true;
 
+            // Display refund and wallet information.
             refundSection.hidden = false;
             walletSection.hidden = false;
 
-            setText(walletCredit, formatMoney(refund.wallet_credited));
+            setText(
+                walletCredit,
+                formatMoney(refund.wallet_credited)
+            );
+
             setText(
                 walletBalance,
-                refund.wallet_balance_after
+                refund.wallet_balance_after !== null &&
+                refund.wallet_balance_after !== undefined &&
+                refund.wallet_balance_after !== ""
                     ? formatMoney(refund.wallet_balance_after)
                     : "Not available"
             );
@@ -4068,6 +4180,7 @@ document.addEventListener("DOMContentLoaded", function () {
             setText(reviewedAt, refund.reviewed_at);
             setText(refundReason, refund.reason);
 
+            // Display the admin note only when one exists.
             if (refund.admin_note) {
                 setText(adminNote, refund.admin_note);
                 adminNoteArea.hidden = false;

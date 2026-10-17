@@ -124,6 +124,41 @@ class BillOrder(models.Model):
     def __str__(self):
         return f"BillOrder - {self.order.order_no}"
 
+
+class BillingSectionReadState(models.Model):
+
+    class Section(models.TextChoices):
+        UNPAID_ORDERS = "unpaid_orders", "Unpaid Orders"
+        UNPAID_BILLS = "unpaid_bills", "Unpaid Bills"
+        PAID_BILLS = "paid_bills", "Paid Bills"
+        REFUNDS = "refunds", "Refunds"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="billing_section_read_states",
+    )
+
+    section = models.CharField(
+        max_length=20,
+        choices=Section.choices,
+    )
+
+    last_viewed_at = models.DateTimeField(
+        default=timezone.now,
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "section"],
+                name="unique_billing_section_read_state",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.user} - {self.get_section_display()}"
+
 class RefundRequest(models.Model):
 
     class RefundType(models.TextChoices):
@@ -335,3 +370,4 @@ class Payment(models.Model):
             f"{self.bill.bill_no} - "
             f"{self.get_status_display()}"
         )
+    

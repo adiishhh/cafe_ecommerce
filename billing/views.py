@@ -1,5 +1,5 @@
 from django.shortcuts import redirect, render, get_object_or_404
-from .models import Bill, BillOrder, Payment, RefundRequest
+from .models import Bill, BillOrder, Payment, RefundRequest, BillingSectionReadState
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from decimal import Decimal, ROUND_HALF_UP
@@ -47,30 +47,110 @@ def admin_bill_list(request):
     if forbidden:
         return forbidden
 
+    now = timezone.now()
+    today = timezone.localtime(now).date()
+
+    valid_views = {
+        "unpaid_orders",
+        "unpaid_bills",
+        "paid_bills",
+        "refunds",
+    }
+
+    active_view = request.GET.get("view", "unpaid_orders")
+
+    if active_view not in valid_views:
+        active_view = "unpaid_orders"
+
+    # --------------------------------------------------
+    # DATE FILTER PERSISTENCE
+    # --------------------------------------------------
+
+    session_key_start = "billing_start_date"
+    session_key_end = "billing_end_date"
+
+    clear_dates = request.GET.get("clear_dates") == "1"
+
     start_date_param = request.GET.get("start_date", "").strip()
     end_date_param = request.GET.get("end_date", "").strip()
 
-    now = timezone.localtime(timezone.now())
-    today = now.date()
+    def parse_date(value):
+        try:
+            return datetime.strptime(value, "%Y-%m-%d").date()
+        except (ValueError, TypeError):
+            return None
 
-    try:
-        start_date = datetime.strptime(start_date_param, "%Y-%m-%d").date()
-    except ValueError:
+    if clear_dates:
+        # Explicit reset: both dates return to today.
         start_date = today
+        end_date = today
 
-    try:
-        end_date = datetime.strptime(end_date_param, "%Y-%m-%d").date()
-    except ValueError:
+    elif start_date_param or end_date_param:
+        # A submitted date filter becomes the new saved range.
+        start_date = parse_date(start_date_param) or today
+        end_date = parse_date(end_date_param) or today
+
+    elif (
+        request.session.get(session_key_start)
+        and request.session.get(session_key_end)
+    ):
+        # Navigating between sections preserves the range.
+        start_date = (
+            parse_date(request.session[session_key_start]) or today
+        )
+        end_date = (
+            parse_date(request.session[session_key_end]) or today
+        )
+
+    else:
+        # First visit: default to today.
+        start_date = today
         end_date = today
 
     if start_date > end_date:
         start_date = today
         end_date = today
 
-    active_view = request.GET.get("view", "unpaid_orders")
-    valid_views = {"unpaid_orders", "unpaid_bills", "paid_bills", "refunds"}
-    if active_view not in valid_views:
-        active_view = "unpaid_orders"
+    request.session[session_key_start] = start_date.strftime("%Y-%m-%d")
+    request.session[session_key_end] = end_date.strftime("%Y-%m-%d")
+
+    # --------------------------------------------------
+    # UNREAD SECTION TRACKING
+    # --------------------------------------------------
+
+    section_choices = [
+        BillingSectionReadState.Section.UNPAID_ORDERS,
+        BillingSectionReadState.Section.UNPAID_BILLS,
+        BillingSectionReadState.Section.PAID_BILLS,
+        BillingSectionReadState.Section.REFUNDS,
+    ]
+
+    # Establish a baseline on the admin's first visit.
+    # This prevents all historical records from appearing
+    # as newly unread.
+    for section in section_choices:
+        BillingSectionReadState.objects.get_or_create(
+            user=request.user,
+            section=section,
+            defaults={"last_viewed_at": now},
+        )
+
+    # Mark only the currently opened section as viewed.
+    BillingSectionReadState.objects.filter(
+        user=request.user,
+        section=active_view,
+    ).update(last_viewed_at=now)
+
+    read_states = {
+        state.section: state.last_viewed_at
+        for state in BillingSectionReadState.objects.filter(
+            user=request.user,
+        )
+    }
+
+    # --------------------------------------------------
+    # DATE-FILTERED SECTION CONTENT
+    # --------------------------------------------------
 
     unpaid_orders = (
         BillOrder.objects
@@ -81,8 +161,13 @@ def admin_bill_list(request):
             created_at__date__gte=start_date,
             created_at__date__lte=end_date,
         )
-        .select_related("order", "order__user")
-        .prefetch_related("order__items__product")
+        .select_related(
+            "order",
+            "order__user",
+        )
+        .prefetch_related(
+            "order__items__product",
+        )
         .order_by("-created_at", "-id")
     )
 
@@ -93,7 +178,10 @@ def admin_bill_list(request):
             created_at__date__gte=start_date,
             created_at__date__lte=end_date,
         )
-        .prefetch_related("bill_orders__order", "bill_orders__order__user")
+        .prefetch_related(
+            "bill_orders__order",
+            "bill_orders__order__user",
+        )
         .order_by("-created_at", "-id")
     )
 
@@ -130,23 +218,59 @@ def admin_bill_list(request):
         .order_by("-created_at", "-id")
     )
 
+    # --------------------------------------------------
+    # UNREAD COUNTS
+    #
+    # These are independent of the selected date filter.
+    # --------------------------------------------------
+
+    unread_unpaid_orders = BillOrder.objects.filter(
+        bill__isnull=True,
+        payment_method=BillOrder.PaymentMethod.COD,
+        order__status=Order.Status.DELIVERED,
+        created_at__gt=read_states["unpaid_orders"],
+    ).count()
+
+    unread_unpaid_bills = Bill.objects.filter(
+        status=Bill.Status.UNPAID,
+        created_at__gt=read_states["unpaid_bills"],
+    ).count()
+
+    unread_paid_bills = Bill.objects.filter(
+        status=Bill.Status.PAID,
+        updated_at__gt=read_states["paid_bills"],
+    ).count()
+
+    unread_refunds = RefundRequest.objects.filter(
+        created_at__gt=read_states["refunds"],
+    ).count()
+
     return render(
         request,
         "admin_panel/bills.html",
         {
             "active_view": active_view,
+
             "start_date": start_date,
             "end_date": end_date,
+
             "start_date_value": start_date.strftime("%Y-%m-%d"),
             "end_date_value": end_date.strftime("%Y-%m-%d"),
+
             "unpaid_orders": unpaid_orders,
             "unpaid_bills": unpaid_bills,
             "paid_bills": paid_bills,
             "refunds": refunds,
+
             "total_unpaid_orders": unpaid_orders.count(),
             "total_unpaid_bills": unpaid_bills.count(),
             "total_paid_bills": paid_bills.count(),
             "total_refunds": refunds.count(),
+
+            "unread_unpaid_orders": unread_unpaid_orders,
+            "unread_unpaid_bills": unread_unpaid_bills,
+            "unread_paid_bills": unread_paid_bills,
+            "unread_refunds": unread_refunds,
         },
     )
 
@@ -720,42 +844,35 @@ def admin_generate_bill(request):
 @login_required(login_url="login")
 @require_GET
 def admin_bill_data(request, bill_id):
-
     forbidden = _admin_staff_check(request)
 
     if forbidden:
         return JsonResponse(
             {
                 "success": False,
-                "message": "Permission denied."
+                "message": "Permission denied.",
             },
-            status=403
+            status=403,
         )
 
-
     bill = get_object_or_404(
-        Bill.objects
-        .prefetch_related(
+        Bill.objects.prefetch_related(
             "bill_orders__order__items__product",
             "payments",
         ),
         id=bill_id,
     )
 
-
     orders = []
 
     for bill_order in bill.bill_orders.all():
-
         products = []
 
         for item in bill_order.order.items.all():
-
             products.append({
                 "name": item.product.name,
                 "quantity": item.quantity,
             })
-
 
         orders.append({
             "order_no": bill_order.order.order_no,
@@ -763,16 +880,50 @@ def admin_bill_data(request, bill_id):
             "products": products,
         })
 
-
-    payment = (
+    # Retrieve actual successful payment records.
+    # Exclude refund transactions from the original
+    # payment details for this bill.
+    payments = (
         bill.payments
         .filter(
-            status=Payment.Status.SUCCESSFUL
+            status=Payment.Status.SUCCESSFUL,
+            refund_request__isnull=True,
+            refund_of__isnull=True,
         )
-        .order_by("-created_at")
-        .first()
+        .order_by("-created_at", "-id")
     )
 
+    payment_data = [
+        {
+            "id": payment.id,
+            "amount": str(payment.amount),
+            "transaction_method": payment.transaction_method,
+            "transaction_method_display": (
+                payment.get_transaction_method_display()
+            ),
+            "status": payment.status,
+            "status_display": payment.get_status_display(),
+            "payment_reference": payment.payment_reference or "",
+            "gateway": payment.gateway or "",
+            "gateway_order_id": payment.gateway_order_id or "",
+            "gateway_payment_id": payment.gateway_payment_id or "",
+            "paid_at": (
+                timezone.localtime(payment.paid_at).strftime(
+                    "%d %b %Y, %I:%M %p"
+                )
+                if payment.paid_at
+                else ""
+            ),
+            "created_at": (
+                timezone.localtime(payment.created_at).strftime(
+                    "%d %b %Y, %I:%M %p"
+                )
+                if payment.created_at
+                else ""
+            ),
+        }
+        for payment in payments
+    ]
 
     return JsonResponse({
         "success": True,
@@ -780,33 +931,18 @@ def admin_bill_data(request, bill_id):
         "bill": {
             "id": bill.id,
             "bill_no": bill.bill_no,
-
             "status": bill.status,
-
+            "status_display": bill.get_status_display(),
             "payment_method": bill.payment_method,
-
-            "transaction_method": (
-                bill.transaction_method
-                if bill.transaction_method
-                else (
-                    payment.transaction_method
-                    if payment
-                    else None
-                )
-            ),
-
-            "payment_reference": (
-                payment.payment_reference
-                if payment
-                else ""
-            ),
-
             "subtotal": str(bill.subtotal),
             "tax_amount": str(bill.tax_amount),
             "total_amount": str(bill.total_amount),
-
             "orders": orders,
-        }
+        },
+
+        # Transaction details come from Payment records,
+        # not from the Bill model.
+        "payments": payment_data,
     })
 
 @login_required(login_url="login")
@@ -857,6 +993,12 @@ def admin_refund_data(request, refund_id):
         )
 
     refund_payment = refund.refund_payment
+
+    original_payment = (
+        refund_payment.refund_of
+        if refund_payment
+        else None
+    )
 
     wallet_transaction = (
         WalletTransaction.objects
@@ -921,29 +1063,55 @@ def admin_refund_data(request, refund_id):
                     if refund.bill
                     else "—"
                 ),
-                "payment_reference": (
-                    refund_payment.payment_reference or ""
-                    if refund_payment
-                    else ""
-                ),
-                "transaction_method": (
-                    refund_payment.get_transaction_method_display()
-                    if refund_payment
-                    else "—"
-                ),
-                "payment_status": (
-                    refund_payment.get_status_display()
-                    if refund_payment
-                    else "—"
-                ),
-                "payment_id": (
-                    refund_payment.id
+                "refund_payment": (
+                    {
+                        "id": refund_payment.id,
+                        "amount": str(refund_payment.amount),
+                        "transaction_method": refund_payment.transaction_method,
+                        "transaction_method_display": (
+                            refund_payment.get_transaction_method_display()
+                        ),
+                        "status": refund_payment.status,
+                        "status_display": refund_payment.get_status_display(),
+                        "payment_reference": refund_payment.payment_reference or "",
+                        "gateway": refund_payment.gateway or "",
+                        "gateway_order_id": refund_payment.gateway_order_id or "",
+                        "gateway_payment_id": refund_payment.gateway_payment_id or "",
+                        "paid_at": (
+                            timezone.localtime(refund_payment.paid_at).strftime(
+                                "%d %b %Y, %I:%M %p"
+                            )
+                            if refund_payment.paid_at
+                            else ""
+                        ),
+                    }
                     if refund_payment
                     else None
                 ),
-                "original_payment_id": (
-                    refund_payment.refund_of_id
-                    if refund_payment
+                
+                "original_payment": (
+                    {
+                        "id": original_payment.id,
+                        "amount": str(original_payment.amount),
+                        "transaction_method": original_payment.transaction_method,
+                        "transaction_method_display": (
+                            original_payment.get_transaction_method_display()
+                        ),
+                        "status": original_payment.status,
+                        "status_display": original_payment.get_status_display(),
+                        "payment_reference": original_payment.payment_reference or "",
+                        "gateway": original_payment.gateway or "",
+                        "gateway_order_id": original_payment.gateway_order_id or "",
+                        "gateway_payment_id": original_payment.gateway_payment_id or "",
+                        "paid_at": (
+                            timezone.localtime(original_payment.paid_at).strftime(
+                                "%d %b %Y, %I:%M %p"
+                            )
+                            if original_payment.paid_at
+                            else ""
+                        ),
+                    }
+                    if original_payment
                     else None
                 ),
                 "wallet_credited": (
