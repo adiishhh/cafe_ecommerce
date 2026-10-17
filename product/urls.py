@@ -55,4 +55,34 @@ urlpatterns = [
 
     path('cart/cancel/', views.cancel_cart, name='cancel_cart'),
 
+    path(
+        "menu/product/<int:product_id>/review/",
+        views.submit_product_review,
+        name="submit_product_review",
+    ),
+    
+    path(
+        "menu/product/<int:product_id>/review/delete/",
+        views.delete_product_review,
+        name="delete_product_review",
+    ),
+    
+    path(
+        "reviews/<int:review_id>/reply/",
+        views.admin_review_reply,
+        name="admin_review_reply",
+    ),
+    
+    path(
+        "reviews/<int:review_id>/reply/delete/",
+        views.admin_delete_review_reply,
+        name="admin_delete_review_reply",
+    ),
+    
+    path(
+        "reviews/<int:review_id>/delete/",
+        views.admin_delete_product_review,
+        name="admin_delete_product_review",
+    ),
+
 ]

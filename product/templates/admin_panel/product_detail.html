@@ -6,212 +6,149 @@
 {% endblock %}
 
 {% block extra_css %}
-
 <link
     rel="stylesheet"
     href="{% static 'admin_panel/css/product_detail.css' %}"
 >
-
 {% endblock %}
-
 
 {% block content %}
 
 <div class="product-detail-page">
 
     <!-- Header -->
-
     <div class="detail-header">
 
         <div class="detail-title">
-
             <a
                 href="{% url 'product_list' %}"
                 class="back-button"
-            >
-                ←
-            </a>
+            >←</a>
 
             <div>
                 <h1>{{ product.name }}</h1>
-
-                <p>
-                    Product Details
-                </p>
+                <p>Product Details</p>
             </div>
-
         </div>
 
-
         <div class="detail-actions">
-
             <a
                 href="{% url 'edit_product' product.id %}"
                 class="edit-product-button"
             >
                 Edit Product
             </a>
-
         </div>
 
     </div>
 
-
     <!-- Main Product Information -->
-
     <div class="product-main">
 
-        <!-- Images -->
-
+        <!-- Product Images -->
         <div class="product-gallery">
 
             {% with first_image=product.images.first %}
-
                 {% if first_image %}
-
                     <div class="main-product-image">
-
                         <img
                             src="{{ first_image.image.url }}"
                             alt="{{ product.name }}"
                         >
-
                     </div>
-
                 {% else %}
-
                     <div class="main-product-image no-image">
                         No image
                     </div>
-
                 {% endif %}
-
             {% endwith %}
 
-
             {% if product.images.count > 1 %}
-
                 <div class="image-thumbnails">
-
                     {% for image in product.images.all %}
-
                         <div class="image-thumbnail">
-
                             <img
                                 src="{{ image.image.url }}"
                                 alt="{{ product.name }}"
                             >
-
                         </div>
-
                     {% endfor %}
-
                 </div>
-
             {% endif %}
 
         </div>
 
-
         <!-- Product Information -->
-
         <div class="product-info-card">
 
             <div class="product-info-header">
 
                 <div>
-
-                    <span class="section-label">
-                        PRODUCT
-                    </span>
-
-                    <h2>
-                        {{ product.name }}
-                    </h2>
-
+                    <span class="section-label">PRODUCT</span>
+                    <h2>{{ product.name }}</h2>
                 </div>
 
-
                 {% if product.is_active and product.category.is_active %}
-
                     <span class="availability-badge available">
                         Available
                     </span>
-
                 {% else %}
-
                     <span class="availability-badge unavailable">
                         Unavailable
                     </span>
-
                 {% endif %}
 
             </div>
 
-
             <div class="info-section">
-
-                <span class="section-label">
-                    DESCRIPTION
-                </span>
-
+                <span class="section-label">DESCRIPTION</span>
                 <p class="product-description">
                     {{ product.description }}
                 </p>
-
             </div>
-
 
             <div class="product-meta">
 
                 <div class="meta-card">
-
-                    <span>
-                        Price
-                    </span>
-
-                    <strong>
-                        ₹{{ product.price }}
-                    </strong>
-
+                    <span>Price</span>
+                    <strong>₹{{ product.price }}</strong>
                 </div>
 
-
                 <div class="meta-card">
-
-                    <span>
-                        Category
-                    </span>
-
-                    <strong>
-                        {{ product.category.name }}
-                    </strong>
-
+                    <span>Category</span>
+                    <strong>{{ product.category.name }}</strong>
                 </div>
 
             </div>
 
-
-            <!-- Rating -->
-
+            <!-- Rating Summary -->
             <div class="rating-section">
 
-                <span class="section-label">
-                    RATING
-                </span>
+                <span class="section-label">RATING</span>
 
-                <div class="rating-empty">
+                <div class="rating-summary">
 
                     <span class="rating-stars">
-                        ★★★★★
+                        {% for star in "12345" %}
+                            {% if forloop.counter <= average_rating %}
+                                ★
+                            {% else %}
+                                <span class="rating-star-empty">★</span>
+                            {% endif %}
+                        {% endfor %}
                     </span>
 
-                    <strong>
-                        —
+                    <strong class="rating-average">
+                        {% if total_reviews %}
+                            {{ average_rating|floatformat:1 }}
+                        {% else %}
+                            —
+                        {% endif %}
                     </strong>
 
-                    <span>
-                        No reviews yet
+                    <span class="rating-review-count">
+                        {{ total_reviews }}
+                        review{{ total_reviews|pluralize }}
                     </span>
 
                 </div>
@@ -222,46 +159,574 @@
 
     </div>
 
-
-    <!-- Reviews -->
-
+    <!-- Customer Reviews -->
     <div class="reviews-card">
 
         <div class="reviews-header">
 
             <div>
-
-                <h2>
-                    Customer Reviews
-                </h2>
-
-                <p>
-                    Reviews for {{ product.name }}
-                </p>
-
+                <h2>Customer Reviews</h2>
+                <p>Reviews for {{ product.name }}</p>
             </div>
+
+            <span class="admin-review-count">
+                {{ total_reviews }}
+                review{{ total_reviews|pluralize }}
+            </span>
 
         </div>
 
+        <!-- AJAX Container: only this section changes during pagination -->
+        <div id="admin-reviews-ajax-container">
 
-        <div class="no-reviews">
+            <!-- Review List -->
+            <div class="admin-reviews-list">
 
-            <div class="no-reviews-icon">
-                ★
+                {% for review in reviews %}
+
+                    <article class="admin-review-item">
+
+                        <!-- Review Header -->
+                        <div class="admin-review-top">
+
+                            <div class="admin-review-author">
+
+                                <div class="admin-review-avatar">
+                                    {% with reviewer_name=review.user.username|default:review.user.email|default:"Customer" %}
+                                        {{ reviewer_name|first|upper }}
+                                    {% endwith %}
+                                </div>
+
+                                <div class="admin-review-author-info">
+
+                                    <strong>
+                                        {% with reviewer_name=review.user.username|default:review.user.email|default:"Customer" %}
+                                            {{ reviewer_name }}
+                                        {% endwith %}
+                                    </strong>
+
+                                    <span>
+                                        {{ review.created_at|date:"d M Y" }}
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                            <div
+                                class="admin-review-stars"
+                                aria-label="{{ review.rating }} out of 5 stars"
+                            >
+                                {% for star in "12345" %}
+                                    {% if forloop.counter <= review.rating %}
+                                        <span class="star-filled">★</span>
+                                    {% else %}
+                                        <span class="star-empty">★</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+
+                        </div>
+
+                        <!-- Customer Review Text -->
+                        <div class="admin-review-content">
+                            {{ review.review|linebreaksbr }}
+                        </div>
+
+                        <!-- Existing Administrator Reply -->
+                        {% if review.admin_reply %}
+
+                            <div class="admin-review-response">
+
+                                <div class="admin-response-heading">
+                                    <strong>Reply</strong>
+
+                                    {% if review.replied_at %}
+                                        <span>
+                                            {{ review.replied_at|date:"d M Y" }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+
+                                <p>
+                                    {{ review.admin_reply|linebreaksbr }}
+                                </p>
+
+                            </div>
+
+                        {% endif %}
+
+                        <!-- Administrator Actions -->
+                        <div class="admin-review-actions">
+
+                            <button
+                                type="button"
+                                class="admin-review-reply-button"
+                                data-open-review-modal="adminReviewReplyModal-{{ review.id }}"
+                            >
+                                {% if review.admin_reply %}
+                                    Edit Reply
+                                {% else %}
+                                    Reply
+                                {% endif %}
+                            </button>
+
+                            {% if review.admin_reply %}
+
+                                <form
+                                    method="POST"
+                                    action="{% url 'admin_delete_review_reply' review.id %}"
+                                    onsubmit="return confirm('Delete your reply to this review?');"
+                                >
+                                    {% csrf_token %}
+
+                                    <button
+                                        type="submit"
+                                        class="admin-review-delete-reply-button"
+                                    >
+                                        Delete Reply
+                                    </button>
+
+                                </form>
+
+                            {% endif %}
+
+                            <form
+                                method="POST"
+                                action="{% url 'admin_delete_product_review' review.id %}"
+                                onsubmit="return confirm('Permanently delete this customer review?');"
+                            >
+                                {% csrf_token %}
+
+                                <button
+                                    type="submit"
+                                    class="admin-review-delete-button"
+                                >
+                                    Delete Review
+                                </button>
+
+                            </form>
+
+                        </div>
+
+                        <!-- Reply Modal -->
+                        <div
+                            class="admin-review-modal"
+                            id="adminReviewReplyModal-{{ review.id }}"
+                            aria-hidden="true"
+                        >
+
+                            <div
+                                class="admin-review-modal-backdrop"
+                                data-close-review-modal
+                            ></div>
+
+                            <div
+                                class="admin-review-modal-dialog"
+                                role="dialog"
+                                aria-modal="true"
+                                aria-labelledby="adminReviewReplyTitle-{{ review.id }}"
+                            >
+
+                                <div class="modal-content">
+
+                                    <div class="modal-header">
+
+                                        <div>
+                                            <span class="section-label">
+                                                CUSTOMER FEEDBACK
+                                            </span>
+
+                                            <h2
+                                                class="modal-title"
+                                                id="adminReviewReplyTitle-{{ review.id }}"
+                                            >
+                                                {% if review.admin_reply %}
+                                                    Edit Reply
+                                                {% else %}
+                                                    Reply to Review
+                                                {% endif %}
+                                            </h2>
+
+                                            <p class="admin-modal-reviewer">
+                                                Responding to
+                                                {% with reviewer_name=review.user.username|default:review.user.email|default:"Customer" %}
+                                                    {{ reviewer_name }}
+                                                {% endwith %}
+                                            </p>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            class="admin-modal-close"
+                                            data-close-review-modal
+                                            aria-label="Close"
+                                        >
+                                            &times;
+                                        </button>
+
+                                    </div>
+
+                                    <form
+                                        method="POST"
+                                        action="{% url 'admin_review_reply' review.id %}"
+                                    >
+                                        {% csrf_token %}
+
+                                        <div class="modal-body">
+
+                                            <label for="adminReplyText-{{ review.id }}">
+                                                Your Response
+                                            </label>
+
+                                            <textarea
+                                                name="admin_reply"
+                                                id="adminReplyText-{{ review.id }}"
+                                                class="admin-review-textarea"
+                                                maxlength="2000"
+                                                placeholder="Write a professional response to the customer..."
+                                                required
+                                            >{{ review.admin_reply|default:"" }}</textarea>
+
+                                            <span class="admin-review-help">
+                                                Maximum 2000 characters.
+                                            </span>
+
+                                        </div>
+
+                                        <div class="modal-footer">
+
+                                            <button
+                                                type="button"
+                                                class="admin-modal-cancel"
+                                                data-close-review-modal
+                                            >
+                                                Cancel
+                                            </button>
+
+                                            <button
+                                                type="submit"
+                                                class="admin-modal-submit"
+                                            >
+                                                Save Reply
+                                            </button>
+
+                                        </div>
+
+                                    </form>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </article>
+
+                {% empty %}
+
+                    <div class="no-reviews">
+
+                        <div class="no-reviews-icon">★</div>
+
+                        <h3>No reviews yet</h3>
+
+                        <p>
+                            Customer reviews and ratings will appear here.
+                        </p>
+
+                    </div>
+
+                {% endfor %}
+
             </div>
 
-            <h3>
-                No reviews yet
-            </h3>
+            <!-- AJAX Pagination -->
+            {% if review_page_obj.paginator.num_pages > 1 %}
 
-            <p>
-                Customer reviews and ratings will appear here.
-            </p>
+                <nav
+                    class="admin-review-pagination"
+                    aria-label="Customer reviews pagination"
+                >
+
+                    <button
+                        type="button"
+                        class="review-page-button review-page-previous"
+                        data-reviews-page="{{ review_page_obj.previous_page_number }}"
+                        {% if not review_page_obj.has_previous %}disabled{% endif %}
+                    >
+                        ← Previous
+                    </button>
+
+                    <div class="review-page-numbers">
+
+                        {% for page_num in review_page_obj.paginator.page_range %}
+
+                            <button
+                                type="button"
+                                class="review-page-button review-page-number {% if page_num == review_page_obj.number %}is-active{% endif %}"
+                                data-reviews-page="{{ page_num }}"
+                                {% if page_num == review_page_obj.number %}aria-current="page"{% endif %}
+                            >
+                                {{ page_num }}
+                            </button>
+
+                        {% endfor %}
+
+                    </div>
+
+                    <button
+                        type="button"
+                        class="review-page-button review-page-next"
+                        data-reviews-page="{{ review_page_obj.next_page_number }}"
+                        {% if not review_page_obj.has_next %}disabled{% endif %}
+                    >
+                        Next →
+                    </button>
+
+                </nav>
+
+            {% endif %}
 
         </div>
+        <!-- End AJAX Container -->
 
     </div>
+    <!-- End Reviews Card -->
 
 </div>
+<!-- End Product Detail Page -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const reviewsContainer = document.getElementById(
+        "admin-reviews-ajax-container"
+    );
+
+    let isLoadingReviews = false;
+
+    /*
+     * Open a reply modal.
+     */
+    function openReviewModal(modal) {
+
+        if (!modal) {
+            return;
+        }
+
+        modal.classList.add("is-open");
+        modal.setAttribute("aria-hidden", "false");
+
+        document.body.classList.add("review-modal-open");
+
+        const textarea = modal.querySelector(
+            ".admin-review-textarea"
+        );
+
+        if (textarea) {
+            textarea.focus();
+        }
+    }
+
+    /*
+     * Close a reply modal.
+     */
+    function closeReviewModal(modal) {
+
+        if (!modal) {
+            return;
+        }
+
+        modal.classList.remove("is-open");
+        modal.setAttribute("aria-hidden", "true");
+
+        if (!document.querySelector(
+            ".admin-review-modal.is-open"
+        )) {
+            document.body.classList.remove(
+                "review-modal-open"
+            );
+        }
+    }
+
+    /*
+     * AJAX pagination.
+     * Only the reviews section is replaced.
+     */
+    async function loadReviewsPage(pageNumber) {
+
+        if (isLoadingReviews || !reviewsContainer) {
+            return;
+        }
+
+        const requestedPage = Number(pageNumber);
+
+        if (
+            !Number.isInteger(requestedPage) ||
+            requestedPage < 1
+        ) {
+            return;
+        }
+
+        isLoadingReviews = true;
+
+        const currentUrl = new URL(window.location.href);
+
+        currentUrl.searchParams.set(
+            "reviews_page",
+            requestedPage
+        );
+
+        try {
+
+            const response = await fetch(
+                currentUrl.toString(),
+                {
+                    method: "GET",
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    credentials: "same-origin"
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    "Unable to load customer reviews."
+                );
+            }
+
+            const html = await response.text();
+
+            const parser = new DOMParser();
+
+            const documentFromResponse = parser.parseFromString(
+                html,
+                "text/html"
+            );
+
+            const updatedContainer =
+                documentFromResponse.getElementById(
+                    "admin-reviews-ajax-container"
+                );
+
+            if (!updatedContainer) {
+                throw new Error(
+                    "The reviews section was not found in the response."
+                );
+            }
+
+            reviewsContainer.innerHTML =
+                updatedContainer.innerHTML;
+
+            window.history.replaceState(
+                {},
+                "",
+                currentUrl.toString()
+            );
+
+            document.body.classList.remove(
+                "review-modal-open"
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Review pagination error:",
+                error
+            );
+
+            alert(
+                "Unable to load reviews right now. Please try again."
+            );
+
+        } finally {
+
+            isLoadingReviews = false;
+
+        }
+    }
+
+    /*
+     * Event delegation keeps working after AJAX replaces
+     * review cards and reply modals.
+     */
+    document.addEventListener("click", function (event) {
+
+        // Pagination buttons
+        const paginationButton = event.target.closest(
+            "[data-reviews-page]"
+        );
+
+        if (paginationButton) {
+
+            event.preventDefault();
+
+            if (
+                paginationButton.disabled ||
+                paginationButton.getAttribute("aria-current") === "page"
+            ) {
+                return;
+            }
+
+            loadReviewsPage(
+                paginationButton.dataset.reviewsPage
+            );
+
+            return;
+        }
+
+        // Open a reply modal
+        const openButton = event.target.closest(
+            "[data-open-review-modal]"
+        );
+
+        if (openButton) {
+
+            const modalId = openButton.getAttribute(
+                "data-open-review-modal"
+            );
+
+            openReviewModal(
+                document.getElementById(modalId)
+            );
+
+            return;
+        }
+
+        // Close a reply modal using its button or backdrop
+        const closeButton = event.target.closest(
+            "[data-close-review-modal]"
+        );
+
+        if (closeButton) {
+
+            const modal = closeButton.closest(
+                ".admin-review-modal"
+            );
+
+            closeReviewModal(modal);
+        }
+
+    });
+
+    // Close open modals using Escape
+    document.addEventListener("keydown", function (event) {
+
+        if (event.key === "Escape") {
+
+            document.querySelectorAll(
+                ".admin-review-modal.is-open"
+            ).forEach(function (modal) {
+                closeReviewModal(modal);
+            });
+
+        }
+
+    });
+
+});
+</script>
 
 {% endblock %}

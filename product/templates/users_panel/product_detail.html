@@ -24,6 +24,22 @@
 
 {% block content %}
 
+{% if messages %}
+
+    <div class="messages">
+
+        {% for message in messages %}
+
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+{% endif %}
+
 <div class="product-detail-page">
 
     <div class="product-detail-container">
@@ -184,90 +200,110 @@
                      RELATED PRODUCTS
                      ========================= -->
 
-                {% if related_products %}
+                {% if related_products or has_next_related %}
 
-                <section class="related-products-section">
+                <section class="related-products-section" id="relatedProductsSection">
                 
-                
+                    <!-- Section heading and navigation -->
                     <div class="related-products-header">
                     
-                        <h2>
-                            Related Products
-                        </h2>
+                        <h2>Related Products</h2>
                     
-                    </div>
-                
-                
-                    <div class="related-products-grid">
-                    
-                    
-                        {% for related_product in related_products %}
-                    
-                            <a
-                                href="{% url 'customer_product_detail' related_product.id %}"
-                                class="related-product-card"
+                        <div class="related-products-controls">
+                        
+                            <button
+                                type="button"
+                                class="related-products-arrow"
+                                id="relatedProductsPrevious"
+                                aria-label="Previous related products"
+                                {% if not has_previous_related %}disabled{% endif %}
                             >
-                    
-                                {% with related_image=related_product.images.all|first %}
-                    
-                    
-                                    <div class="related-product-image">
-                                    
-                                    
-                                        {% if related_image %}
-                                    
-                                            <img
-                                                src="{{ related_image.image.url }}"
-                                                alt="{{ related_product.name }}"
-                                            >
-                                    
-                                        {% else %}
-                                    
-                                            <div class="related-product-no-image">
-                                                No image
-                                            </div>
-                                        
-                                        {% endif %}
-                                        
-                                        
-                                        {% if not related_product.is_active or not related_product.category.is_active %}
-                                        
-                                            <div class="related-product-unavailable">
-                                                Unavailable
-                                            </div>
-                                        
-                                        {% endif %}
-                                        
-                                        
-                                    </div>
-                                
-                                
-                                    <div class="related-product-info">
-                                    
-                                        <h3>
-                                            {{ related_product.name }}
-                                        </h3>
-                                    
-                                        <strong>
-                                            ₹{{ related_product.price }}
-                                        </strong>
-                                    
-                                    </div>
-                                
-                                
-                                {% endwith %}
-                                
-                            </a>
+                                &lsaquo;
+                            </button>
                         
-                        {% endfor %}
+                            <button
+                                type="button"
+                                class="related-products-arrow"
+                                id="relatedProductsNext"
+                                aria-label="Next related products"
+                                {% if not has_next_related %}disabled{% endif %}
+                            >
+                                &rsaquo;
+                            </button>
                         
-                        
+                        </div>
+                    
                     </div>
                 
+                    <!-- AJAX content container -->
+                    <div
+                        id="relatedProductsContainer"
+                        data-current-page="{{ related_page|default:0 }}"
+                    >
+                
+                        <div class="related-products-grid">
+                        
+                            {% for related_product in related_products %}
+                        
+                                <a
+                                    href="{% url 'customer_product_detail' related_product.id %}"
+                                    class="related-product-card"
+                                >
+                        
+                                    {% with related_image=related_product.images.all|first %}
+                        
+                                        <div class="related-product-image">
+                                        
+                                            {% if related_image %}
+                                        
+                                                <img
+                                                    src="{{ related_image.image.url }}"
+                                                    alt="{{ related_product.name }}"
+                                                >
+                                        
+                                            {% else %}
+                                        
+                                                <div class="related-product-no-image">
+                                                    No image
+                                                </div>
+                                            
+                                            {% endif %}
+                                            
+                                            {% if not related_product.is_active or not related_product.category.is_active %}
+                                            
+                                                <div class="related-product-unavailable">
+                                                    Unavailable
+                                                </div>
+                                            
+                                            {% endif %}
+                                            
+                                        </div>
+                                    
+                                        <div class="related-product-info">
+                                        
+                                            <h3>{{ related_product.name }}</h3>
+                                        
+                                            <strong>₹{{ related_product.price }}</strong>
+                                        
+                                        </div>
+                                    
+                                    {% endwith %}
+                                    
+                                </a>
+                            
+                            {% empty %}
+                            
+                                <p>No related products available.</p>
+                            
+                            {% endfor %}
+                            
+                        </div>
+                    
+                    </div>
                 
                 </section>
-            
-            {% endif %}
+
+                {% endif %}
             
 
             </div>
@@ -433,41 +469,6 @@
 
                         </div>
 
-
-                        <!-- REVIEWS -->
-
-                        <div class="reviews-section">
-
-                            <label>
-                                CUSTOMER REVIEWS
-                            </label>
-
-
-                            <div class="dummy-review">
-
-                                <div class="review-header">
-
-                                    <strong>
-                                        Priya S.
-                                    </strong>
-
-                                    <span>
-                                        ★★★★★
-                                    </span>
-
-                                </div>
-
-
-                                <p>
-                                    Perfect on a hot afternoon. The caramel touch is lovely!
-                                </p>
-
-                            </div>
-
-                        </div>
-
-
-
                         <!-- ADD TO ORDER / USUAL -->
 
                         <input
@@ -520,10 +521,417 @@
 
                 {% endif %}
 
+                <!-- =========================
+                     CUSTOMER REVIEWS
+                     ========================= -->
+
+                <section class="reviews-section" id="productReviews">
+                
+                    <!-- Heading, summary and navigation -->
+                    <div class="reviews-heading">
+                    
+                        <div class="reviews-heading-info">
+                        
+                            <label>CUSTOMER REVIEWS</label>
+                        
+                            <div class="reviews-summary">
+                            
+                                <span class="reviews-average">
+                                    {% if total_reviews %}
+                                        {{ average_rating|floatformat:1 }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </span>
+                            
+                                <span class="reviews-summary-star">★</span>
+                            
+                                <span class="reviews-count">
+                                    {{ total_reviews }}
+                                    review{{ total_reviews|pluralize }}
+                                </span>
+                            
+                            </div>
+                        
+                        </div>
+                    
+                        <div class="customer-review-controls">
+                        
+                            <button
+                                type="button"
+                                class="customer-review-arrow"
+                                id="customerReviewPrevious"
+                                aria-label="Previous review"
+                                {% if not has_previous_review %}disabled{% endif %}
+                            >
+                                &lsaquo;
+                            </button>
+                        
+                            <button
+                                type="button"
+                                class="customer-review-arrow"
+                                id="customerReviewNext"
+                                aria-label="Next review"
+                                {% if not has_next_review %}disabled{% endif %}
+                            >
+                                &rsaquo;
+                            </button>
+                        
+                        </div>
+                    
+                        {% if user.is_authenticated %}
+                    
+                            {% if not user.is_staff %}
+                    
+                                {% if not user_review %}
+                    
+                                    <button
+                                        type="button"
+                                        class="review-action-button"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#reviewModal"
+                                    >
+                                        + Add Review
+                                    </button>
+                                
+                                {% endif %}
+                                
+                            {% endif %}
+                                
+                        {% else %}
+                                
+                            <span class="review-login-note">
+                                Sign in to write a review.
+                            </span>
+                        
+                        {% endif %}
+                        
+                    </div>
+                
+                    <!-- AJAX review container -->
+                    <div
+                        id="customerReviewContainer"
+                        data-current-index="{{ review_index|default:0 }}"
+                    >
+                
+                        {% if reviews %}
+                
+                            {% for review in reviews %}
+                
+                                {% if forloop.first %}
+                
+                                    <article class="review-card">
+                                    
+                                        <div class="review-card-top">
+                                        
+                                            <div class="review-author">
+                                            
+                                                <div class="review-avatar">
+                                                
+                                                    {% with reviewer_name=review.user.username|default:review.user.email|default:"Customer" %}
+                                                        {{ reviewer_name|first|upper }}
+                                                    {% endwith %}
+                                                
+                                                </div>
+                                            
+                                                <div class="review-author-details">
+                                                
+                                                    <strong>
+                                                        {% with reviewer_name=review.user.username|default:review.user.email|default:"Customer" %}
+                                                            {{ reviewer_name }}
+                                                        {% endwith %}
+                                                    </strong>
+                                                
+                                                    <span class="review-date">
+                                                        {{ review.created_at|date:"d M Y" }}
+                                                    </span>
+                                                
+                                                </div>
+                                            
+                                            </div>
+                                        
+                                            <div
+                                                class="review-rating"
+                                                aria-label="{{ review.rating }} out of 5 stars"
+                                            >
+                                        
+                                                {% for star in rating_choices %}
+                                        
+                                                    {% if star <= review.rating %}
+                                                        <span class="star-filled">★</span>
+                                                    {% else %}
+                                                        <span class="star-empty">★</span>
+                                                    {% endif %}
+                                        
+                                                {% endfor %}
+                                        
+                                            </div>
+                                        
+                                        </div>
+                                    
+                                        <p class="review-text">
+                                            {{ review.review }}
+                                        </p>
+                                    
+                                        <!-- SmartCafe response -->
+                                        {% if review.admin_reply %}
+                                    
+                                            <div class="review-admin-reply">
+                                            
+                                                <div class="admin-reply-heading">
+                                                
+                                                    <span class="admin-reply-icon">↳</span>
+                                                
+                                                    <strong>SmartCafe Response</strong>
+                                                
+                                                </div>
+                                            
+                                                <p>{{ review.admin_reply }}</p>
+                                            
+                                                {% if review.replied_at %}
+                                            
+                                                    <span class="admin-reply-date">
+                                                        {{ review.replied_at|date:"d M Y" }}
+                                                    </span>
+                                                
+                                                {% endif %}
+                                                
+                                            </div>
+                                        
+                                        {% endif %}
+                                        
+                                        <!-- Review owner actions -->
+                                        {% if user.is_authenticated %}
+                                        
+                                            {% if review.user_id == user.id %}
+                                        
+                                                <div class="review-owner-actions">
+                                                
+                                                    <button
+                                                        type="button"
+                                                        class="review-edit-button"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#reviewModal"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                
+                                                    <form
+                                                        method="POST"
+                                                        action="{% url 'delete_product_review' product.id %}"
+                                                        onsubmit="return confirm('Are you sure you want to delete your review?');"
+                                                    >
+                                                
+                                                        {% csrf_token %}
+                                                
+                                                        <button
+                                                            type="submit"
+                                                            class="review-delete-button"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    
+                                                    </form>
+                                                
+                                                </div>
+                                            
+                                            {% endif %}
+                                            
+                                        {% endif %}
+                                            
+                                    </article>
+                                
+                                {% endif %}
+                                
+                            {% endfor %}
+                                
+                        {% else %}
+                                
+                            <div class="reviews-empty-state">
+                            
+                                <div class="reviews-empty-icon">☆</div>
+                            
+                                <h3>No reviews yet</h3>
+                            
+                                <p>
+                                    Be the first to share your experience
+                                    with this product.
+                                </p>
+                            
+                            </div>
+                        
+                        {% endif %}
+                        
+                    </div>
+                
+                </section>
+
 
             </div>
 
         </div>
+
+        <!-- =========================
+             ADD / EDIT REVIEW MODAL
+             ========================= -->
+
+        {% if user.is_authenticated and not user.is_staff %}
+
+            <div
+                class="modal fade review-modal"
+                id="reviewModal"
+                tabindex="-1"
+                aria-labelledby="reviewModalTitle"
+                aria-hidden="true"
+            >
+
+                <div class="modal-dialog modal-dialog-centered">
+                
+                    <div class="modal-content">
+                    
+                        <div class="modal-header">
+                        
+                            <div>
+                            
+                                <span class="review-modal-eyebrow">
+                                    YOUR EXPERIENCE
+                                </span>
+                            
+                                <h2
+                                    class="modal-title"
+                                    id="reviewModalTitle"
+                                >
+                                    {% if user_review %}
+                                        Edit Your Review
+                                    {% else %}
+                                        Write a Review
+                                    {% endif %}
+                                </h2>
+                            
+                            </div>
+                        
+                            <button
+                                type="button"
+                                class="review-modal-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"
+                            >
+                                &times;
+                            </button>
+                        
+                        </div>
+                    
+                    
+                        <form
+                            method="POST"
+                            action="{% url 'submit_product_review' product.id %}"
+                        >
+                    
+                            {% csrf_token %}
+                    
+                            <div class="modal-body">
+                            
+                                <div class="review-product-reference">
+                                
+                                    <span class="review-product-icon">☕</span>
+                                
+                                    <div>
+                                        <strong>{{ product.name }}</strong>
+                                        <span>Share your thoughts with us</span>
+                                    </div>
+                                
+                                </div>
+                            
+                            
+                                <div class="review-form-group">
+                                
+                                    <label for="reviewRating">
+                                        Your Rating
+                                    </label>
+                                
+                                    <select
+                                        name="rating"
+                                        id="reviewRating"
+                                        class="review-form-control"
+                                        required
+                                    >
+                                
+                                        <option value="">
+                                            Select your rating
+                                        </option>
+                                    
+                                        {% for rating in rating_choices %}
+                                    
+                                            <option
+                                                value="{{ rating }}"
+                                                {% if user_review and user_review.rating == rating %}selected{% endif %}
+                                            >
+                                                {{ rating }} ★ 
+                                            </option>
+                                        
+                                        {% endfor %}
+                                        
+                                    </select>
+                                
+                                </div>
+                            
+                            
+                                <div class="review-form-group">
+                                
+                                    <label for="reviewText">
+                                        Your Review
+                                    </label>
+                                
+                                    <textarea
+                                        name="review"
+                                        id="reviewText"
+                                        class="review-form-control review-textarea"
+                                        placeholder="What did you think about this product?"
+                                        maxlength="2000"
+                                        required
+                                    >{% if user_review %}{{ user_review.review }}{% endif %}</textarea>
+                                
+                                    <span class="review-field-hint">
+                                        Share your honest experience. Maximum 2000 characters.
+                                    </span>
+                                
+                                </div>
+                            
+                            </div>
+                        
+                        
+                            <div class="modal-footer">
+                            
+                                <button
+                                    type="button"
+                                    class="review-cancel-button"
+                                    data-bs-dismiss="modal"
+                                >
+                                    Cancel
+                                </button>
+                            
+                                <button
+                                    type="submit"
+                                    class="review-submit-button"
+                                >
+                                    {% if user_review %}
+                                        Save Changes
+                                    {% else %}
+                                        Submit Review
+                                    {% endif %}
+                                </button>
+                            
+                            </div>
+                        
+                        </form>
+                    
+                    </div>
+                
+                </div>
+            
+            </div>
+        
+        {% endif %}
 
 
         <!-- IMAGE ZOOM -->
@@ -907,7 +1315,316 @@ instructionButtons.forEach(
 
     }
 );
+/* =========================================================
+   AJAX NAVIGATION: RELATED PRODUCTS AND CUSTOMER REVIEWS
+   ========================================================= */
 
+(function () {
+    "use strict";
+
+    const relatedPrevious = document.getElementById(
+        "relatedProductsPrevious"
+    );
+
+    const relatedNext = document.getElementById(
+        "relatedProductsNext"
+    );
+
+    const reviewPrevious = document.getElementById(
+        "customerReviewPrevious"
+    );
+
+    const reviewNext = document.getElementById(
+        "customerReviewNext"
+    );
+
+
+    /*
+     * Fetch the existing product-detail page through AJAX.
+     * The response is parsed, and only the requested section
+     * is extracted and replaced.
+     *
+     * This avoids creating separate partial templates.
+     */
+
+    async function loadSection(section, value, direction) {
+        const containerId = section === "related_products"
+            ? "relatedProductsContainer"
+            : "customerReviewContainer";
+        
+        const container = document.getElementById(containerId);
+        
+        if (!container || container.dataset.loading === "true") {
+            return;
+        }
+    
+        const positionKey = section === "related_products"
+            ? "currentPage"
+            : "currentIndex";
+    
+        const currentValue = Number(
+            container.dataset[positionKey] || 0
+        );
+    
+        const nextValue = currentValue + direction;
+    
+        if (nextValue < 0) {
+            return;
+        }
+    
+        const previousButton = document.getElementById(
+            section === "related_products"
+                ? "relatedProductsPrevious"
+                : "customerReviewPrevious"
+        );
+    
+        const nextButton = document.getElementById(
+            section === "related_products"
+                ? "relatedProductsNext"
+                : "customerReviewNext"
+        );
+    
+        container.dataset.loading = "true";
+    
+        [previousButton, nextButton].forEach(button => {
+            if (button) {
+                button.disabled = true;
+            }
+        });
+    
+        try {
+            const url = new URL(window.location.href);
+        
+            url.searchParams.set("section", section);
+            url.searchParams.set(value, String(nextValue));
+        
+            const response = await fetch(url.toString(), {
+                method: "GET",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            });
+        
+            if (!response.ok) {
+                throw new Error(
+                    `Request failed with status ${response.status}`
+                );
+            }
+        
+            const html = await response.text();
+        
+            const parsedDocument = new DOMParser().parseFromString(
+                html,
+                "text/html"
+            );
+        
+            const updatedContainer = parsedDocument.getElementById(
+                containerId
+            );
+        
+            if (!updatedContainer) {
+                throw new Error(
+                    `Could not find ${containerId} in the response.`
+                );
+            }
+        
+            /*
+             * STEP 1:
+             * Fade out and slide the current content.
+             */
+        
+            container.classList.remove(
+                "slide-next",
+                "slide-previous"
+            );
+        
+            container.classList.add("is-transitioning");
+        
+            await new Promise(resolve => setTimeout(resolve, 220));
+        
+            /*
+             * STEP 2:
+             * Replace only the requested section's content.
+             */
+        
+            updatedContainer.classList.remove(
+                "is-transitioning",
+                "slide-next",
+                "slide-previous"
+            );
+        
+            updatedContainer.classList.add(
+                direction > 0 ? "slide-next" : "slide-previous",
+                "is-transitioning"
+            );
+        
+            container.replaceWith(updatedContainer);
+        
+            /*
+             * STEP 3:
+             * Start the new content slightly offset and transparent.
+             */
+        
+            void updatedContainer.offsetWidth;
+        
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    updatedContainer.classList.remove(
+                        "is-transitioning",
+                        "slide-next",
+                        "slide-previous"
+                    );
+                });
+            });
+        
+            /*
+             * Update arrow states from the returned page.
+             */
+        
+            const updatedPrevious = parsedDocument.getElementById(
+                section === "related_products"
+                    ? "relatedProductsPrevious"
+                    : "customerReviewPrevious"
+            );
+        
+            const updatedNext = parsedDocument.getElementById(
+                section === "related_products"
+                    ? "relatedProductsNext"
+                    : "customerReviewNext"
+            );
+        
+            const currentPrevious = document.getElementById(
+                section === "related_products"
+                    ? "relatedProductsPrevious"
+                    : "customerReviewPrevious"
+            );
+        
+            const currentNext = document.getElementById(
+                section === "related_products"
+                    ? "relatedProductsNext"
+                    : "customerReviewNext"
+            );
+        
+            if (currentPrevious && updatedPrevious) {
+                currentPrevious.disabled = updatedPrevious.disabled;
+            }
+        
+            if (currentNext && updatedNext) {
+                currentNext.disabled = updatedNext.disabled;
+            }
+        
+        } catch (error) {
+            console.error(
+                `Unable to load ${section}:`,
+                error
+            );
+        
+        } finally {
+            const currentContainer = document.getElementById(
+                containerId
+            );
+        
+            if (currentContainer) {
+                delete currentContainer.dataset.loading;
+            }
+        
+            /*
+             * Restore valid arrow states using the current position.
+             */
+        
+            const finalPrevious = document.getElementById(
+                section === "related_products"
+                    ? "relatedProductsPrevious"
+                    : "customerReviewPrevious"
+            );
+        
+            const finalNext = document.getElementById(
+                section === "related_products"
+                    ? "relatedProductsNext"
+                    : "customerReviewNext"
+            );
+        
+            if (currentContainer) {
+                const position = Number(
+                    currentContainer.dataset[positionKey] || 0
+                );
+            
+                const totalAvailable = section === "related_products"
+                    ? Number({{ related_products_count|default:0 }})
+                    : Number({{ total_reviews|default:0 }});
+            
+                const pageSize = section === "related_products" ? 4 : 1;
+            
+                const hasPrevious = position > 0;
+            
+                const hasNext = section === "related_products"
+                    ? (position + 1) * pageSize < totalAvailable
+                    : position < totalAvailable - 1;
+            
+                if (finalPrevious) {
+                    finalPrevious.disabled = !hasPrevious;
+                }
+            
+                if (finalNext) {
+                    finalNext.disabled = !hasNext;
+                }
+            }
+        }
+    }
+
+
+    /*
+     * RELATED PRODUCTS
+     * Four products per group.
+     */
+
+    if (relatedPrevious) {
+        relatedPrevious.addEventListener("click", function () {
+            loadSection(
+                "related_products",
+                "page",
+                -1
+            );
+        });
+    }
+
+    if (relatedNext) {
+        relatedNext.addEventListener("click", function () {
+            loadSection(
+                "related_products",
+                "page",
+                1
+            );
+        });
+    }
+
+
+    /*
+     * CUSTOMER REVIEWS
+     * One review per click.
+     */
+
+    if (reviewPrevious) {
+        reviewPrevious.addEventListener("click", function () {
+            loadSection(
+                "reviews",
+                "index",
+                -1
+            );
+        });
+    }
+
+    if (reviewNext) {
+        reviewNext.addEventListener("click", function () {
+            loadSection(
+                "reviews",
+                "index",
+                1
+            );
+        });
+    }
+
+})();
 
 </script>
 

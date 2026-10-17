@@ -10,6 +10,10 @@ from .models import Product
 from orders.models import Tax
 from category.models import Category
 from decimal import Decimal, InvalidOperation
+from django.db.models import Avg, Count
+from django.utils import timezone
+from .models import ReviewRating
+from django.http import HttpResponseBadRequest
 
 def _get_current_tax():
     tax = Tax.objects.first()
@@ -162,35 +166,441 @@ def customer_home(request):
     )
 
 def customer_product_detail(request, product_id):
-
     product = get_object_or_404(
-        Product.objects.select_related(
-            'category'
-        ).prefetch_related(
-            'images'
-        ),
+        Product.objects.select_related("category").prefetch_related("images"),
         id=product_id
     )
 
-    related_products = Product.objects.select_related(
-        'category'
-    ).prefetch_related(
-        'images'
-    ).filter(
-        category=product.category
-    ).exclude(
-        id=product.id
-    ).order_by(
-        '-created_at'
-    )[:12]
+    reviews = (
+        ReviewRating.objects
+        .filter(product=product)
+        .select_related("user", "replied_by")
+        .order_by("-created_at", "-id")
+    )
+
+    rating_summary = reviews.aggregate(
+        average_rating=Avg("rating"),
+        total_reviews=Count("id")
+    )
+
+    average_rating = rating_summary["average_rating"] or 0
+    total_reviews = rating_summary["total_reviews"]
+
+    user_review = None
+
+    if request.user.is_authenticated and not request.user.is_staff:
+        user_review = ReviewRating.objects.filter(
+            product=product,
+            user=request.user
+        ).first()
+
+    related_products_queryset = (
+        Product.objects
+        .select_related("category")
+        .prefetch_related("images")
+        .filter(category=product.category)
+        .exclude(id=product.id)
+        .order_by("-created_at", "-id")
+    )
+
+    related_products_count = related_products_queryset.count()
+
+    related_products = list(
+        related_products_queryset[:4]
+    )
+
+    related_page = 0
+    has_previous_related = False
+    has_next_related = related_products_count > 4
+
+    first_review = reviews.first()
+
+    displayed_reviews = (
+        [first_review]
+        if first_review is not None
+        else []
+    )
+
+    review = first_review
+    review_index = 0
+
+    has_previous_review = False
+    has_next_review = total_reviews > 1
+
+    is_ajax = (
+        request.headers.get("X-Requested-With")
+        == "XMLHttpRequest"
+    )
+
+    section = request.GET.get("section")
+
+    if is_ajax and section == "related_products":
+
+        try:
+            related_page = int(
+                request.GET.get("page", 0)
+            )
+        except (TypeError, ValueError):
+            return HttpResponseBadRequest(
+                "Invalid related-products page."
+            )
+
+        if related_page < 0:
+            return HttpResponseBadRequest(
+                "Invalid related-products page."
+            )
+
+        start = related_page * 4
+        end = start + 4
+
+        related_products = list(
+            related_products_queryset[start:end]
+        )
+
+        if related_page > 0 and not related_products:
+            return HttpResponseBadRequest(
+                "No related products found for this page."
+            )
+
+        has_previous_related = related_page > 0
+        has_next_related = end < related_products_count
+
+    elif is_ajax and section == "reviews":
+
+        try:
+            review_index = int(
+                request.GET.get("index", 0)
+            )
+        except (TypeError, ValueError):
+            return HttpResponseBadRequest(
+                "Invalid review index."
+            )
+
+        if review_index < 0 or review_index >= total_reviews:
+            return HttpResponseBadRequest(
+                "Invalid review index."
+            )
+
+        review = reviews[
+            review_index:review_index + 1
+        ].first()
+
+        if review is None:
+            return HttpResponseBadRequest(
+                "Review not found."
+            )
+
+        displayed_reviews = [review]
+
+        has_previous_review = review_index > 0
+        has_next_review = review_index < total_reviews - 1
+
+    elif is_ajax:
+        return HttpResponseBadRequest(
+            "Invalid AJAX section."
+        )
+
+    context = {
+        "product": product,
+        "related_products": related_products,
+        "related_products_count": related_products_count,
+        "related_page": related_page,
+        "has_previous_related": has_previous_related,
+        "has_next_related": has_next_related,
+        "average_rating": average_rating,
+        "total_reviews": total_reviews,
+        "reviews": displayed_reviews,
+        "review": review,
+        "review_index": review_index,
+        "has_previous_review": has_previous_review,
+        "has_next_review": has_next_review,
+        "user_review": user_review,
+        "rating_choices": range(1, 6),
+    }
 
     return render(
         request,
-        'users_panel/product_detail.html',
-        {
-            'product': product,
-            'related_products': related_products,
+        "users_panel/product_detail.html",
+        context
+    )
+
+@login_required(login_url="login")
+@require_POST
+def submit_product_review(request, product_id):
+
+    if request.user.is_staff:
+        return HttpResponseForbidden(
+            "Administrators cannot submit customer reviews."
+        )
+
+    product = get_object_or_404(
+        Product.objects.select_related("category"),
+        id=product_id
+    )
+
+    if not product.is_active or not product.category.is_active:
+
+        messages.error(
+            request,
+            "You cannot review an unavailable product."
+        )
+
+        return redirect(
+            "customer_product_detail",
+            product_id=product.id
+        )
+
+    rating_value = request.POST.get(
+        "rating", ""
+    ).strip()
+
+    review_text = request.POST.get(
+        "review", ""
+    ).strip()
+
+    try:
+        rating_value = int(rating_value)
+    except (TypeError, ValueError):
+        rating_value = 0
+
+    if rating_value not in range(1, 6):
+
+        messages.error(
+            request,
+            "Please select a rating between 1 and 5 stars."
+        )
+
+        return redirect(
+            "customer_product_detail",
+            product_id=product.id
+        )
+
+    if not review_text:
+
+        messages.error(
+            request,
+            "Please enter your review."
+        )
+
+        return redirect(
+            "customer_product_detail",
+            product_id=product.id
+        )
+
+    if len(review_text) > 2000:
+
+        messages.error(
+            request,
+            "Your review cannot exceed 2000 characters."
+        )
+
+        return redirect(
+            "customer_product_detail",
+            product_id=product.id
+        )
+
+    review_obj, created = ReviewRating.objects.get_or_create(
+        product=product,
+        user=request.user,
+        defaults={
+            "rating": rating_value,
+            "review": review_text,
         }
+    )
+
+    if not created:
+
+        review_obj.rating = rating_value
+        review_obj.review = review_text
+        review_obj.save(
+            update_fields=[
+                "rating",
+                "review",
+                "updated_at",
+            ]
+        )
+
+        messages.success(
+            request,
+            "Your review has been updated."
+        )
+
+    else:
+
+        messages.success(
+            request,
+            "Thank you! Your review has been submitted."
+        )
+
+    return redirect(
+        "customer_product_detail",
+        product_id=product.id
+    )
+
+@login_required(login_url="login")
+@require_POST
+def delete_product_review(request, product_id):
+
+    if request.user.is_staff:
+        return HttpResponseForbidden(
+            "Administrators cannot use this customer action."
+        )
+
+    review = get_object_or_404(
+        ReviewRating,
+        product_id=product_id,
+        user=request.user
+    )
+
+    review.delete()
+
+    messages.success(
+        request,
+        "Your review has been deleted."
+    )
+
+    return redirect(
+        "customer_product_detail",
+        product_id=product_id
+    )
+
+@login_required(login_url="login")
+@require_POST
+def admin_review_reply(request, review_id):
+
+    if not request.user.is_staff:
+        return HttpResponseForbidden(
+            "You are not authorized to reply to reviews."
+        )
+
+    review_obj = get_object_or_404(
+        ReviewRating.objects.select_related("product"),
+        id=review_id
+    )
+
+    reply_text = request.POST.get(
+        "admin_reply", ""
+    ).strip()
+
+    if not reply_text:
+
+        messages.error(
+            request,
+            "Please enter a reply before submitting."
+        )
+
+        return redirect(
+            "product_detail",
+            product_id=review_obj.product_id
+        )
+
+    if len(reply_text) > 2000:
+
+        messages.error(
+            request,
+            "The reply cannot exceed 2000 characters."
+        )
+
+        return redirect(
+            "product_detail",
+            product_id=review_obj.product_id
+        )
+
+    review_obj.admin_reply = reply_text
+    review_obj.replied_by = request.user
+    review_obj.replied_at = timezone.now()
+
+    review_obj.save(
+        update_fields=[
+            "admin_reply",
+            "replied_by",
+            "replied_at",
+            "updated_at",
+        ]
+    )
+
+    messages.success(
+        request,
+        "Your reply has been saved."
+    )
+
+    return redirect(
+        "product_detail",
+        product_id=review_obj.product_id
+    )
+
+@login_required(login_url="login")
+@require_POST
+def admin_delete_review_reply(request, review_id):
+
+    if not request.user.is_staff:
+        return HttpResponseForbidden(
+            "You are not authorized to delete review replies."
+        )
+
+    review_obj = get_object_or_404(
+        ReviewRating.objects.select_related("product"),
+        id=review_id
+    )
+
+    if not review_obj.admin_reply:
+
+        messages.info(
+            request,
+            "This review does not have a reply to delete."
+        )
+
+    else:
+
+        review_obj.admin_reply = ""
+        review_obj.replied_by = None
+        review_obj.replied_at = None
+
+        review_obj.save(
+            update_fields=[
+                "admin_reply",
+                "replied_by",
+                "replied_at",
+                "updated_at",
+            ]
+        )
+
+        messages.success(
+            request,
+            "Administrator reply deleted successfully."
+        )
+
+    return redirect(
+        "product_detail",
+        product_id=review_obj.product_id
+    )
+
+@login_required(login_url="login")
+@require_POST
+def admin_delete_product_review(request, review_id):
+
+    if not request.user.is_staff:
+        return HttpResponseForbidden(
+            "You are not authorized to delete customer reviews."
+        )
+
+    review_obj = get_object_or_404(
+        ReviewRating.objects.select_related("product"),
+        id=review_id
+    )
+
+    product_id = review_obj.product_id
+
+    review_obj.delete()
+
+    messages.success(
+        request,
+        "Customer review deleted successfully."
+    )
+
+    return redirect(
+        "product_detail",
+        product_id=product_id
     )
 
 MAX_CART_QUANTITY = 10
@@ -896,14 +1306,45 @@ def product_detail(request, product_id):
         id=product_id
     )
 
+    reviews = ReviewRating.objects.filter(
+        product=product
+    ).select_related(
+        'user',
+        'replied_by'
+    ).order_by(
+        '-created_at',
+        '-id'
+    )
+
+    rating_summary = reviews.aggregate(
+        average_rating=Avg('rating'),
+        total_reviews=Count('id')
+    )
+
+    average_rating = (
+        rating_summary['average_rating'] or 0
+    )
+
+    total_reviews = rating_summary['total_reviews']
+
+    review_page_obj = Paginator(
+        reviews,
+        6
+    ).get_page(
+        request.GET.get('reviews_page', 1)
+    )
+
     return render(
         request,
         'admin_panel/product_detail.html',
         {
             'product': product,
+            'reviews': review_page_obj.object_list,
+            'review_page_obj': review_page_obj,
+            'average_rating': average_rating,
+            'total_reviews': total_reviews,
         }
     )
-
 
 @login_required(login_url='login')
 def add_product(request):
