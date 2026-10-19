@@ -2001,7 +2001,17 @@ def admin_dashboard(request):
             }
         )
 
-    unpaid_bills = None
+    unpaid_orders = (
+        BillOrder.objects
+        .filter(
+            bill__isnull=True,
+            payment_method=BillOrder.PaymentMethod.COD,
+            order__status=Order.Status.DELIVERED,
+            created_at__date__gte=start_date,
+            created_at__date__lte=end_date,
+        )
+        .count()
+    )
 
     return render(
         request,
@@ -2016,7 +2026,7 @@ def admin_dashboard(request):
             "total_sales": total_sales,
             "total_orders": total_orders,
             "pending_orders": pending_orders,
-            "unpaid_bills": unpaid_bills,
+            "unpaid_orders": unpaid_orders,
             "best_selling_products": best_selling_products,
             "best_selling_categories": best_selling_categories,
             "recent_orders": recent_orders,
@@ -2089,14 +2099,11 @@ def admin_order_list(request):
             | Q(user__email__icontains=search)
             | Q(items__product__name__icontains=search)
         )
-
+    
         if search.isdigit():
             search_filter |= Q(user_id=int(search))
-
-        orders = orders.filter(search_filter)
-        orders = orders.filter(
-            Q(items__product__name__icontains=search)
-        ).distinct()
+    
+        orders = orders.filter(search_filter).distinct()
 
     valid_statuses = {
         choice[0]

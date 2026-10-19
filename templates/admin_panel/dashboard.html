@@ -178,7 +178,7 @@
         </div>
         <!-- Notifications -->
         
-        <button
+        {% comment %} <button
             type="button"
             class="notification-button"
             aria-label="Notifications"
@@ -188,7 +188,7 @@
         
             <span class="notification-dot"></span>
         
-        </button>
+        </button> {% endcomment %}
         
     </div>
     
@@ -395,40 +395,26 @@
         </div>
 
 
-
-        <!-- Unpaid Bills -->
+        <!-- Unpaid Orders -->
 
         <div class="kpi-card">
-
+        
             <div class="kpi-icon bills-icon">
-
                 <i class="fa fa-file-text-o"></i>
-
             </div>
-
-
+        
             <div class="kpi-content">
-
+            
                 <span class="kpi-label">
-                    Unpaid Bills
+                    Unpaid Orders
                 </span>
-
-                {% if unpaid_bills is not None %}
-
-                    <strong class="kpi-value">
-                        {{ unpaid_bills }}
-                    </strong>
-
-                {% else %}
-
-                    <strong class="kpi-value">
-                        —
-                    </strong>
-
-                {% endif %}
-
+            
+                <strong class="kpi-value">
+                    {{ unpaid_orders }}
+                </strong>
+            
             </div>
-
+        
         </div>
 
 

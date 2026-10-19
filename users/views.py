@@ -93,15 +93,15 @@ def verify_signup_otp(request):
                         phone=signup_data['phone'],
                         password=signup_data['password'],
                     )
-    
+
                     Wallet.objects.create(
                         user=user
                     )
-    
+
                     cache.delete(f'signup_{signup_id}')
                     cache.delete(f'signup_resend_{signup_id}')
                     request.session.pop('signup_id', None)
-    
+
                     return redirect('login')
             else:
                 form.add_error('otp', 'Invalid OTP. Please try again.')
@@ -174,7 +174,7 @@ def login_view(request):
             login(request, user)
 
             if user.is_staff:
-                return redirect('admin_users')
+                return redirect('admin_dashboard')
 
             return redirect('home')
 
