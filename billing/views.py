@@ -38,7 +38,7 @@ def _admin_staff_check(request):
 
         messages.error(
             request,
-            "You do not have permission to access the admin area.",
+            "You do not have permission to access this feature.",
         )
 
         return redirect("home")
@@ -66,10 +66,6 @@ def admin_bill_list(request):
     if active_view not in valid_views:
         active_view = "unpaid_orders"
 
-    # --------------------------------------------------
-    # DATE FILTER PERSISTENCE
-    # --------------------------------------------------
-
     session_key_start = "billing_start_date"
     session_key_end = "billing_end_date"
 
@@ -90,7 +86,6 @@ def admin_bill_list(request):
         end_date = today
 
     elif start_date_param or end_date_param:
-        # A submitted date filter becomes the new saved range.
         start_date = parse_date(start_date_param) or today
         end_date = parse_date(end_date_param) or today
 
@@ -107,7 +102,6 @@ def admin_bill_list(request):
         )
 
     else:
-        # First visit: default to today.
         start_date = today
         end_date = today
 
@@ -129,9 +123,6 @@ def admin_bill_list(request):
         BillingSectionReadState.Section.REFUNDS,
     ]
 
-    # Establish a baseline on the admin's first visit.
-    # This prevents all historical records from appearing
-    # as newly unread.
     for section in section_choices:
         BillingSectionReadState.objects.get_or_create(
             user=request.user,
@@ -139,7 +130,7 @@ def admin_bill_list(request):
             defaults={"last_viewed_at": now},
         )
 
-    # Mark only the currently opened section as viewed.
+    # Marking only the currently opened section as viewed.
     BillingSectionReadState.objects.filter(
         user=request.user,
         section=active_view,
@@ -258,12 +249,7 @@ def admin_bill_list(request):
 
         refunds = refunds_page.object_list
 
-    # --------------------------------------------------
-    # UNREAD COUNTS
-    #
-    # These are independent of the selected date filter.
-    # --------------------------------------------------
-
+    # These are independent read counts of the selected date filter.
     unread_unpaid_orders = BillOrder.objects.filter(
         bill__isnull=True,
         payment_method=BillOrder.PaymentMethod.COD,
@@ -395,13 +381,12 @@ def admin_review_refund(request, refund_id):
             }
         )
 
-    # Lock the associated order before changing its status.
+    # Locking the associated order before changing its status.
     order = get_object_or_404(
         Order.objects.select_for_update(),
         id=refund.order_id,
     )
 
-    # A full-order refund must not be processed if the order
     # has already been cancelled or progressed beyond eligibility.
     if order.status not in {
         Order.Status.CONFIRMED,
@@ -446,7 +431,7 @@ def admin_review_refund(request, refund_id):
         amount = order.total_amount
 
     else:
-        # Lock the requested item and verify that it is still active.
+        # Locking the requested item and verify that it is still active.
         item = get_object_or_404(
             OrderItem.objects.select_for_update(),
             id=refund.order_item_id,
@@ -929,7 +914,6 @@ def admin_bill_data(request, bill_id):
 
     # Retrieve actual successful payment records.
     # Exclude refund transactions from the original
-    # payment details for this bill.
     payments = (
         bill.payments
         .filter(
@@ -2104,17 +2088,6 @@ def get_report_dates(period, start_value=None, end_value=None):
 @login_required(login_url="login")
 @require_GET
 def admin_reports(request):
-    """
-    Admin financial reports.
-
-    Reports use saved order amounts and actual Payment records.
-    Product offer discounts are not reconstructed because historical
-    product discount amounts are not stored separately.
-    """
-
-    # ---------------------------------------------------------
-    # PERMISSION CHECK
-    # ---------------------------------------------------------
 
     if not (request.user.is_staff or request.user.is_superuser):
         return HttpResponse(
@@ -2281,8 +2254,6 @@ def admin_reports(request):
     # PAYMENT COLLECTIONS
     # ---------------------------------------------------------
 
-    # Count only actual successful original payments.
-    # Refund payment records must not be counted as collections.
     payment_queryset = Payment.objects.filter(
         status=Payment.Status.SUCCESSFUL,
         paid_at__date__range=(start_date, end_date),
@@ -2312,7 +2283,6 @@ def admin_reports(request):
     for item in payment_aggregates:
         method = item["transaction_method"]
 
-        # Use the model's own display labels.
         payment_method_rows.append({
             "method": method,
             "label": dict(
@@ -2328,9 +2298,6 @@ def admin_reports(request):
         )["total"]
     )
 
-    # Outstanding is an estimate based on report-period order
-    # totals less original successful collections. It is not a
-    # substitute for the current balance of individual bills.
     outstanding_amount = max(
         Decimal("0.00"),
         order_total - amount_collected,
@@ -2467,9 +2434,6 @@ def export_admin_report(
     start_date,
     end_date,
 ):
-    """
-    Export the filtered report to CSV, Excel or PDF.
-    """
 
     headers = [
         "Order ID",

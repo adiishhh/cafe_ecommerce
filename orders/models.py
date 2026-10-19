@@ -3,6 +3,7 @@ from django.conf import settings
 from product.models import Product
 
 # Create your models here.
+
 class Tax(models.Model):
     percentage = models.DecimalField(
         max_digits=5,

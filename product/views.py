@@ -592,7 +592,7 @@ def admin_delete_review_reply(request, review_id):
 
         messages.success(
             request,
-            "Administrator reply deleted successfully."
+            "Reply deleted successfully."
         )
 
     return redirect(

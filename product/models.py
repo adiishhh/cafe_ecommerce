@@ -21,7 +21,6 @@ class Product(models.Model):
 
     description = models.TextField()
 
-    # Original price stored in the database.
     base_price = models.DecimalField(
         max_digits=10,
         decimal_places=2

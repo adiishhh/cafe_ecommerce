@@ -7,7 +7,6 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.views.decorators.http import require_POST
-from product.models import Product
 from users.models import Address
 from .models import Order, OrderItem, Tax
 from django.http import HttpResponse, JsonResponse
@@ -524,10 +523,6 @@ def place_order(request):
         )
         return redirect("cart")
 
-    # ----------------------------------------------------------
-    # PAYMENT METHOD
-    # ----------------------------------------------------------
-
     payment_method = request.POST.get(
         "payment_method",
         "cod",
@@ -542,10 +537,6 @@ def place_order(request):
             "Please choose a valid payment method."
         )
         return redirect("final_checkout")
-
-    # ----------------------------------------------------------
-    # DELIVERY ADDRESS
-    # ----------------------------------------------------------
 
     order_type = request.session.get(
         "checkout_order_type"
@@ -584,10 +575,6 @@ def place_order(request):
                 "The selected address is no longer available."
             )
             return redirect("order_type")
-
-    # ----------------------------------------------------------
-    # COUPON
-    # ----------------------------------------------------------
 
     coupon = None
     discount = Decimal("0.00")
@@ -633,13 +620,6 @@ def place_order(request):
     ).quantize(
         Decimal("0.01")
     )
-
-    # ----------------------------------------------------------
-    # CREATE ORDER
-    #
-    # Everything is inside the same transaction.
-    # If wallet payment fails later, this order is rolled back.
-    # ----------------------------------------------------------
 
     order = Order.objects.create(
 
@@ -722,10 +702,6 @@ def place_order(request):
         total_amount=total,
     )
 
-    # ----------------------------------------------------------
-    # CREATE ORDER ITEMS
-    # ----------------------------------------------------------
-
     for item in checkout["cart_items"]:
 
         product = item["product"]
@@ -739,10 +715,6 @@ def place_order(request):
             subtotal=item["item_total"],
         )
 
-    # ----------------------------------------------------------
-    # RECORD COUPON USAGE
-    # ----------------------------------------------------------
-
     if coupon:
 
         coupon.used_count += 1
@@ -753,10 +725,6 @@ def place_order(request):
                 "updated_at",
             ]
         )
-
-    # ----------------------------------------------------------
-    # WALLET PAYMENT
-    # ----------------------------------------------------------
 
     if payment_method == "wallet":
 
@@ -2099,10 +2067,10 @@ def admin_order_list(request):
             | Q(user__email__icontains=search)
             | Q(items__product__name__icontains=search)
         )
-    
+
         if search.isdigit():
             search_filter |= Q(user_id=int(search))
-    
+
         orders = orders.filter(search_filter).distinct()
 
     valid_statuses = {
