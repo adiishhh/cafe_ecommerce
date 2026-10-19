@@ -152,7 +152,7 @@
                 </a>
             
             
-                <a
+                {% comment %} <a
                     href="#"
                     class="nav-link {% if request.resolver_match.url_name == 'admin_tables' %}active{% endif %}"
                 >
@@ -165,7 +165,7 @@
                         Tables & QR
                     </span>
                 
-                </a>
+                </a> {% endcomment %}
             
             
                 <a
@@ -201,8 +201,8 @@
             
             
                 <a
-                    href="#"
-                    class="nav-link {% if request.resolver_match.url_name == 'admin_reports' %}active{% endif %}"
+                    href="{% url "admin_reports" %}"
+                    class="nav-link {% if 'reports' in request.resolver_match.url_name %}active{% endif %}"
                 >
             
                     <span class="nav-icon">

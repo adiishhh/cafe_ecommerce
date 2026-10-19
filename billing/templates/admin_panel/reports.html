@@ -1,0 +1,1484 @@
+{% extends "admin_panel/base.html" %}
+{% load static %}
+
+{% block title %}
+    SmartCafe Admin - Reports
+{% endblock %}
+
+{% block extra_css %}
+<link
+    rel="stylesheet"
+    href="{% static 'admin_panel/css/reports.css' %}"
+>
+{% endblock %}
+
+{% block content %}
+
+<div class="reports-page">
+
+    <!-- =====================================================
+         PAGE HEADER
+         ===================================================== -->
+
+    <header class="reports-header">
+
+        <div class="reports-heading">
+            <h1>Reports</h1>
+
+            <p>
+                Review orders, sales values, coupon discounts,
+                payment collections and refunds.
+            </p>
+        </div>
+
+        <div class="reports-header-meta">
+            <span class="reports-live-indicator"></span>
+            <span>Financial Overview</span>
+        </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         DATE AND ORDER FILTERS
+         ===================================================== -->
+
+    <section class="reports-filter-card">
+
+        <div class="reports-filter-heading">
+
+            <div class="reports-filter-title">
+
+                <span class="reports-filter-icon">
+                    <i class="fa fa-calendar"></i>
+                </span>
+
+                <div>
+                    <h2>Report Period</h2>
+
+                    <p>
+                        Select the period and order type you want to analyse.
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <form
+            method="get"
+            action=""
+            class="reports-filter-form"
+            id="reportsFilterForm"
+        >
+
+            <div class="reports-filter-field reports-period-field">
+
+                <label for="reportPeriod">Quick Period</label>
+
+                <select id="reportPeriod" name="period">
+
+                    <option
+                        value="today"
+                        {% if selected_period == "today" %}selected{% endif %}
+                    >
+                        Today
+                    </option>
+
+                    <option
+                        value="yesterday"
+                        {% if selected_period == "yesterday" %}selected{% endif %}
+                    >
+                        Yesterday
+                    </option>
+
+                    <option
+                        value="this_week"
+                        {% if selected_period == "this_week" %}selected{% endif %}
+                    >
+                        This Week
+                    </option>
+
+                    <option
+                        value="last_week"
+                        {% if selected_period == "last_week" %}selected{% endif %}
+                    >
+                        Last Week
+                    </option>
+
+                    <option
+                        value="this_month"
+                        {% if selected_period == "this_month" %}selected{% endif %}
+                    >
+                        This Month
+                    </option>
+
+                    <option
+                        value="last_month"
+                        {% if selected_period == "last_month" %}selected{% endif %}
+                    >
+                        Last Month
+                    </option>
+
+                    <option
+                        value="this_year"
+                        {% if selected_period == "this_year" %}selected{% endif %}
+                    >
+                        This Year
+                    </option>
+
+                    <option
+                        value="last_year"
+                        {% if selected_period == "last_year" %}selected{% endif %}
+                    >
+                        Last Year
+                    </option>
+
+                    <option
+                        value="custom"
+                        {% if selected_period == "custom" %}selected{% endif %}
+                    >
+                        Custom Range
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="reports-filter-field">
+
+                <label for="reportStartDate">Start Date</label>
+
+                <input
+                    type="date"
+                    id="reportStartDate"
+                    name="start_date"
+                    value="{{ start_date_value }}"
+                    required
+                >
+
+            </div>
+
+
+            <div class="reports-date-separator">
+                <i class="fa fa-long-arrow-right"></i>
+            </div>
+
+
+            <div class="reports-filter-field">
+
+                <label for="reportEndDate">End Date</label>
+
+                <input
+                    type="date"
+                    id="reportEndDate"
+                    name="end_date"
+                    value="{{ end_date_value }}"
+                    required
+                >
+
+            </div>
+
+
+            <div class="reports-filter-field">
+
+                <label for="reportOrderType">Order Type</label>
+
+                <select id="reportOrderType" name="order_type">
+
+                    <option
+                        value="all"
+                        {% if selected_order_type == "all" %}selected{% endif %}
+                    >
+                        All Types
+                    </option>
+
+                    <option
+                        value="pickup"
+                        {% if selected_order_type == "pickup" %}selected{% endif %}
+                    >
+                        Pickup
+                    </option>
+
+                    <option
+                        value="delivery"
+                        {% if selected_order_type == "delivery" %}selected{% endif %}
+                    >
+                        Delivery
+                    </option>
+
+                    <option
+                        value="table"
+                        {% if selected_order_type == "table" %}selected{% endif %}
+                    >
+                        Table
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="reports-filter-actions">
+
+                <button
+                    type="submit"
+                    class="reports-apply-button"
+                >
+                    <i class="fa fa-filter"></i>
+                    Apply
+                </button>
+
+                <a
+                    href="?period=today"
+                    class="reports-clear-button"
+                >
+                    Clear
+                </a>
+
+            </div>
+
+        </form>
+
+
+        <div class="reports-period-caption">
+
+            <i class="fa fa-calendar-check-o"></i>
+
+            <span>
+                Showing report for
+                <strong>{{ start_date|date:"d M Y" }}</strong>
+                to
+                <strong>{{ end_date|date:"d M Y" }}</strong>
+            </span>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         FINANCIAL SUMMARY
+         ===================================================== -->
+
+    <section class="reports-section">
+
+        <div class="reports-section-heading">
+
+            <div>
+                <h2>Financial Summary</h2>
+
+                <p>
+                    Overview of orders and their financial values
+                    for the selected period.
+                </p>
+            </div>
+
+        </div>
+
+
+        <div class="reports-summary-grid">
+
+
+            <!-- TOTAL ORDERS -->
+
+            <article class="reports-summary-card">
+
+                <div class="reports-summary-top">
+
+                    <span class="reports-summary-icon orders-icon">
+                        <i class="fa fa-shopping-bag"></i>
+                    </span>
+
+                    <span class="reports-summary-label">
+                        Total Orders
+                    </span>
+
+                </div>
+
+                <strong class="reports-summary-value">
+                    {{ total_orders|default:0 }}
+                </strong>
+
+                <span class="reports-summary-description">
+                    Orders placed during the period
+                </span>
+
+            </article>
+
+
+            <!-- COMPLETED ORDERS -->
+
+            <article class="reports-summary-card">
+
+                <div class="reports-summary-top">
+
+                    <span class="reports-summary-icon completed-icon">
+                        <i class="fa fa-check-circle"></i>
+                    </span>
+
+                    <span class="reports-summary-label">
+                        Completed Orders
+                    </span>
+
+                </div>
+
+                <strong class="reports-summary-value">
+                    {{ completed_orders|default:0 }}
+                </strong>
+
+                <span class="reports-summary-description">
+                    Orders with delivered status
+                </span>
+
+            </article>
+
+
+            <!-- ORDER SUBTOTAL -->
+
+            <article class="reports-summary-card">
+
+                <div class="reports-summary-top">
+
+                    <span class="reports-summary-icon sales-icon">
+                        <i class="fa fa-line-chart"></i>
+                    </span>
+
+                    <span class="reports-summary-label">
+                        Order Subtotal
+                    </span>
+
+                </div>
+
+                <strong class="reports-summary-value">
+                    ₹{{ order_subtotal|default:"0.00"|floatformat:2 }}
+                </strong>
+
+                <span class="reports-summary-description">
+                    Before coupon discounts and tax
+                </span>
+
+            </article>
+
+
+            <!-- COUPON DISCOUNTS -->
+
+            <article class="reports-summary-card">
+
+                <div class="reports-summary-top">
+
+                    <span class="reports-summary-icon discount-icon">
+                        <i class="fa fa-tags"></i>
+                    </span>
+
+                    <span class="reports-summary-label">
+                        Coupon Discounts
+                    </span>
+
+                </div>
+
+                <strong class="reports-summary-value">
+                    ₹{{ total_discounts|default:"0.00"|floatformat:2 }}
+                </strong>
+
+                <span class="reports-summary-description">
+                    Recorded coupon deductions
+                </span>
+
+            </article>
+
+
+            <!-- SUBTOTAL AFTER COUPON -->
+
+            <article class="reports-summary-card reports-summary-highlight">
+
+                <div class="reports-summary-top">
+
+                    <span class="reports-summary-icon net-sales-icon">
+                        <i class="fa fa-money"></i>
+                    </span>
+
+                    <span class="reports-summary-label">
+                        Subtotal After Coupon
+                    </span>
+
+                </div>
+
+                <strong class="reports-summary-value">
+                    ₹{{ subtotal_after_coupon|default:"0.00"|floatformat:2 }}
+                </strong>
+
+                <span class="reports-summary-description">
+                    Order subtotal less coupon discounts
+                </span>
+
+            </article>
+
+
+            <!-- TAX -->
+
+            <article class="reports-summary-card">
+
+                <div class="reports-summary-top">
+
+                    <span class="reports-summary-icon tax-icon">
+                        <i class="fa fa-file-text-o"></i>
+                    </span>
+
+                    <span class="reports-summary-label">
+                        Tax on Orders
+                    </span>
+
+                </div>
+
+                <strong class="reports-summary-value">
+                    ₹{{ total_tax|default:"0.00"|floatformat:2 }}
+                </strong>
+
+                <span class="reports-summary-description">
+                    Tax recorded on the orders
+                </span>
+
+            </article>
+
+
+            <!-- COMPLETED REFUNDS -->
+
+            <article class="reports-summary-card">
+
+                <div class="reports-summary-top">
+
+                    <span class="reports-summary-icon refund-icon">
+                        <i class="fa fa-undo"></i>
+                    </span>
+
+                    <span class="reports-summary-label">
+                        Completed Refunds
+                    </span>
+
+                </div>
+
+                <strong class="reports-summary-value">
+                    ₹{{ total_refunds|default:"0.00"|floatformat:2 }}
+                </strong>
+
+                <span class="reports-summary-description">
+                    Successfully completed refunds
+                </span>
+
+            </article>
+
+
+            <!-- NET AFTER REFUNDS -->
+
+            <article class="reports-summary-card reports-summary-highlight">
+
+                <div class="reports-summary-top">
+
+                    <span class="reports-summary-icon retained-icon">
+                        <i class="fa fa-balance-scale"></i>
+                    </span>
+
+                    <span class="reports-summary-label">
+                        Net After Refunds
+                    </span>
+
+                </div>
+
+                <strong class="reports-summary-value">
+                    ₹{{ net_after_refunds|default:"0.00"|floatformat:2 }}
+                </strong>
+
+                <span class="reports-summary-description">
+                    Order totals less completed refunds
+                </span>
+
+            </article>
+
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         SALES AND DISCOUNT BREAKDOWN
+         ===================================================== -->
+
+    <section class="reports-two-column">
+
+
+        <!-- SALES BREAKDOWN -->
+
+        <article class="reports-card">
+
+            <div class="reports-card-header">
+
+                <div class="reports-card-heading-icon">
+                    <i class="fa fa-calculator"></i>
+                </div>
+
+                <div>
+                    <h2>Sales Breakdown</h2>
+
+                    <p>
+                        Understand how the order total is calculated.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="reports-breakdown-body">
+
+                <div class="reports-breakdown-row">
+
+                    <span>Order Subtotal</span>
+
+                    <strong>
+                        ₹{{ order_subtotal|default:"0.00"|floatformat:2 }}
+                    </strong>
+
+                </div>
+
+
+                <div class="reports-breakdown-row deduction-row">
+
+                    <span>
+                        <i class="fa fa-minus-circle"></i>
+                        Coupon Discounts
+                    </span>
+
+                    <strong>
+                        − ₹{{ total_discounts|default:"0.00"|floatformat:2 }}
+                    </strong>
+
+                </div>
+
+
+                <div class="reports-breakdown-divider"></div>
+
+
+                <div class="reports-breakdown-row reports-breakdown-total">
+
+                    <span>Subtotal After Coupon</span>
+
+                    <strong>
+                        ₹{{ subtotal_after_coupon|default:"0.00"|floatformat:2 }}
+                    </strong>
+
+                </div>
+
+
+                <div class="reports-breakdown-row">
+
+                    <span>Tax on Orders</span>
+
+                    <strong>
+                        ₹{{ total_tax|default:"0.00"|floatformat:2 }}
+                    </strong>
+
+                </div>
+
+
+                <div class="reports-breakdown-divider"></div>
+
+
+                <div class="reports-breakdown-row reports-breakdown-grand-total">
+
+                    <span>Order Total</span>
+
+                    <strong>
+                        ₹{{ order_total|default:"0.00"|floatformat:2 }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </article>
+
+
+        <!-- DISCOUNT ANALYSIS -->
+
+        <article class="reports-card">
+
+            <div class="reports-card-header">
+
+                <div class="reports-card-heading-icon discount-heading-icon">
+                    <i class="fa fa-tags"></i>
+                </div>
+
+                <div>
+                    <h2>Discount Analysis</h2>
+
+                    <p>
+                        Review coupon discounts recorded on orders.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="reports-discount-content">
+
+
+                <div class="reports-discount-total">
+
+                    <div>
+
+                        <span>Total Coupon Discounts</span>
+
+                        <strong>
+                            ₹{{ total_discounts|default:"0.00"|floatformat:2 }}
+                        </strong>
+
+                    </div>
+
+                    <span class="reports-discount-percentage">
+                        {{ discount_rate|default:0|floatformat:2 }}%
+                    </span>
+
+                </div>
+
+
+                <div class="reports-discount-progress">
+
+                    <div class="reports-discount-progress-track">
+
+                        <div
+                            class="reports-discount-progress-fill"
+                            style="width: {{ discount_rate|default:0 }}%;"
+                        ></div>
+
+                    </div>
+
+                    <div class="reports-discount-progress-labels">
+
+                        <span>Coupon discount rate</span>
+
+                        <span>
+                            {{ discount_rate|default:0|floatformat:2 }}%
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="reports-discount-stat">
+
+                    <span class="reports-discount-stat-icon coupon-discount-icon">
+                        <i class="fa fa-ticket"></i>
+                    </span>
+
+                    <div class="reports-discount-stat-info">
+
+                        <span>Coupon Discounts</span>
+
+                        <strong>
+                            ₹{{ coupon_discounts|default:"0.00"|floatformat:2 }}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- =====================================================
+         PAYMENT COLLECTIONS
+         ===================================================== -->
+
+    <section class="reports-card reports-collections-card">
+
+        <div class="reports-card-header reports-collections-header">
+
+            <div class="reports-card-title-group">
+
+                <div class="reports-card-heading-icon collections-icon">
+                    <i class="fa fa-credit-card"></i>
+                </div>
+
+                <div>
+                    <h2>Payment Collections</h2>
+
+                    <p>
+                        Review successful payments recorded during
+                        the selected period.
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="reports-collection-summary">
+
+
+            <div class="reports-collection-metric">
+
+                <span>Amount Collected</span>
+
+                <strong class="collection-positive">
+                    ₹{{ amount_collected|default:"0.00"|floatformat:2 }}
+                </strong>
+
+            </div>
+
+
+            <div class="reports-collection-metric">
+
+                <span>Outstanding Amount</span>
+
+                <strong class="collection-outstanding">
+                    ₹{{ outstanding_amount|default:"0.00"|floatformat:2 }}
+                </strong>
+
+            </div>
+
+
+            <div class="reports-collection-metric">
+
+                <span>Collection Rate</span>
+
+                <strong>
+                    {{ collection_rate|default:0|floatformat:2 }}%
+                </strong>
+
+            </div>
+
+
+        </div>
+
+
+        <div class="reports-table-wrapper">
+
+            <table class="reports-table reports-payment-table">
+
+                <thead>
+
+                    <tr>
+                        <th>Transaction Method</th>
+                        <th>Successful Transactions</th>
+                        <th class="text-right">Amount Collected</th>
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for payment in payment_method_rows %}
+
+                        <tr>
+
+                            <td>
+
+                                <div class="reports-method-cell">
+
+                                    <span class="reports-method-icon">
+
+                                        {% if payment.method == "cash" %}
+                                            <i class="fa fa-money"></i>
+
+                                        {% elif payment.method == "upi" %}
+                                            <i class="fa fa-mobile"></i>
+
+                                        {% elif payment.method == "card" %}
+                                            <i class="fa fa-credit-card"></i>
+
+                                        {% elif payment.method == "wallet" %}
+                                            <i class="fa fa-google-wallet"></i>
+
+                                        {% else %}
+                                            <i class="fa fa-exchange"></i>
+                                        {% endif %}
+
+                                    </span>
+
+                                    <span>
+                                        {{ payment.label }}
+                                    </span>
+
+                                </div>
+
+                            </td>
+
+
+                            <td>
+                                {{ payment.transaction_count }}
+                            </td>
+
+
+                            <td class="text-right reports-money-cell">
+                                ₹{{ payment.amount|default:"0.00"|floatformat:2 }}
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+
+                            <td colspan="3" class="reports-empty-cell">
+                                No successful payment transactions were
+                                found for this period.
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+
+                <tfoot>
+
+                    <tr>
+
+                        <td colspan="2">
+                            Total Recorded Collections
+                        </td>
+
+                        <td class="text-right">
+                            ₹{{ amount_collected|default:"0.00"|floatformat:2 }}
+                        </td>
+
+                    </tr>
+
+                </tfoot>
+
+            </table>
+
+        </div>
+
+
+    </section>
+
+
+    <!-- =====================================================
+         REFUND SUMMARY
+         ===================================================== -->
+
+    <section class="reports-card reports-refunds-card">
+
+        <div class="reports-card-header">
+
+            <div class="reports-card-heading-icon refund-heading-icon">
+                <i class="fa fa-undo"></i>
+            </div>
+
+            <div>
+                <h2>Refund Summary</h2>
+
+                <p>
+                    Review completed refunds and outstanding refund requests.
+                </p>
+            </div>
+
+        </div>
+
+
+        <div class="reports-refund-summary">
+
+
+            <div class="reports-refund-metric">
+
+                <span>Completed Refunds</span>
+
+                <strong>
+                    {{ completed_refund_count|default:0 }}
+                </strong>
+
+            </div>
+
+
+            <div class="reports-refund-metric">
+
+                <span>Total Refunded</span>
+
+                <strong>
+                    ₹{{ total_refunds|default:"0.00"|floatformat:2 }}
+                </strong>
+
+            </div>
+
+
+            <div class="reports-refund-metric">
+
+                <span>Pending Requests</span>
+
+                <strong>
+                    {{ pending_refund_count|default:0 }}
+                </strong>
+
+            </div>
+
+
+        </div>
+
+
+        <div class="reports-refund-note">
+
+            Pending refund requests are displayed separately and are
+            not included in the completed refund total.
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         DETAILED SALES REPORT
+         ===================================================== -->
+
+    <section class="reports-card reports-orders-card">
+
+        <div class="reports-card-header reports-orders-header">
+
+            <div class="reports-card-title-group">
+
+                <div class="reports-card-heading-icon orders-table-icon">
+                    <i class="fa fa-list-alt"></i>
+                </div>
+
+                <div>
+                    <h2>Detailed Sales Report</h2>
+
+                    <p>
+                        Review the recorded financial values of individual orders.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="reports-order-count">
+                {{ page_obj.paginator.count|default:0 }} records
+            </div>
+
+        </div>
+
+
+        <!-- SEARCH -->
+
+        <div class="reports-table-toolbar">
+
+            <form
+                method="get"
+                action=""
+                class="reports-search-form"
+            >
+
+                <input
+                    type="hidden"
+                    name="period"
+                    value="{{ selected_period }}"
+                >
+
+                <input
+                    type="hidden"
+                    name="start_date"
+                    value="{{ start_date_value }}"
+                >
+
+                <input
+                    type="hidden"
+                    name="end_date"
+                    value="{{ end_date_value }}"
+                >
+
+                <input
+                    type="hidden"
+                    name="order_type"
+                    value="{{ selected_order_type }}"
+                >
+
+
+                <label
+                    for="reportOrderSearch"
+                    class="reports-search-icon"
+                >
+                    <i class="fa fa-search"></i>
+                </label>
+
+
+                <input
+                    type="search"
+                    id="reportOrderSearch"
+                    name="search"
+                    value="{{ search_query }}"
+                    placeholder="Search order ID..."
+                >
+
+
+                <button type="submit">
+                    Search
+                </button>
+
+            </form>
+
+
+            <span class="reports-table-hint">
+                Showing orders matching your filters.
+            </span>
+
+        </div>
+
+
+        <!-- ORDER TABLE -->
+
+        <div class="reports-table-wrapper">
+
+            <table class="reports-table reports-orders-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Order ID</th>
+
+                        <th>Order Date</th>
+
+                        <th>Order Type</th>
+
+                        <th>Status</th>
+
+                        <th class="text-right">
+                            Order Subtotal
+                        </th>
+
+                        <th class="text-right">
+                            Coupon Discount
+                        </th>
+
+                        <th class="text-right">
+                            Tax
+                        </th>
+
+                        <th class="text-right">
+                            Order Total
+                        </th>
+
+                        <th class="text-right">
+                            Refunded Amount
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for row in report_orders %}
+
+                        <tr>
+
+                            <td>
+
+                                <span class="reports-order-number">
+                                    {{ row.order_no }}
+                                </span>
+
+                            </td>
+
+
+                            <td>
+                                {{ row.order_date|date:"d M Y, h:i A" }}
+                            </td>
+
+
+                            <td>
+
+                                <span class="reports-type-badge">
+                                    {{ row.order_type }}
+                                </span>
+
+                            </td>
+
+
+                            <td>
+
+                                <span class="reports-status-badge status-{{ row.status|lower }}">
+                                    {{ row.status_label }}
+                                </span>
+
+                            </td>
+
+
+                            <td class="text-right">
+                                ₹{{ row.gross_amount|default:"0.00"|floatformat:2 }}
+                            </td>
+
+
+                            <td class="text-right reports-discount-value">
+                                ₹{{ row.discount_amount|default:"0.00"|floatformat:2 }}
+                            </td>
+
+
+                            <td class="text-right">
+                                ₹{{ row.tax_amount|default:"0.00"|floatformat:2 }}
+                            </td>
+
+
+                            <td class="text-right reports-money-cell">
+                                ₹{{ row.order_total|default:"0.00"|floatformat:2 }}
+                            </td>
+
+
+                            <td class="text-right reports-refund-value">
+                                ₹{{ row.refund_amount|default:"0.00"|floatformat:2 }}
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+
+                            <td colspan="9" class="reports-empty-cell">
+
+                                <div class="reports-empty-state">
+
+                                    <span class="reports-empty-icon">
+                                        <i class="fa fa-file-text-o"></i>
+                                    </span>
+
+                                    <strong>
+                                        No records found
+                                    </strong>
+
+                                    <p>
+                                        Try a different date range or search term.
+                                    </p>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <!-- PAGINATION -->
+
+        {% if page_obj.has_other_pages %}
+
+            <div class="reports-pagination">
+
+                <div class="reports-pagination-info">
+
+                    Page {{ page_obj.number }}
+                    of {{ page_obj.paginator.num_pages }}
+
+                </div>
+
+
+                <div class="reports-pagination-actions">
+
+
+                    {% if page_obj.has_previous %}
+
+                        <a
+                            href="?period={{ selected_period }}&start_date={{ start_date_value }}&end_date={{ end_date_value }}&order_type={{ selected_order_type }}&search={{ search_query|urlencode }}&page={{ page_obj.previous_page_number }}"
+                            class="reports-page-button"
+                        >
+                            <i class="fa fa-angle-left"></i>
+                            Previous
+                        </a>
+
+                    {% else %}
+
+                        <span class="reports-page-button disabled">
+                            <i class="fa fa-angle-left"></i>
+                            Previous
+                        </span>
+
+                    {% endif %}
+
+
+                    {% if page_obj.has_next %}
+
+                        <a
+                            href="?period={{ selected_period }}&start_date={{ start_date_value }}&end_date={{ end_date_value }}&order_type={{ selected_order_type }}&search={{ search_query|urlencode }}&page={{ page_obj.next_page_number }}"
+                            class="reports-page-button"
+                        >
+                            Next
+                            <i class="fa fa-angle-right"></i>
+                        </a>
+
+                    {% else %}
+
+                        <span class="reports-page-button disabled">
+                            Next
+                            <i class="fa fa-angle-right"></i>
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- =====================================================
+         REPORT DOWNLOADS
+         ===================================================== -->
+
+    <section class="reports-export-card">
+
+        <div class="reports-export-information">
+
+            <span class="reports-export-icon">
+                <i class="fa fa-download"></i>
+            </span>
+
+            <div>
+
+                <h2>Download Reports</h2>
+
+                <p>
+                    Export financial data for bookkeeping and reconciliation.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="reports-export-actions">
+
+            <button
+                type="submit"
+                form="reportsFilterForm"
+                name="export"
+                value="pdf"
+                class="reports-export-button export-pdf"
+            >
+                <i class="fa fa-file-pdf-o"></i>
+                Download PDF
+            </button>
+
+
+            <button
+                type="submit"
+                form="reportsFilterForm"
+                name="export"
+                value="excel"
+                class="reports-export-button export-excel"
+            >
+                <i class="fa fa-file-excel-o"></i>
+                Download Excel
+            </button>
+
+
+            <button
+                type="submit"
+                form="reportsFilterForm"
+                name="export"
+                value="csv"
+                class="reports-export-button export-csv"
+            >
+                <i class="fa fa-file-text-o"></i>
+                Download CSV
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         REPORT FOOTER
+         ===================================================== -->
+
+    <footer class="reports-footer">
+
+        <span>
+            <i class="fa fa-calendar"></i>
+
+            Period:
+            {{ start_date|date:"d M Y" }}
+            –
+            {{ end_date|date:"d M Y" }}
+        </span>
+
+        <span>
+            SmartCafe Financial Reports
+        </span>
+
+    </footer>
+
+</div>
+
+
+<!-- =========================================================
+     FILTER INTERACTION
+     ========================================================= -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const periodSelect = document.getElementById("reportPeriod");
+    const startDate = document.getElementById("reportStartDate");
+    const endDate = document.getElementById("reportEndDate");
+    const filterForm = document.getElementById("reportsFilterForm");
+
+    if (!periodSelect || !startDate || !endDate || !filterForm) {
+        return;
+    }
+
+    function getLocalDate() {
+        const date = new Date();
+
+        return new Date(
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDate()
+        );
+    }
+
+    function formatDate(date) {
+
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+
+        return `${year}-${month}-${day}`;
+    }
+
+    function startOfWeek(date) {
+
+        const result = new Date(date);
+        const day = result.getDay();
+
+        result.setDate(result.getDate() - ((day + 6) % 7));
+
+        return result;
+    }
+
+    function updateDateRange() {
+
+        const period = periodSelect.value;
+        const today = getLocalDate();
+
+        if (period === "custom") {
+            return;
+        }
+
+        let start = new Date(today);
+        let end = new Date(today);
+
+
+        if (period === "yesterday") {
+
+            start.setDate(start.getDate() - 1);
+            end = new Date(start);
+
+        } else if (period === "this_week") {
+
+            start = startOfWeek(today);
+
+        } else if (period === "last_week") {
+
+            start = startOfWeek(today);
+            start.setDate(start.getDate() - 7);
+
+            end = new Date(start);
+            end.setDate(end.getDate() + 6);
+
+        } else if (period === "this_month") {
+
+            start = new Date(
+                today.getFullYear(),
+                today.getMonth(),
+                1
+            );
+
+        } else if (period === "last_month") {
+
+            start = new Date(
+                today.getFullYear(),
+                today.getMonth() - 1,
+                1
+            );
+
+            end = new Date(
+                today.getFullYear(),
+                today.getMonth(),
+                0
+            );
+
+        } else if (period === "this_year") {
+
+            start = new Date(
+                today.getFullYear(),
+                0,
+                1
+            );
+
+        } else if (period === "last_year") {
+
+            start = new Date(
+                today.getFullYear() - 1,
+                0,
+                1
+            );
+
+            end = new Date(
+                today.getFullYear() - 1,
+                11,
+                31
+            );
+
+        }
+
+        startDate.value = formatDate(start);
+        endDate.value = formatDate(end);
+    }
+
+
+    periodSelect.addEventListener("change", updateDateRange);
+
+
+    filterForm.addEventListener("submit", function (event) {
+
+        if (
+            startDate.value &&
+            endDate.value &&
+            startDate.value > endDate.value
+        ) {
+
+            event.preventDefault();
+
+            alert("Start date cannot be later than end date.");
+
+        }
+
+    });
+
+});
+</script>
+
+{% endblock %}

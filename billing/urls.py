@@ -58,4 +58,10 @@ urlpatterns = [
         views.admin_refund_data,
         name="admin_refund_data",
     ),
+
+    path(
+        "admin_panel/reports/",
+        views.admin_reports,
+        name="admin_reports",
+    ),
 ]

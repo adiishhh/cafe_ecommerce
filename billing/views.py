@@ -5,10 +5,9 @@ from django.contrib.auth.decorators import login_required
 from decimal import Decimal, ROUND_HALF_UP
 from django.db import transaction
 from django.utils import timezone
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_POST, require_GET
 import uuid
 from django.conf import settings
 import razorpay
@@ -16,13 +15,18 @@ from orders.models import Order, OrderItem
 from orders.views import _get_checkout_cart
 from coupons.views import apply_coupon
 from coupons.models import Coupon
-import logging
+import logging  
 from django.urls import reverse
 from orders.views import _generate_order_number
 from product.models import Product
 from wallet.models import WalletTransaction
 from wallet.views import credit_wallet
-from django.core.exceptions import ValidationError
+from django.db.models import Sum, Count, Q
+from django.http import HttpResponse, HttpResponseBadRequest
+import csv
+from collections import defaultdict
+from io import BytesIO
+from django.core.paginator import Paginator
 
 # Create you views here.
 
@@ -1088,7 +1092,7 @@ def admin_refund_data(request, refund_id):
                     if refund_payment
                     else None
                 ),
-                
+
                 "original_payment": (
                     {
                         "id": original_payment.id,
@@ -1974,4 +1978,714 @@ def download_invoice(request, order_id):
                 )
             ),
         },
+    )
+
+REPORT_PERIODS = {
+    "today",
+    "yesterday",
+    "this_week",
+    "last_week",
+    "this_month",
+    "last_month",
+    "this_year",
+    "last_year",
+    "custom",
+}
+
+
+def report_money(value):
+    """Convert monetary values to Decimal safely."""
+    if value is None:
+        return Decimal("0.00")
+
+    return Decimal(str(value)).quantize(Decimal("0.01"))
+
+
+def get_report_dates(period, start_value=None, end_value=None):
+    """
+    Return the inclusive start and end dates for a report.
+    Uses the current local date.
+    """
+    today = timezone.localdate()
+
+    if period not in REPORT_PERIODS:
+        period = "today"
+
+    if period == "custom":
+        try:
+            start_date = date.fromisoformat(start_value)
+            end_date = date.fromisoformat(end_value)
+        except (TypeError, ValueError):
+            start_date = today
+            end_date = today
+
+        if start_date > end_date:
+            start_date, end_date = end_date, start_date
+
+        return start_date, end_date, period
+
+    if period == "today":
+        start_date = end_date = today
+
+    elif period == "yesterday":
+        start_date = end_date = today - timedelta(days=1)
+
+    elif period == "this_week":
+        start_date = today - timedelta(days=today.weekday())
+        end_date = today
+
+    elif period == "last_week":
+        this_week_start = today - timedelta(days=today.weekday())
+        start_date = this_week_start - timedelta(days=7)
+        end_date = this_week_start - timedelta(days=1)
+
+    elif period == "this_month":
+        start_date = today.replace(day=1)
+        end_date = today
+
+    elif period == "last_month":
+        first_day_this_month = today.replace(day=1)
+        end_date = first_day_this_month - timedelta(days=1)
+        start_date = end_date.replace(day=1)
+
+    elif period == "this_year":
+        start_date = today.replace(month=1, day=1)
+        end_date = today
+
+    else:  # last_year
+        start_date = date(today.year - 1, 1, 1)
+        end_date = date(today.year - 1, 12, 31)
+
+    return start_date, end_date, period
+
+@login_required(login_url="login")
+@require_GET
+def admin_reports(request):
+    """
+    Admin financial reports.
+
+    Reports use saved order amounts and actual Payment records.
+    Product offer discounts are not reconstructed because historical
+    product discount amounts are not stored separately.
+    """
+
+    # ---------------------------------------------------------
+    # PERMISSION CHECK
+    # ---------------------------------------------------------
+
+    if not (request.user.is_staff or request.user.is_superuser):
+        return HttpResponse(
+            "You do not have permission to access this page.",
+            status=403,
+        )
+
+    # ---------------------------------------------------------
+    # DATE FILTERS
+    # ---------------------------------------------------------
+
+    selected_period = request.GET.get("period", "today")
+
+    start_date, end_date, selected_period = get_report_dates(
+        selected_period,
+        request.GET.get("start_date"),
+        request.GET.get("end_date"),
+    )
+
+    start_date_value = start_date.isoformat()
+    end_date_value = end_date.isoformat()
+
+    selected_order_type = request.GET.get("order_type", "all")
+
+    valid_order_types = {
+        choice[0]
+        for choice in Order._meta.get_field("order_type").choices
+    }
+
+    if (
+        selected_order_type != "all"
+        and selected_order_type not in valid_order_types
+    ):
+        selected_order_type = "all"
+
+    search_query = request.GET.get("search", "").strip()
+
+    # ---------------------------------------------------------
+    # BASE ORDER QUERYSET
+    # ---------------------------------------------------------
+
+    orders = Order.objects.filter(
+        created_at__date__range=(start_date, end_date)
+    )
+
+    if selected_order_type != "all":
+        orders = orders.filter(order_type=selected_order_type)
+
+    if search_query:
+        orders = orders.filter(order_no__icontains=search_query)
+
+    orders = orders.order_by("-created_at", "-id")
+
+    # All matching orders are included in the detailed report.
+    total_orders = orders.count()
+
+    completed_orders = orders.filter(
+        status=Order.Status.DELIVERED
+    ).count()
+
+    # Cancelled orders remain visible in the detailed table,
+    # but are excluded from the primary sales calculations.
+    sales_orders = orders.exclude(
+        status=Order.Status.CANCELLED
+    )
+
+    # ---------------------------------------------------------
+    # FINANCIAL SUMMARY
+    # ---------------------------------------------------------
+
+    sales_totals = sales_orders.aggregate(
+        order_subtotal=Sum("subtotal"),
+        coupon_discounts=Sum("discount_amount"),
+        total_tax=Sum("tax_amount"),
+        order_total=Sum("total_amount"),
+    )
+
+    order_subtotal = report_money(
+        sales_totals["order_subtotal"]
+    )
+
+    coupon_discounts = report_money(
+        sales_totals["coupon_discounts"]
+    )
+
+    total_tax = report_money(
+        sales_totals["total_tax"]
+    )
+
+    order_total = report_money(
+        sales_totals["order_total"]
+    )
+
+    subtotal_after_coupon = (
+        order_subtotal - coupon_discounts
+    ).quantize(Decimal("0.01"))
+
+    total_discounts = coupon_discounts
+
+    # The checkout calculates tax on the subtotal before applying
+    # the coupon. Therefore this is a display breakdown, not a
+    # recalculation of the tax basis.
+    net_sales = subtotal_after_coupon
+
+    # ---------------------------------------------------------
+    # REFUNDS
+    # ---------------------------------------------------------
+
+    # Use completed_at for refunds completed during the selected
+    # period, rather than the date the refund request was created.
+    refund_date_filter = {
+        "status": RefundRequest.Status.COMPLETED,
+        "completed_at__date__range": (start_date, end_date),
+    }
+
+    completed_refunds = RefundRequest.objects.filter(
+        **refund_date_filter
+    )
+
+    if selected_order_type != "all":
+        completed_refunds = completed_refunds.filter(
+            order__order_type=selected_order_type
+        )
+
+    total_refunds = report_money(
+        completed_refunds.aggregate(
+            total=Sum("amount")
+        )["total"]
+    )
+
+    completed_refund_count = completed_refunds.count()
+
+    pending_refunds = RefundRequest.objects.filter(
+        status=RefundRequest.Status.PENDING,
+        created_at__date__range=(start_date, end_date),
+    )
+
+    if selected_order_type != "all":
+        pending_refunds = pending_refunds.filter(
+            order__order_type=selected_order_type
+        )
+
+    pending_refund_count = pending_refunds.count()
+
+    net_after_refunds = (
+        order_total - total_refunds
+    ).quantize(Decimal("0.01"))
+
+    # ---------------------------------------------------------
+    # DISCOUNT ANALYSIS
+    # ---------------------------------------------------------
+
+    # The saved Order.discount_amount represents the coupon
+    # deduction. Historical product-offer discount amounts are
+    # not separately available in the existing schema.
+    discount_rate = Decimal("0.00")
+
+    if order_subtotal > 0:
+        discount_rate = (
+            total_discounts / order_subtotal * Decimal("100")
+        ).quantize(Decimal("0.01"))
+
+    # ---------------------------------------------------------
+    # PAYMENT COLLECTIONS
+    # ---------------------------------------------------------
+
+    # Count only actual successful original payments.
+    # Refund payment records must not be counted as collections.
+    payment_queryset = Payment.objects.filter(
+        status=Payment.Status.SUCCESSFUL,
+        paid_at__date__range=(start_date, end_date),
+        refund_request__isnull=True,
+        refund_of__isnull=True,
+    )
+
+    if selected_order_type != "all":
+        payment_queryset = payment_queryset.filter(
+            bill__bill_orders__order__order_type=selected_order_type
+        )
+
+    payment_queryset = payment_queryset.distinct()
+
+    payment_aggregates = (
+        payment_queryset
+        .values("transaction_method")
+        .annotate(
+            transaction_count=Count("id"),
+            amount=Sum("amount"),
+        )
+        .order_by("transaction_method")
+    )
+
+    payment_method_rows = []
+
+    for item in payment_aggregates:
+        method = item["transaction_method"]
+
+        # Use the model's own display labels.
+        payment_method_rows.append({
+            "method": method,
+            "label": dict(
+                Payment.TransactionMethod.choices
+            ).get(method, method.title()),
+            "transaction_count": item["transaction_count"],
+            "amount": report_money(item["amount"]),
+        })
+
+    amount_collected = report_money(
+        payment_queryset.aggregate(
+            total=Sum("amount")
+        )["total"]
+    )
+
+    # Outstanding is an estimate based on report-period order
+    # totals less original successful collections. It is not a
+    # substitute for the current balance of individual bills.
+    outstanding_amount = max(
+        Decimal("0.00"),
+        order_total - amount_collected,
+    ).quantize(Decimal("0.01"))
+
+    collection_rate = Decimal("0.00")
+
+    if order_total > 0:
+        collection_rate = (
+            amount_collected / order_total * Decimal("100")
+        ).quantize(Decimal("0.01"))
+
+    # ---------------------------------------------------------
+    # DETAILED REPORT ROWS
+    # ---------------------------------------------------------
+
+    report_orders = []
+
+    # Aggregate refunds per order to avoid repeating the same
+    # refund total for every row in the detailed report.
+    refunds_by_order = defaultdict(lambda: Decimal("0.00"))
+
+    order_ids = list(orders.values_list("id", flat=True))
+
+    if order_ids:
+        order_refund_totals = (
+            RefundRequest.objects.filter(
+                order_id__in=order_ids,
+                status=RefundRequest.Status.COMPLETED,
+            )
+            .values("order_id")
+            .annotate(total=Sum("amount"))
+        )
+
+        for refund in order_refund_totals:
+            refunds_by_order[refund["order_id"]] = report_money(
+                refund["total"]
+            )
+
+    for order in orders:
+        report_orders.append({
+            "id": order.id,
+            "order_no": order.order_no,
+            "order_date": order.created_at,
+            "order_type": order.get_order_type_display(),
+            "status": order.status,
+            "status_label": order.get_status_display(),
+            "gross_amount": report_money(order.subtotal),
+            "discount_amount": report_money(
+                order.discount_amount
+            ),
+            "tax_amount": report_money(order.tax_amount),
+            "order_total": report_money(order.total_amount),
+            "refund_amount": refunds_by_order[order.id],
+        })
+
+    # ---------------------------------------------------------
+    # EXPORTS
+    # ---------------------------------------------------------
+
+    export_format = request.GET.get("export", "").strip().lower()
+
+    if export_format:
+        return export_admin_report(
+            export_format=export_format,
+            report_orders=report_orders,
+            start_date=start_date,
+            end_date=end_date,
+        )
+
+    # ---------------------------------------------------------
+    # PAGINATION
+    # ---------------------------------------------------------
+
+    paginator = Paginator(report_orders, 10)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    # ---------------------------------------------------------
+    # TEMPLATE CONTEXT
+    # ---------------------------------------------------------
+
+    context = {
+        "selected_period": selected_period,
+        "selected_order_type": selected_order_type,
+        "start_date": start_date,
+        "end_date": end_date,
+        "start_date_value": start_date_value,
+        "end_date_value": end_date_value,
+        "search_query": search_query,
+
+        "total_orders": total_orders,
+        "completed_orders": completed_orders,
+
+        "order_subtotal": order_subtotal,
+        "gross_sales": order_subtotal,
+
+        "total_discounts": total_discounts,
+        "coupon_discounts": coupon_discounts,
+        "product_discounts": Decimal("0.00"),
+        "other_discounts": Decimal("0.00"),
+
+        "subtotal_after_coupon": subtotal_after_coupon,
+        "net_sales": net_sales,
+        "total_tax": total_tax,
+        "order_total": order_total,
+
+        "total_refunds": total_refunds,
+        "completed_refund_count": completed_refund_count,
+        "pending_refund_count": pending_refund_count,
+        "net_after_refunds": net_after_refunds,
+
+        "discount_rate": discount_rate,
+
+        "amount_collected": amount_collected,
+        "outstanding_amount": outstanding_amount,
+        "collection_rate": collection_rate,
+        "payment_method_rows": payment_method_rows,
+
+        "report_orders": page_obj.object_list,
+        "page_obj": page_obj,
+
+        "active_page": "reports",
+    }
+
+    return render(
+        request,
+        "admin_panel/reports.html",
+        context,
+    )
+
+def export_admin_report(
+    export_format,
+    report_orders,
+    start_date,
+    end_date,
+):
+    """
+    Export the filtered report to CSV, Excel or PDF.
+    """
+
+    headers = [
+        "Order ID",
+        "Order Date",
+        "Order Type",
+        "Status",
+        "Order Subtotal",
+        "Coupon Discount",
+        "Tax",
+        "Order Total",
+        "Refunded Amount",
+    ]
+
+    rows = []
+
+    for row in report_orders:
+        order_date = row["order_date"]
+
+        if timezone.is_aware(order_date):
+            order_date = timezone.localtime(order_date)
+
+        rows.append([
+            row["order_no"],
+            order_date.strftime("%Y-%m-%d %H:%M:%S"),
+            row["order_type"],
+            row["status_label"],
+            str(row["gross_amount"]),
+            str(row["discount_amount"]),
+            str(row["tax_amount"]),
+            str(row["order_total"]),
+            str(row["refund_amount"]),
+        ])
+
+    filename_base = (
+        f"smartcafe_report_{start_date}_{end_date}"
+    )
+
+    # ---------------------------------------------------------
+    # CSV
+    # ---------------------------------------------------------
+
+    if export_format == "csv":
+        response = HttpResponse(
+            content_type="text/csv; charset=utf-8",
+        )
+
+        response["Content-Disposition"] = (
+            f'attachment; filename="{filename_base}.csv"'
+        )
+
+        response.write("\ufeff")
+
+        writer = csv.writer(response)
+        writer.writerow(headers)
+        writer.writerows(rows)
+
+        return response
+
+    # ---------------------------------------------------------
+    # EXCEL
+    # ---------------------------------------------------------
+
+    if export_format == "excel":
+        try:
+            from openpyxl import Workbook
+            from openpyxl.styles import Font, PatternFill
+            from openpyxl.utils import get_column_letter
+        except ImportError:
+            return HttpResponse(
+                "Excel export requires openpyxl. "
+                "Install it with: pip install openpyxl",
+                status=500,
+            )
+
+        workbook = Workbook()
+        worksheet = workbook.active
+        worksheet.title = "Sales Report"
+
+        worksheet.append(headers)
+
+        for cell in worksheet[1]:
+            cell.font = Font(bold=True, color="FFFFFF")
+            cell.fill = PatternFill(
+                fill_type="solid",
+                fgColor="8B3F16",
+            )
+
+        for row in rows:
+            worksheet.append(row)
+
+        worksheet.freeze_panes = "A2"
+        worksheet.auto_filter.ref = worksheet.dimensions
+
+        for column_cells in worksheet.columns:
+            max_length = max(
+                len(str(cell.value or ""))
+                for cell in column_cells
+            )
+
+            worksheet.column_dimensions[
+                get_column_letter(column_cells[0].column)
+            ].width = min(max_length + 3, 30)
+
+        output = BytesIO()
+        workbook.save(output)
+        output.seek(0)
+
+        response = HttpResponse(
+            output.getvalue(),
+            content_type=(
+                "application/vnd.openxmlformats-officedocument."
+                "spreadsheetml.sheet"
+            ),
+        )
+
+        response["Content-Disposition"] = (
+            f'attachment; filename="{filename_base}.xlsx"'
+        )
+
+        return response
+
+    # ---------------------------------------------------------
+    # PDF
+    # ---------------------------------------------------------
+
+    if export_format == "pdf":
+        try:
+            from reportlab.lib import colors
+            from reportlab.lib.pagesizes import landscape, A4
+            from reportlab.lib.styles import getSampleStyleSheet
+            from reportlab.platypus import (
+                SimpleDocTemplate,
+                Paragraph,
+                Spacer,
+                Table,
+                TableStyle,
+            )
+        except ImportError:
+            return HttpResponse(
+                "PDF export requires ReportLab. "
+                "Install it with: pip install reportlab",
+                status=500,
+            )
+
+        output = BytesIO()
+
+        document = SimpleDocTemplate(
+            output,
+            pagesize=landscape(A4),
+            rightMargin=24,
+            leftMargin=24,
+            topMargin=24,
+            bottomMargin=24,
+        )
+
+        styles = getSampleStyleSheet()
+
+        elements = [
+            Paragraph(
+                "SmartCafe - Detailed Sales Report",
+                styles["Title"],
+            ),
+            Spacer(1, 8),
+            Paragraph(
+                f"Period: {start_date} to {end_date}",
+                styles["Normal"],
+            ),
+            Spacer(1, 16),
+        ]
+
+        table_data = [headers]
+
+        for row in rows:
+            # Paragraphs allow long order IDs or statuses to wrap.
+            table_data.append([
+                Paragraph(str(value), styles["BodyText"])
+                for value in row
+            ])
+
+        table = Table(
+            table_data,
+            repeatRows=1,
+        )
+
+        table.setStyle(TableStyle([
+            (
+                "BACKGROUND",
+                (0, 0),
+                (-1, 0),
+                colors.HexColor("#8B3F16"),
+            ),
+            (
+                "TEXTCOLOR",
+                (0, 0),
+                (-1, 0),
+                colors.white,
+            ),
+            (
+                "FONTNAME",
+                (0, 0),
+                (-1, 0),
+                "Helvetica-Bold",
+            ),
+            (
+                "FONTSIZE",
+                (0, 0),
+                (-1, -1),
+                7,
+            ),
+            (
+                "GRID",
+                (0, 0),
+                (-1, -1),
+                0.4,
+                colors.HexColor("#E2D8CA"),
+            ),
+            (
+                "VALIGN",
+                (0, 0),
+                (-1, -1),
+                "TOP",
+            ),
+            (
+                "ROWBACKGROUNDS",
+                (0, 1),
+                (-1, -1),
+                [
+                    colors.white,
+                    colors.HexColor("#FFF9F3"),
+                ],
+            ),
+            (
+                "LEFTPADDING",
+                (0, 0),
+                (-1, -1),
+                5,
+            ),
+            (
+                "RIGHTPADDING",
+                (0, 0),
+                (-1, -1),
+                5,
+            ),
+        ]))
+
+        elements.append(table)
+        document.build(elements)
+
+        response = HttpResponse(
+            output.getvalue(),
+            content_type="application/pdf",
+        )
+
+        response["Content-Disposition"] = (
+            f'attachment; filename="{filename_base}.pdf"'
+        )
+
+        return response
+
+    return HttpResponseBadRequest(
+        "Unsupported export format."
     )
