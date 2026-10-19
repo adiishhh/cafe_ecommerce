@@ -3419,3 +3419,93 @@
         padding: 16px;
     }
 }
+
+/* =========================================================
+   BILLING PAGINATION
+   ========================================================= */
+
+.billing-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+
+    margin-top: 22px;
+    padding: 16px 20px;
+
+    background: #fffaf5;
+    border: 1px solid #eadfd3;
+    border-radius: 12px;
+}
+
+.billing-pagination-info {
+    color: #79695d;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.billing-pagination-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.billing-page-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    min-height: 36px;
+    padding: 8px 12px;
+
+    border: 1px solid #e2d2c2;
+    border-radius: 8px;
+
+    background: #ffffff;
+    color: #713b1d;
+
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.billing-page-button:hover {
+    background: #934116;
+    color: #ffffff;
+    border-color: #934116;
+}
+
+.billing-page-button:focus-visible {
+    outline: 3px solid rgba(147, 65, 22, 0.25);
+    outline-offset: 2px;
+}
+
+@media (max-width: 576px) {
+    .billing-pagination {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 12px;
+        padding: 14px;
+    }
+
+    .billing-pagination-info {
+        text-align: center;
+    }
+
+    .billing-pagination-actions {
+        justify-content: center;
+    }
+
+    .billing-page-button {
+        flex: 1;
+    }
+}

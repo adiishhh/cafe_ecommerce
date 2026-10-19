@@ -222,6 +222,42 @@ def admin_bill_list(request):
         .order_by("-created_at", "-id")
     )
 
+    total_unpaid_orders = unpaid_orders.count()
+    total_unpaid_bills = unpaid_bills.count()
+    total_paid_bills = paid_bills.count()
+    total_refunds = refunds.count()
+
+    unpaid_bills_page = None
+    paid_bills_page = None
+    refunds_page = None
+
+    if active_view == "unpaid_bills":
+        unpaid_bills_paginator = Paginator(unpaid_bills, 10)
+
+        unpaid_bills_page = unpaid_bills_paginator.get_page(
+            request.GET.get("page")
+        )
+
+        unpaid_bills = unpaid_bills_page.object_list
+
+    elif active_view == "paid_bills":
+        paid_bills_paginator = Paginator(paid_bills, 10)
+
+        paid_bills_page = paid_bills_paginator.get_page(
+            request.GET.get("page")
+        )
+
+        paid_bills = paid_bills_page.object_list
+
+    elif active_view == "refunds":
+        refunds_paginator = Paginator(refunds, 10)
+
+        refunds_page = refunds_paginator.get_page(
+            request.GET.get("page")
+        )
+
+        refunds = refunds_page.object_list
+
     # --------------------------------------------------
     # UNREAD COUNTS
     #
@@ -266,11 +302,18 @@ def admin_bill_list(request):
             "paid_bills": paid_bills,
             "refunds": refunds,
 
-            "total_unpaid_orders": unpaid_orders.count(),
-            "total_unpaid_bills": unpaid_bills.count(),
-            "total_paid_bills": paid_bills.count(),
-            "total_refunds": refunds.count(),
+            # Total records across ALL pages.
+            "total_unpaid_orders": total_unpaid_orders,
+            "total_unpaid_bills": total_unpaid_bills,
+            "total_paid_bills": total_paid_bills,
+            "total_refunds": total_refunds,
 
+            # Pagination objects.
+            "unpaid_bills_page": unpaid_bills_page,
+            "paid_bills_page": paid_bills_page,
+            "refunds_page": refunds_page,
+
+            # Preserve existing unread counts.
             "unread_unpaid_orders": unread_unpaid_orders,
             "unread_unpaid_bills": unread_unpaid_bills,
             "unread_paid_bills": unread_paid_bills,

@@ -1114,6 +1114,64 @@ SmartCafe Admin - Bills
 
             </div>
 
+            {% if unpaid_bills_page.paginator.num_pages > 1 %}
+
+                <nav
+                    class="billing-pagination"
+                    aria-label="Unpaid bills pagination"
+                >
+
+                    <span class="billing-pagination-info">
+                        Page {{ unpaid_bills_page.number }}
+                        of {{ unpaid_bills_page.paginator.num_pages }}
+                    </span>
+
+                    <div class="billing-pagination-actions">
+
+                        {% if unpaid_bills_page.has_previous %}
+                            <a
+                                class="billing-page-button"
+                                href="?view=unpaid_bills&start_date={{ start_date_value|urlencode }}&end_date={{ end_date_value|urlencode }}&page=1"
+                                aria-label="First page"
+                            >
+                                <i class="fa fa-angle-double-left"></i>
+                            </a>
+
+                            <a
+                                class="billing-page-button"
+                                href="?view=unpaid_bills&start_date={{ start_date_value|urlencode }}&end_date={{ end_date_value|urlencode }}&page={{ unpaid_bills_page.previous_page_number }}"
+                                aria-label="Previous page"
+                            >
+                                <i class="fa fa-angle-left"></i>
+                                Previous
+                            </a>
+                        {% endif %}
+
+                        {% if unpaid_bills_page.has_next %}
+                            <a
+                                class="billing-page-button"
+                                href="?view=unpaid_bills&start_date={{ start_date_value|urlencode }}&end_date={{ end_date_value|urlencode }}&page={{ unpaid_bills_page.next_page_number }}"
+                                aria-label="Next page"
+                            >
+                                Next
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                            <a
+                                class="billing-page-button"
+                                href="?view=unpaid_bills&start_date={{ start_date_value|urlencode }}&end_date={{ end_date_value|urlencode }}&page={{ unpaid_bills_page.paginator.num_pages }}"
+                                aria-label="Last page"
+                            >
+                                <i class="fa fa-angle-double-right"></i>
+                            </a>
+                        {% endif %}
+
+                    </div>
+
+                </nav>
+
+            {% endif %}
+
 
         {% else %}
 
@@ -1319,6 +1377,64 @@ SmartCafe Admin - Bills
 
             </div>
 
+            {% if paid_bills_page.paginator.num_pages > 1 %}
+
+                <nav
+                    class="billing-pagination"
+                    aria-label="Paid bills pagination"
+                >
+
+                    <span class="billing-pagination-info">
+                        Page {{ paid_bills_page.number }}
+                        of {{ paid_bills_page.paginator.num_pages }}
+                    </span>
+
+                    <div class="billing-pagination-actions">
+
+                        {% if paid_bills_page.has_previous %}
+                            <a
+                                class="billing-page-button"
+                                href="?view=paid_bills&start_date={{ start_date_value|urlencode }}&end_date={{ end_date_value|urlencode }}&page=1"
+                                aria-label="First page"
+                            >
+                                <i class="fa fa-angle-double-left"></i>
+                            </a>
+
+                            <a
+                                class="billing-page-button"
+                                href="?view=paid_bills&start_date={{ start_date_value|urlencode }}&end_date={{ end_date_value|urlencode }}&page={{ paid_bills_page.previous_page_number }}"
+                                aria-label="Previous page"
+                            >
+                                <i class="fa fa-angle-left"></i>
+                                Previous
+                            </a>
+                        {% endif %}
+
+                        {% if paid_bills_page.has_next %}
+                            <a
+                                class="billing-page-button"
+                                href="?view=paid_bills&start_date={{ start_date_value|urlencode }}&end_date={{ end_date_value|urlencode }}&page={{ paid_bills_page.next_page_number }}"
+                                aria-label="Next page"
+                            >
+                                Next
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                            <a
+                                class="billing-page-button"
+                                href="?view=paid_bills&start_date={{ start_date_value|urlencode }}&end_date={{ end_date_value|urlencode }}&page={{ paid_bills_page.paginator.num_pages }}"
+                                aria-label="Last page"
+                            >
+                                <i class="fa fa-angle-double-right"></i>
+                            </a>
+                        {% endif %}
+
+                    </div>
+
+                </nav>
+
+            {% endif %}
+
 
         {% else %}
 
@@ -1515,6 +1631,64 @@ SmartCafe Admin - Bills
                 </table>
 
             </div>
+
+            {% if refunds_page.paginator.num_pages > 1 %}
+
+                <nav
+                    class="billing-pagination"
+                    aria-label="Refunds pagination"
+                >
+
+                    <span class="billing-pagination-info">
+                        Page {{ refunds_page.number }}
+                        of {{ refunds_page.paginator.num_pages }}
+                    </span>
+
+                    <div class="billing-pagination-actions">
+
+                        {% if refunds_page.has_previous %}
+                            <a
+                                class="billing-page-button"
+                                href="?view=refunds&start_date={{ start_date_value|urlencode }}&end_date={{ end_date_value|urlencode }}&page=1"
+                                aria-label="First page"
+                            >
+                                <i class="fa fa-angle-double-left"></i>
+                            </a>
+
+                            <a
+                                class="billing-page-button"
+                                href="?view=refunds&start_date={{ start_date_value|urlencode }}&end_date={{ end_date_value|urlencode }}&page={{ refunds_page.previous_page_number }}"
+                                aria-label="Previous page"
+                            >
+                                <i class="fa fa-angle-left"></i>
+                                Previous
+                            </a>
+                        {% endif %}
+
+                        {% if refunds_page.has_next %}
+                            <a
+                                class="billing-page-button"
+                                href="?view=refunds&start_date={{ start_date_value|urlencode }}&end_date={{ end_date_value|urlencode }}&page={{ refunds_page.next_page_number }}"
+                                aria-label="Next page"
+                            >
+                                Next
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                            <a
+                                class="billing-page-button"
+                                href="?view=refunds&start_date={{ start_date_value|urlencode }}&end_date={{ end_date_value|urlencode }}&page={{ refunds_page.paginator.num_pages }}"
+                                aria-label="Last page"
+                            >
+                                <i class="fa fa-angle-double-right"></i>
+                            </a>
+                        {% endif %}
+
+                    </div>
+
+                </nav>
+
+            {% endif %}
 
 
         {% else %}
