@@ -52,6 +52,14 @@
 
             {% csrf_token %}
 
+            <input
+                type="hidden"
+                name="temporary_images"
+                id="temporary-images"
+                value="{{ temporary_references_json|default:'[]' }}"
+                data-preview-url="{% url 'temporary_product_image_preview' %}"
+            >
+
 
             {% if form.non_field_errors %}
 
@@ -233,7 +241,8 @@
                         {{ image_form.image }}
 
                         {{ image_form.image.errors }}
-
+                        
+                        <div class="temporary-image-preview"></div>
 
                         {% if image_form.DELETE.errors %}
                             {{ image_form.DELETE.errors }}

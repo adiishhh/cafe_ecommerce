@@ -12,7 +12,12 @@ from category.models import Category
 from decimal import Decimal, InvalidOperation
 from django.utils import timezone
 from .models import ReviewRating
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, Http404, HttpResponse
+from django.core.files.storage import default_storage
+import json
+import uuid
+from django.core.files.base import ContentFile
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 def _get_current_tax():
     tax = Tax.objects.first()
@@ -1372,36 +1377,328 @@ def product_detail(request, product_id):
         }
     )
 
-@login_required(login_url='login')
+TEMP_PRODUCT_IMAGE_DIR = "temporary_product_images"
+
+
+def get_temp_image_key(request):
+    """Get or create a temporary image key for the current session."""
+
+    key = request.session.get("product_temp_upload_key")
+
+    if not key:
+        key = uuid.uuid4().hex
+        request.session["product_temp_upload_key"] = key
+
+    return key
+
+
+def save_temp_product_image(request, uploaded_file):
+    """Save a cropped image temporarily."""
+
+    key = get_temp_image_key(request)
+
+    filename = f"{uuid.uuid4().hex}.jpg"
+
+    storage_name = (
+        f"{TEMP_PRODUCT_IMAGE_DIR}/{key}/{filename}"
+    )
+
+    uploaded_file.seek(0)
+
+    return default_storage.save(
+        storage_name,
+        uploaded_file,
+    )
+
+
+def get_temp_product_image(request, storage_name):
+    """Read a temporary image belonging to the current session."""
+
+    key = request.session.get("product_temp_upload_key")
+
+    if not key or not isinstance(storage_name, str):
+        return None
+
+    expected_prefix = (
+        f"{TEMP_PRODUCT_IMAGE_DIR}/{key}/"
+    )
+
+    if not storage_name.startswith(expected_prefix):
+        return None
+
+    filename = storage_name[len(expected_prefix):]
+
+    if (
+        not filename
+        or "/" in filename
+        or "\\" in filename
+        or filename in {".", ".."}
+    ):
+        return None
+
+    if not default_storage.exists(storage_name):
+        return None
+
+    with default_storage.open(storage_name, "rb") as stored_file:
+        return stored_file.read()
+
+
+def delete_temp_product_images(storage_names):
+    """Delete temporary files after they are no longer needed."""
+
+    for storage_name in storage_names:
+
+        if not isinstance(storage_name, str):
+            continue
+
+        if not storage_name.startswith(
+            f"{TEMP_PRODUCT_IMAGE_DIR}/"
+        ):
+            continue
+
+        default_storage.delete(storage_name)
+
+
+def get_temp_image_references(request):
+    """Read and validate temporary image references from the form."""
+
+    try:
+        references = json.loads(
+            request.POST.get("temporary_images", "[]")
+        )
+    except (TypeError, json.JSONDecodeError):
+        return []
+
+    if not isinstance(references, list):
+        return []
+
+    valid_references = []
+    seen_fields = set()
+
+    for reference in references:
+
+        if not isinstance(reference, dict):
+            continue
+
+        field_name = reference.get("field")
+        storage_name = reference.get("storage_name")
+
+        if not isinstance(field_name, str):
+            continue
+
+        if not isinstance(storage_name, str):
+            continue
+
+        if field_name in seen_fields:
+            continue
+
+        if get_temp_product_image(request, storage_name) is None:
+            continue
+
+        valid_references.append({
+            "field": field_name,
+            "storage_name": storage_name,
+        })
+
+        seen_fields.add(field_name)
+
+    return valid_references
+
+def restore_temp_product_images(
+    request,
+    image_formset,
+    temporary_references,
+):
+    """Restore preserved images into their corresponding formset fields."""
+
+    expected_fields = {
+        f"{image_formset.prefix}-{index}-image"
+        for index in range(image_formset.total_form_count())
+    }
+
+    restored_fields = set()
+
+    for reference in temporary_references:
+        field_name = reference["field"]
+        storage_name = reference["storage_name"]
+
+        if field_name not in expected_fields:
+            continue
+
+        # Keep a newly uploaded file if one exists.
+        uploaded_file = request.FILES.get(field_name)
+
+        if uploaded_file and uploaded_file.size > 0:
+            continue
+
+        image_bytes = get_temp_product_image(
+            request,
+            storage_name,
+        )
+
+        if image_bytes is None:
+            continue
+
+        request.FILES[field_name] = SimpleUploadedFile(
+            name="preserved_product_image.jpg",
+            content=image_bytes,
+            content_type="image/jpeg",
+        )
+
+        restored_fields.add(field_name)
+
+    return restored_fields
+
+def preserve_temp_product_images(
+    request,
+    image_formset,
+    existing_references,
+    newly_uploaded_fields,
+):
+    """
+    Preserve newly uploaded images and retain existing temporary images.
+
+    Images already restored from temporary storage are not saved again.
+    """
+
+    references_by_field = {
+        reference["field"]: reference["storage_name"]
+        for reference in existing_references
+    }
+
+    new_references = []
+    files_to_delete = []
+
+    for index, image_form in enumerate(image_formset):
+
+        field_name = (
+            f"{image_formset.prefix}-{index}-image"
+        )
+
+        old_reference = references_by_field.get(field_name)
+
+        # Do not retain temporary images explicitly marked for deletion.
+        if (
+            image_form.cleaned_data.get("DELETE")
+            if image_form.is_bound and image_form.is_valid()
+            else False
+        ):
+            if old_reference:
+                files_to_delete.append(old_reference)
+
+            continue
+
+        uploaded_file = request.FILES.get(field_name)
+
+        if field_name in newly_uploaded_fields and uploaded_file:
+
+            new_storage_name = save_temp_product_image(
+                request,
+                uploaded_file,
+            )
+
+            new_references.append({
+                "field": field_name,
+                "storage_name": new_storage_name,
+            })
+
+            if old_reference:
+                files_to_delete.append(old_reference)
+
+        elif old_reference:
+
+            new_references.append({
+                "field": field_name,
+                "storage_name": old_reference,
+            })
+
+    delete_temp_product_images(files_to_delete)
+
+    return new_references
+
+@login_required(login_url="login")
+def temporary_product_image_preview(request):
+
+    if not request.user.is_staff:
+        return HttpResponseForbidden(
+            "You are not authorized to access this image."
+        )
+
+    storage_name = request.GET.get("name", "")
+
+    image_bytes = get_temp_product_image(
+        request,
+        storage_name,
+    )
+
+    if image_bytes is None:
+        raise Http404
+
+    return HttpResponse(
+        image_bytes,
+        content_type="image/jpeg",
+        headers={
+            "Cache-Control": "private, no-store",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
+
+@login_required(login_url="login")
 def add_product(request):
 
     if not request.user.is_staff:
         return HttpResponseForbidden(
-            'You are not authorized to access this page.'
+            "You are not authorized to access this page."
         )
 
-    if request.method == 'POST':
+    temporary_references = []
+
+    if request.method == "POST":
+
+        temporary_references = get_temp_image_references(request)
 
         form = ProductForm(request.POST)
 
         image_formset = ProductImageFormSet(
             request.POST,
-            request.FILES
+            request.FILES,
         )
 
-        if form.is_valid() and image_formset.is_valid():
+        # Record which files were genuinely uploaded in this request.
+        newly_uploaded_fields = {
+            field_name
+            for field_name in request.FILES
+            if field_name.endswith("-image")
+        }
+
+        restore_temp_product_images(
+            request,
+            image_formset,
+            temporary_references,
+        )
+
+        image_formset = ProductImageFormSet(
+            request.POST,
+            request.FILES,
+        )
+
+        form_valid = form.is_valid()
+        images_valid = image_formset.is_valid()
+
+        if form_valid and images_valid:
 
             image_count = sum(
                 1
                 for image_form in image_formset
-                if image_form.cleaned_data.get('image')
+                if image_form.cleaned_data.get("image")
+                and not image_form.cleaned_data.get("DELETE")
             )
 
             if image_count < 3:
 
                 messages.error(
                     request,
-                    'A product must have at least 3 images.'
+                    "A product must have at least 3 images.",
                 )
 
             else:
@@ -1411,28 +1708,44 @@ def add_product(request):
                 image_formset.instance = product
                 image_formset.save()
 
-                messages.success(
-                    request,
-                    'Product added successfully.'
+                delete_temp_product_images(
+                    [
+                        reference["storage_name"]
+                        for reference in temporary_references
+                    ]
                 )
 
-                return redirect('product_list')
+                messages.success(
+                    request,
+                    "Product added successfully.",
+                )
+
+                return redirect("product_list")
+
+        temporary_references = preserve_temp_product_images(
+            request,
+            image_formset,
+            temporary_references,
+            newly_uploaded_fields,
+        )
 
     else:
 
         form = ProductForm()
-
         image_formset = ProductImageFormSet()
 
     return render(
         request,
-        'admin_panel/product_form.html',
+        "admin_panel/product_form.html",
         {
-            'form': form,
-            'image_formset': image_formset,
-            'page_title': 'Add Product',
-            'button_text': 'Add Product',
-        }
+            "form": form,
+            "image_formset": image_formset,
+            "page_title": "Add Product",
+            "button_text": "Add Product",
+            "temporary_references_json": json.dumps(
+                temporary_references
+            ),
+        },
     )
 
 
@@ -1485,33 +1798,58 @@ def toggle_product_status(request, product_id):
     return redirect('product_list')
 
 
-@login_required(login_url='login')
+@login_required(login_url="login")
 def edit_product(request, product_id):
 
     if not request.user.is_staff:
         return HttpResponseForbidden(
-            'You are not authorized to access this page.'
+            "You are not authorized to access this page."
         )
 
     product = get_object_or_404(
         Product,
-        id=product_id
+        id=product_id,
     )
 
-    if request.method == 'POST':
+    temporary_references = []
+
+    if request.method == "POST":
+
+        temporary_references = get_temp_image_references(request)
 
         form = ProductForm(
             request.POST,
-            instance=product
+            instance=product,
         )
 
         image_formset = ProductImageFormSet(
             request.POST,
             request.FILES,
-            instance=product
+            instance=product,
         )
 
-        if form.is_valid() and image_formset.is_valid():
+        newly_uploaded_fields = {
+            field_name
+            for field_name in request.FILES
+            if field_name.endswith("-image")
+        }
+
+        restore_temp_product_images(
+            request,
+            image_formset,
+            temporary_references,
+        )
+
+        image_formset = ProductImageFormSet(
+            request.POST,
+            request.FILES,
+            instance=product,
+        )
+
+        form_valid = form.is_valid()
+        images_valid = image_formset.is_valid()
+
+        if form_valid and images_valid:
 
             existing_images = product.images.count()
 
@@ -1519,14 +1857,15 @@ def edit_product(request, product_id):
                 1
                 for image_form in image_formset
                 if image_form.instance.pk
-                and image_form.cleaned_data.get('DELETE')
+                and image_form.cleaned_data.get("DELETE")
             )
 
             new_images = sum(
                 1
                 for image_form in image_formset
                 if not image_form.instance.pk
-                and image_form.cleaned_data.get('image')
+                and image_form.cleaned_data.get("image")
+                and not image_form.cleaned_data.get("DELETE")
             )
 
             final_image_count = (
@@ -1539,40 +1878,54 @@ def edit_product(request, product_id):
 
                 messages.error(
                     request,
-                    'A product must have at least 3 images.'
+                    "A product must have at least 3 images.",
                 )
 
             else:
 
                 form.save()
-
                 image_formset.save()
+
+                delete_temp_product_images(
+                    [
+                        reference["storage_name"]
+                        for reference in temporary_references
+                    ]
+                )
 
                 messages.success(
                     request,
-                    'Product updated successfully.'
+                    "Product updated successfully.",
                 )
 
-                return redirect('product_list')
+                return redirect("product_list")
+
+        temporary_references = preserve_temp_product_images(
+            request,
+            image_formset,
+            temporary_references,
+            newly_uploaded_fields,
+        )
 
     else:
 
-        form = ProductForm(
-            instance=product
-        )
+        form = ProductForm(instance=product)
 
         image_formset = ProductImageFormSet(
-            instance=product
+            instance=product,
         )
 
     return render(
         request,
-        'admin_panel/product_form.html',
+        "admin_panel/product_form.html",
         {
-            'form': form,
-            'image_formset': image_formset,
-            'product': product,
-            'page_title': 'Edit Product',
-            'button_text': 'Save Changes',
-        }
+            "form": form,
+            "image_formset": image_formset,
+            "product": product,
+            "page_title": "Edit Product",
+            "button_text": "Save Changes",
+            "temporary_references_json": json.dumps(
+                temporary_references
+            ),
+        },
     )

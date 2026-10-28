@@ -8,9 +8,79 @@ document.addEventListener('DOMContentLoaded', function () {
     const cropButton = document.getElementById('crop-button');
     const cancelButton = document.getElementById('crop-cancel');
 
+    const temporaryImagesInput = document.getElementById(
+        'temporary-images'
+    );
+
+    let temporaryImages = [];
+
+    try {
+        temporaryImages = JSON.parse(
+            temporaryImagesInput?.value || '[]'
+        );
+    } catch (error) {
+        temporaryImages = [];
+    }
+
     const imageInputs = document.querySelectorAll(
         '.image-upload input[type="file"]'
     );
+
+
+    function getFieldName(input) {
+
+        return input.name;
+
+    }
+
+
+    function removeTemporaryReference(fieldName) {
+
+        temporaryImages = temporaryImages.filter(
+            item => item.field !== fieldName
+        );
+
+        updateTemporaryReferences();
+
+    }
+
+
+    function updateTemporaryReferences() {
+
+        if (temporaryImagesInput) {
+
+            temporaryImagesInput.value = JSON.stringify(
+                temporaryImages
+            );
+
+        }
+
+    }
+
+
+    function updatePreview(input, imageUrl) {
+
+        const container = input.closest('.image-upload');
+
+        let preview = container.querySelector(
+            '.image-preview'
+        );
+
+        if (!preview) {
+
+            preview = document.createElement('img');
+
+            preview.className = 'image-preview';
+
+            preview.alt = 'Selected product image';
+
+            container.appendChild(preview);
+
+        }
+
+        preview.src = imageUrl;
+
+    }
 
 
     imageInputs.forEach(function (input) {
@@ -24,11 +94,13 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             if (!file.type.startsWith('image/')) {
+
                 input.value = '';
 
                 alert('Please select an image file.');
 
                 return;
+
             }
 
             currentInput = input;
@@ -37,15 +109,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
             reader.onload = function (event) {
 
-                cropImage.src = event.target.result;
-
-                modal.classList.add('show');
-
-                if (cropper) {
-                    cropper.destroy();
-                }
-
                 cropImage.onload = function () {
+
+                    if (cropper) {
+                        cropper.destroy();
+                    }
 
                     cropper = new Cropper(
                         cropImage,
@@ -59,6 +127,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     );
 
                 };
+
+                cropImage.src = event.target.result;
+
+                modal.classList.add('show');
 
             };
 
@@ -82,17 +154,22 @@ document.addEventListener('DOMContentLoaded', function () {
             imageSmoothingQuality: 'high',
         });
 
-
         canvas.toBlob(
             function (blob) {
+
+                if (!blob) {
+
+                    alert('Unable to crop this image.');
+
+                    return;
+
+                }
 
                 const originalFile = currentInput.files[0];
 
                 const fileName =
-                    originalFile.name
-                        .replace(/\.[^/.]+$/, '') +
+                    originalFile.name.replace(/\.[^/.]+$/, '') +
                     '.jpg';
-
 
                 const processedFile = new File(
                     [blob],
@@ -103,19 +180,20 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 );
 
-
                 const dataTransfer = new DataTransfer();
 
                 dataTransfer.items.add(processedFile);
 
                 currentInput.files = dataTransfer.files;
 
+                removeTemporaryReference(
+                    getFieldName(currentInput)
+                );
 
                 updatePreview(
                     currentInput,
                     URL.createObjectURL(processedFile)
                 );
-
 
                 closeCropper();
 
@@ -130,7 +208,9 @@ document.addEventListener('DOMContentLoaded', function () {
     cancelButton.addEventListener('click', function () {
 
         if (currentInput) {
+
             currentInput.value = '';
+
         }
 
         closeCropper();
@@ -141,8 +221,11 @@ document.addEventListener('DOMContentLoaded', function () {
     function closeCropper() {
 
         if (cropper) {
+
             cropper.destroy();
+
             cropper = null;
+
         }
 
         cropImage.src = '';
@@ -154,27 +237,58 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 
-    function updatePreview(input, imageUrl) {
+    updateTemporaryReferences();
 
-        const container = input.closest('.image-upload');
+        // Restore previews for images preserved by Django.
+    const previewBaseUrl = temporaryImagesInput?.dataset.previewUrl;
 
-        let preview = container.querySelector(
-            '.image-preview'
-        );
+    if (previewBaseUrl) {
 
+        temporaryImages.forEach(function (item) {
 
-        if (!preview) {
+            const input = document.querySelector(
+                `.image-upload input[type="file"][name="${CSS.escape(item.field)}"]`
+            );
 
-            preview = document.createElement('img');
+            if (!input) {
+                return;
+            }
+
+            const container = input.closest('.image-upload');
+
+            if (!container) {
+                return;
+            }
+
+            const previewContainer = container.querySelector(
+                '.temporary-image-preview'
+            );
+
+            if (!previewContainer) {
+                return;
+            }
+
+            const preview = document.createElement('img');
 
             preview.className = 'image-preview';
 
-            container.appendChild(preview);
+            preview.alt = 'Preserved cropped product image';
 
-        }
+            const previewUrl = new URL(
+                previewBaseUrl,
+                window.location.origin
+            );
 
+            previewUrl.searchParams.set(
+                'name',
+                item.storage_name
+            );
 
-        preview.src = imageUrl;
+            preview.src = previewUrl.toString();
+
+            previewContainer.replaceChildren(preview);
+
+        });
 
     }
 
