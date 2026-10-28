@@ -2229,6 +2229,103 @@ SmartCafe Admin - Bills
     {% csrf_token %}
 </form>
 
+<!-- REFUND ACTION MODAL -->
+<div
+    id="refundActionModal"
+    class="billing-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="refundActionTitle"
+    hidden
+>
+    <div
+        class="billing-modal-backdrop"
+        data-close-refund-modal
+    ></div>
+
+    <div class="billing-modal-dialog refund-action-dialog">
+
+        <div class="billing-modal-header">
+            <div>
+                <span class="billing-modal-label">REFUND MANAGEMENT</span>
+
+                <h2 id="refundActionTitle">Confirm Action</h2>
+
+                <p id="refundActionSubtitle">
+                    Review this action before continuing.
+                </p>
+            </div>
+
+            <button
+                type="button"
+                class="billing-modal-close"
+                id="refundActionClose"
+                aria-label="Close dialog"
+            >
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+
+        <div class="billing-modal-body">
+
+            <p
+                id="refundActionMessage"
+                class="refund-action-message"
+            ></p>
+
+            <div
+                id="refundReasonField"
+                class="refund-reason-field"
+                hidden
+            >
+                <label for="refundAdminReason">
+                    Reason for rejection <span>*</span>
+                </label>
+
+                <textarea
+                    id="refundAdminReason"
+                    rows="4"
+                    maxlength="1000"
+                    placeholder="Enter the reason for rejecting this refund..."
+                ></textarea>
+
+                <small id="refundReasonError" hidden>
+                    A rejection reason is required.
+                </small>
+            </div>
+
+            <div
+                id="refundActionFeedback"
+                class="refund-action-feedback"
+                role="status"
+                hidden
+            ></div>
+
+        </div>
+
+        <div class="billing-modal-footer">
+
+            <button
+                type="button"
+                class="billing-modal-cancel"
+                id="refundActionCancel"
+            >
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                class="bill-save-button"
+                id="refundActionConfirm"
+            >
+                Confirm
+            </button>
+
+        </div>
+
+    </div>
+</div>
+
 <!-- =============================================================
      AJAX BILL BUILDER JAVASCRIPT
      ============================================================= -->
@@ -3839,160 +3936,317 @@ document.addEventListener(
 /* =========================================================
    REFUND REQUEST REVIEW
    ========================================================= */
+document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById("refundActionModal");
 
-/* =========================================================
-   REFUND REQUEST REVIEW
-   ========================================================= */
-
-document.addEventListener("click", async function (event) {
-    const button = event.target.closest(
-        ".refund-review-button[data-refund-id][data-action]"
-    );
-
-    if (!button) {
+    if (!modal) {
         return;
     }
 
-    event.preventDefault();
+    const title = document.getElementById("refundActionTitle");
+    const subtitle = document.getElementById("refundActionSubtitle");
+    const message = document.getElementById("refundActionMessage");
 
-    const refundId = button.dataset.refundId;
-    const action = button.dataset.action;
+    const reasonField = document.getElementById("refundReasonField");
+    const reasonInput = document.getElementById("refundAdminReason");
+    const reasonError = document.getElementById("refundReasonError");
 
-    if (!refundId || !["accept", "reject"].includes(action)) {
-        console.error("Invalid refund ID or action.", {
-            refundId,
-            action
+    const feedback = document.getElementById("refundActionFeedback");
+
+    const confirmButton = document.getElementById("refundActionConfirm");
+    const cancelButton = document.getElementById("refundActionCancel");
+    const closeButton = document.getElementById("refundActionClose");
+
+    let dialogResolver = null;
+    let dialogMode = "confirm";
+    let previousFocus = null;
+
+    function openDialog(options) {
+        previousFocus = document.activeElement;
+
+        title.textContent = options.title || "Confirm Action";
+        subtitle.textContent = options.subtitle || "";
+        message.textContent = options.message || "";
+
+        dialogMode = options.mode || "confirm";
+
+        reasonField.hidden = dialogMode !== "reject";
+        reasonInput.value = "";
+        reasonInput.disabled = false;
+        reasonError.hidden = true;
+
+        feedback.hidden = true;
+        feedback.textContent = "";
+
+        confirmButton.textContent = options.confirmText || "Confirm";
+        confirmButton.disabled = false;
+
+        cancelButton.hidden = false;
+        cancelButton.disabled = false;
+        closeButton.disabled = false;
+
+        modal.hidden = false;
+        document.body.style.overflow = "hidden";
+
+        if (dialogMode === "reject") {
+            requestAnimationFrame(() => reasonInput.focus());
+        } else {
+            confirmButton.focus();
+        }
+
+        return new Promise((resolve) => {
+            dialogResolver = resolve;
         });
-        return;
     }
 
-    // Confirm acceptance or collect a mandatory rejection reason.
-    let adminNote = "";
-
-    if (action === "accept") {
-        const confirmed = window.confirm(
-            "Accept this refund request?\n\n" +
-            "The approved amount will be credited to the customer's " +
-            "wallet, and the relevant order or item will be cancelled."
-        );
-
-        if (!confirmed) {
-            return;
-        }
-    }
-
-    if (action === "reject") {
-        const enteredNote = window.prompt(
-            "Enter the reason for rejecting this refund request:"
-        );
-
-        if (enteredNote === null) {
+    function closeDialog(result = null) {
+        if (confirmButton.disabled && !feedback.hidden) {
             return;
         }
 
-        adminNote = enteredNote.trim();
+        modal.hidden = true;
+        document.body.style.overflow = "";
 
-        if (!adminNote) {
-            window.alert("A rejection reason is required.");
-            return;
+        if (dialogResolver) {
+            const resolve = dialogResolver;
+            dialogResolver = null;
+            resolve(result);
+        }
+
+        if (previousFocus && typeof previousFocus.focus === "function") {
+            previousFocus.focus();
         }
     }
 
-    // Retrieve the token rendered by Django.
-    const csrfInput = document.querySelector(
-        '#refund-csrf-form input[name="csrfmiddlewaretoken"]'
-    );
-
-    const csrfToken = csrfInput
-        ? csrfInput.value
-        : "";
-
-    if (!csrfToken) {
-        window.alert(
-            "The security token could not be found. " +
-            "Please reload the page and try again."
-        );
-        console.error(
-            "CSRF token missing from #refund-csrf-form."
-        );
-        return;
+    function showFeedback(text) {
+        feedback.textContent = text;
+        feedback.hidden = false;
     }
 
-    const formData = new FormData();
-    formData.append("action", action);
-    formData.append("admin_note", adminNote);
+    confirmButton.addEventListener("click", function () {
+        if (dialogMode === "reject") {
+            const reason = reasonInput.value.trim();
 
-    const originalText = button.textContent.trim();
+            if (!reason) {
+                reasonError.hidden = false;
+                reasonInput.focus();
+                return;
+            }
 
-    button.disabled = true;
-    button.classList.add("is-processing");
-    button.textContent =
-        action === "accept" ? "Accepting..." : "Rejecting...";
+            reasonError.hidden = true;
+            closeDialog({ confirmed: true, reason });
+            return;
+        }
 
-    try {
-        const endpoint = "{% url 'admin_review_refund' 0 %}"
-            .replace("/0/", `/${encodeURIComponent(refundId)}/`);
+        closeDialog({ confirmed: true });
+    });
 
-        const response = await fetch(endpoint, {
-            method: "POST",
-            headers: {
-                "X-CSRFToken": csrfToken,
-                "X-Requested-With": "XMLHttpRequest"
-            },
-            body: formData,
-            credentials: "same-origin"
+    cancelButton.addEventListener("click", function () {
+        closeDialog(null);
+    });
+
+    closeButton.addEventListener("click", function () {
+        closeDialog(null);
+    });
+
+    modal.querySelector("[data-close-refund-modal]")
+        .addEventListener("click", function () {
+            closeDialog(null);
         });
 
-        // Handle non-JSON responses without hiding the real error.
-        const responseText = await response.text();
+    reasonInput.addEventListener("input", function () {
+        if (reasonInput.value.trim()) {
+            reasonError.hidden = true;
+        }
+    });
 
-        let data;
+    document.addEventListener("keydown", function (event) {
+        if (modal.hidden) {
+            return;
+        }
+
+        if (event.key === "Escape") {
+            closeDialog(null);
+        }
+
+        if (event.key === "Enter" && event.ctrlKey && dialogMode === "reject") {
+            confirmButton.click();
+        }
+    });
+
+    async function showNotice(text, options = {}) {
+        const result = await openDialog({
+            title: options.title || "Notification",
+            subtitle: options.subtitle || "",
+            message: text,
+            mode: "notice",
+            confirmText: options.confirmText || "Close"
+        });
+
+        return result;
+    }
+
+    document.addEventListener("click", async function (event) {
+        const button = event.target.closest(
+            ".refund-review-button[data-refund-id][data-action]"
+        );
+
+        if (!button) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const refundId = button.dataset.refundId;
+        const action = button.dataset.action;
+
+        if (!refundId || !["accept", "reject"].includes(action)) {
+            console.error("Invalid refund ID or action.", {
+                refundId,
+                action
+            });
+
+            await showNotice(
+                "The refund request could not be identified.",
+                { title: "Unable to Continue" }
+            );
+
+            return;
+        }
+
+        let adminNote = "";
+
+        if (action === "accept") {
+            const result = await openDialog({
+                title: "Accept Refund",
+                subtitle: "Please confirm this action.",
+                message:
+                    "Accept this refund request?\n\n" +
+                    "The approved amount will be credited to the customer's " +
+                    "wallet, and the relevant order or item will be cancelled.",
+                mode: "confirm",
+                confirmText: "Accept Refund"
+            });
+
+            if (!result || !result.confirmed) {
+                return;
+            }
+        }
+
+        if (action === "reject") {
+            const result = await openDialog({
+                title: "Reject Refund",
+                subtitle: "A rejection reason is required.",
+                message:
+                    "Please provide the reason for rejecting this refund request.",
+                mode: "reject",
+                confirmText: "Reject Refund"
+            });
+
+            if (!result || !result.confirmed) {
+                return;
+            }
+
+            adminNote = result.reason;
+        }
+
+        const csrfInput = document.querySelector(
+            '#refund-csrf-form input[name="csrfmiddlewaretoken"]'
+        );
+
+        const csrfToken = csrfInput ? csrfInput.value : "";
+
+        if (!csrfToken) {
+            await showNotice(
+                "The security token could not be found. Please reload the page and try again.",
+                { title: "Security Error" }
+            );
+
+            console.error(
+                "CSRF token missing from #refund-csrf-form."
+            );
+
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("action", action);
+        formData.append("admin_note", adminNote);
+
+        const originalText = button.textContent.trim();
+
+        button.disabled = true;
+        button.classList.add("is-processing");
+        button.textContent =
+            action === "accept" ? "Accepting..." : "Rejecting...";
 
         try {
-            data = JSON.parse(responseText);
-        } catch (parseError) {
-            console.error(
-                "Refund endpoint returned a non-JSON response:",
-                response.status,
-                responseText
-            );
+            const endpoint = "{% url 'admin_review_refund' 0 %}"
+                .replace("/0/", `/${encodeURIComponent(refundId)}/`);
 
-            throw new Error(
-                `The server returned an unexpected response ` +
-                `(HTTP ${response.status}). Check the Django terminal.`
-            );
-        }
+            const response = await fetch(endpoint, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrfToken,
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body: formData,
+                credentials: "same-origin"
+            });
 
-        if (!response.ok || !data.success) {
-            throw new Error(
+            const responseText = await response.text();
+
+            let data;
+
+            try {
+                data = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error(
+                    "Refund endpoint returned a non-JSON response:",
+                    response.status,
+                    responseText
+                );
+
+                throw new Error(
+                    `The server returned an unexpected response (HTTP ${response.status}). Check the Django terminal.`
+                );
+            }
+
+            if (!response.ok || !data.success) {
+                throw new Error(
+                    data.message ||
+                    `Unable to process the refund request (HTTP ${response.status}).`
+                );
+            }
+
+            await showNotice(
                 data.message ||
-                `Unable to process the refund request ` +
-                `(HTTP ${response.status}).`
+                (
+                    action === "accept"
+                        ? "Refund accepted successfully."
+                        : "Refund rejected successfully."
+                ),
+                {
+                    title: "Refund Updated",
+                    confirmText: "Continue"
+                }
+            );
+
+            window.location.reload();
+
+        } catch (error) {
+            console.error("Refund review error:", error);
+
+            button.disabled = false;
+            button.classList.remove("is-processing");
+            button.textContent = originalText;
+
+            await showNotice(
+                error.message || "Something went wrong.",
+                { title: "Unable to Process Refund" }
             );
         }
-
-        window.alert(
-            data.message ||
-            (
-                action === "accept"
-                    ? "Refund accepted successfully."
-                    : "Refund rejected successfully."
-            )
-        );
-
-        window.location.reload();
-
-    } catch (error) {
-        console.error("Refund review error:", error);
-
-        window.alert(
-            error.message || "Something went wrong."
-        );
-
-        button.disabled = false;
-        button.classList.remove("is-processing");
-        button.textContent = originalText;
-    }
+    });
 });
 </script>
 <script>

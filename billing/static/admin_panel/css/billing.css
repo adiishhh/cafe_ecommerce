@@ -3509,3 +3509,100 @@
         flex: 1;
     }
 }
+
+/* ============================================================
+   REFUND ACTION MODAL
+   ============================================================ */
+
+.refund-action-dialog {
+    width: min(480px, 100%);
+}
+
+.refund-action-message {
+    margin: 0;
+    color: #51483f;
+    font-size: 13px;
+    line-height: 1.7;
+    white-space: pre-line;
+}
+
+.refund-reason-field {
+    margin-top: 18px;
+}
+
+.refund-reason-field label {
+    display: block;
+    margin-bottom: 8px;
+    color: #51483f;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.refund-reason-field label span {
+    color: #c0392b;
+}
+
+.refund-reason-field textarea {
+    display: block;
+    width: 100%;
+    min-height: 100px;
+    padding: 11px 12px;
+    box-sizing: border-box;
+
+    border: 1px solid #dcd2c8;
+    border-radius: 8px;
+
+    background: #fffdf9;
+    color: #453c34;
+
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 1.6;
+
+    resize: vertical;
+    outline: none;
+}
+
+.refund-reason-field textarea:focus {
+    border-color: #a4511e;
+    box-shadow: 0 0 0 3px rgba(164, 81, 30, 0.08);
+}
+
+.refund-reason-field textarea:disabled {
+    background: #f5f1ec;
+    cursor: not-allowed;
+}
+
+.refund-reason-field small {
+    display: block;
+    margin-top: 6px;
+    color: #b42318;
+    font-size: 11px;
+}
+
+.refund-action-feedback {
+    margin-top: 14px;
+    padding: 10px 12px;
+    border: 1px solid #e7c5c0;
+    border-radius: 7px;
+    background: #fff3f1;
+    color: #a23d32;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+#refundActionConfirm:disabled,
+#refundActionCancel:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+@media (max-width: 520px) {
+    .refund-action-dialog {
+        width: 100%;
+    }
+
+    .refund-action-dialog .billing-modal-footer {
+        gap: 8px;
+    }
+}
