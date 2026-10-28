@@ -27,11 +27,77 @@
 
     .toolbar {
         display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        padding-bottom : 20px;
+    }
+
+    .search-form {
+        display: flex;
         align-items: center;
-
         gap: 10px;
+        flex: 1;
+        min-width: 280px;
+        max-width: 550px;
+    }
 
-        margin-bottom: 18px;
+    .date-filter-form {
+        display: flex;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .date-filter-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .date-filter-field label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #766c62;
+    }
+
+    .date-filter-input {
+        height: 40px;
+        padding: 0 10px;
+        border: 1px solid #ddd4c9;
+        border-radius: 8px;
+        background: #fffdf9;
+        color: #51483f;
+        font-family: inherit;
+        font-size: 12px;
+        outline: none;
+    }
+
+    .date-filter-input:focus {
+        border-color: #8b431c;
+    }
+
+    @media (max-width: 768px) {
+        .toolbar {
+            align-items: stretch;
+        }
+
+        .search-form,
+        .date-filter-form {
+            max-width: 100%;
+            width: 100%;
+        }
+
+        .date-filter-field {
+            flex: 1;
+            min-width: 130px;
+        }
+
+        .date-filter-input {
+            width: 100%;
+            box-sizing: border-box;
+        }
     }
 
 
@@ -655,7 +721,6 @@
         action="{% url 'admin_users' %}"
         class="search-form"
     >
-
         <input
             type="text"
             name="q"
@@ -670,18 +735,58 @@
         >
             Search
         </button>
+    </form>
+
+    <form
+        method="get"
+        action="{% url 'admin_users' %}"
+        class="date-filter-form"
+    >
+        <div class="date-filter-field">
+            <label for="start_date">From</label>
+            <input
+                type="date"
+                id="start_date"
+                name="start_date"
+                value="{{ start_date }}"
+                class="date-filter-input"
+            >
+        </div>
+
+        <div class="date-filter-field">
+            <label for="end_date">To</label>
+            <input
+                type="date"
+                id="end_date"
+                name="end_date"
+                value="{{ end_date }}"
+                class="date-filter-input"
+            >
+        </div>
 
         {% if search_query %}
+            <input
+                type="hidden"
+                name="q"
+                value="{{ search_query }}"
+            >
+        {% endif %}
 
+        <button
+            type="submit"
+            class="button search-button"
+        >
+            Apply
+        </button>
+
+        {% if start_date or end_date %}
             <a
-                href="{% url 'admin_users' %}"
+                href="{% url 'admin_users' %}{% if search_query %}?q={{ search_query|urlencode }}{% endif %}"
                 class="clear-button"
             >
                 Clear
             </a>
-
         {% endif %}
-
     </form>
 
 </div>
@@ -855,7 +960,7 @@
         {% if page_obj.has_previous %}
 
             <a
-                href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
+                href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if start_date %}&start_date={{ start_date|urlencode }}{% endif %}{% if end_date %}&end_date={{ end_date|urlencode }}{% endif %}"
             >
                 Previous
             </a>
@@ -876,24 +981,22 @@
                 <span class="current">
                     {{ number }}
                 </span>
-
+            
             {% else %}
-
-                <a
-                    href="?page={{ number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
-                >
+            
+                <a href="?page={{ number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if start_date %}&start_date={{ start_date|urlencode }}{% endif %}{% if end_date %}&end_date={{ end_date|urlencode }}{% endif %}">
                     {{ number }}
                 </a>
-
+            
             {% endif %}
-
+            
         {% endfor %}
 
 
         {% if page_obj.has_next %}
 
             <a
-                href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
+                href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}{% if start_date %}&start_date={{ start_date|urlencode }}{% endif %}{% if end_date %}&end_date={{ end_date|urlencode }}{% endif %}"
             >
                 Next
             </a>

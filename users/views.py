@@ -504,12 +504,16 @@ def delete_address(request, address_id):
 @login_required(login_url='login')
 def admin_users_view(request):
     if not request.user.is_staff:
-        return HttpResponseForbidden("You do not have permission to access this page.")
-    
+        return HttpResponseForbidden(
+            "You do not have permission to access this page."
+        )
+
     search_query = request.GET.get('q', '').strip()
+    start_date = request.GET.get('start_date', '').strip()
+    end_date = request.GET.get('end_date', '').strip()
 
     users = User.objects.filter(
-    is_staff=False
+        is_staff=False
     ).prefetch_related(
         Prefetch(
             'addresses',
@@ -524,6 +528,16 @@ def admin_users_view(request):
             Q(email__icontains=search_query)
         )
 
+    if start_date:
+        users = users.filter(
+            created_at__date__gte=start_date
+        )
+
+    if end_date:
+        users = users.filter(
+            created_at__date__lte=end_date
+        )
+
     paginator = Paginator(users, 5)
 
     page_number = request.GET.get('page')
@@ -535,6 +549,8 @@ def admin_users_view(request):
         {
             'page_obj': page_obj,
             'search_query': search_query,
+            'start_date': start_date,
+            'end_date': end_date,
         }
     )
     
