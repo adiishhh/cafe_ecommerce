@@ -53,9 +53,9 @@
             <div class="order-detail-header">
 
                 <a
-                    href="{% url 'placed_orders' %}"
+                    href="{% if is_guest_order %}{% url 'home' %}{% else %}{% url 'placed_orders' %}{% endif %}"
                     class="order-detail-back"
-                    aria-label="Back to Orders"
+                    aria-label="{% if is_guest_order %}Back to Menu{% else %}Back to Orders{% endif %}"
                 >
                     ←
                 </a>
@@ -91,6 +91,7 @@
                 
                 
                     <!-- Save This Order -->
+                {% if not is_guest_order %}
                 
                     {% if can_save_as_usual %}
                 
@@ -103,6 +104,8 @@
                         </button>
                     
                     {% endif %}
+                
+                {% endif %}
                     
                 </div>
 
@@ -633,11 +636,31 @@
 
                         <span>
                             Order Number
+                            <strong>
+                                {{ order.order_no }}
+                            </strong>
                         </span>
 
-                        <strong>
-                            {{ order.order_no }}
-                        </strong>
+
+                        {% if is_guest_order %}
+                            <span>
+                                Tracking Number
+                                <strong>{{ order.tracking_no }}</strong>
+                            </span>
+
+                        {% endif %}
+
+                        {% if order.order_type == 'table' and order.table %}
+                            
+                                <span>
+                                    Table Number
+                                    <strong>
+                                        Table {{ order.table.table_number }}
+                                    </strong>
+                                </span>
+                            
+                            
+                        {% endif %}
 
                     </div>
 
@@ -663,7 +686,7 @@
 
                             {% else %}
 
-                                Table
+                                Dine-in
 
                             {% endif %}
 
@@ -1005,7 +1028,7 @@
 
                 <form
                     method="POST"
-                    action="{% if is_paid_online %}{% url 'request_order_refund' order.id %}{% else %}{% url 'cancel_order' order.id %}{% endif %}"
+                    action="{% if is_guest_order %}{% url 'guest_cancel_order' order.id %}{% elif is_paid_online %}{% url 'request_order_refund' order.id %}{% else %}{% url 'cancel_order' order.id %}{% endif %}"
                 >
 
                     {% csrf_token %}
@@ -1272,7 +1295,13 @@
                                     if (cancelItemForm) {
                                         const endpoint = refundMode
                                             ? "{% url 'request_item_refund' 0 %}"
-                                            : "{% url 'cancel_order_item' 0 %}";
+                                            : (
+                                                {% if is_guest_order %}
+                                                    "{% url 'guest_cancel_order_item' 0 %}"
+                                                {% else %}
+                                                    "{% url 'cancel_order_item' 0 %}"
+                                                {% endif %}
+                                            );
                                     
                                         cancelItemForm.action = endpoint.replace(
                                             "/0/",

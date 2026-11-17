@@ -1,0 +1,169 @@
+{% extends "admin_panel/base.html" %}
+
+{% load static %}
+
+
+{% block title %}
+    {{ page_title }} | SmartCafe
+{% endblock %}
+
+
+{% block extra_css %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'admin_panel/css/tables.css' %}"
+>
+
+{% endblock %}
+
+
+{% block content %}
+
+
+<div class="table-form-page">
+
+
+    <div class="form-page-header">
+
+        <div>
+
+        <a
+            href="{% url 'admin_tables' %}"
+            class="back-button"
+        >
+
+            <i class="fa fa-arrow-left"></i>
+        </a>
+
+            <h1>
+                {{ page_title }}
+            </h1>
+
+        </div>
+
+
+    </div>
+
+
+
+    <div class="table-form-card">
+
+
+        <form method="post">
+
+            {% csrf_token %}
+
+
+            {% if form.non_field_errors %}
+
+                <div class="form-errors">
+
+                    {{ form.non_field_errors }}
+
+                </div>
+
+            {% endif %}
+
+
+            <!-- TABLE NUMBER -->
+
+            <div class="form-group">
+
+                <label for="{{ form.table_number.id_for_label }}">
+
+                    Table Number
+
+                </label>
+
+
+                {{ form.table_number }}
+
+
+                {% for error in form.table_number.errors %}
+
+                    <small class="field-error">
+                        {{ error }}
+                    </small>
+
+                {% endfor %}
+
+            </div>
+
+
+
+            <!-- CAPACITY -->
+
+            <div class="form-group">
+
+                <label for="{{ form.capacity.id_for_label }}">
+
+                    Seating Capacity
+
+                </label>
+
+
+                {{ form.capacity }}
+
+
+                {% for error in form.capacity.errors %}
+
+                    <small class="field-error">
+                        {{ error }}
+                    </small>
+
+                {% endfor %}
+
+            </div>
+
+
+
+            <div class="form-note">
+
+                <i class="fa fa-info-circle"></i>
+
+                A unique QR token will be generated automatically
+                when the table is created.
+
+            </div>
+
+
+
+            <div class="form-actions">
+
+
+                <a
+                    href="{% url 'admin_tables' %}"
+                    class="cancel-button"
+                >
+
+                    Cancel
+
+                </a>
+
+
+                <button
+                    type="submit"
+                    class="save-button"
+                >
+
+                    <i class="fa fa-check"></i>
+
+                    {{ button_text }}
+
+                </button>
+
+
+            </div>
+
+
+        </form>
+
+
+    </div>
+
+
+</div>
+
+
+{% endblock %}

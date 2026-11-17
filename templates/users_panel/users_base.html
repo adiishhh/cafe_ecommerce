@@ -25,6 +25,11 @@
         href="{% static 'common/images/favicon.png' %}"
     >
 
+    <link
+        href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"
+        rel="stylesheet"
+    >
+
 
     <!-- =====================================================
          SAME HOME CSS
@@ -33,6 +38,11 @@
     <link
         rel="stylesheet"
         href="{% static 'users_panel/css/home.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'common/css/auto-dismiss-messages.css' %}"
     >
 
 
@@ -98,7 +108,14 @@
                         class="main-nav-item
                         {% if request.resolver_match.url_name == 'home' %}
                             active
-                        {% endif %}"
+                        {% endif %}
+                        {% if request.resolver_match.url_name == 'customer_product_detail' %}
+                            active
+                        {% endif %}
+                        {% if request.resolver_match.url_name == 'cart' %}
+                            active
+                        {% endif %}
+                        "
                     >
                         Menu
                     </a>
@@ -242,7 +259,50 @@
                     {% endif %}
 
 
+                    <details class="mobile-nav-dropdown">
+                    
+                        <summary aria-label="Open navigation menu">
+                            <i class="fa fa-bars"></i>
+                        </summary>
+                    
+                        <div class="mobile-nav-panel">
+                        
+                            <a href="{% url 'home' %}">
+                                Menu
+                            </a>
+                        
+                            <a href="{% url 'placed_orders' %}">
+                                Orders
+                            </a>
+                        
+                            {% if user.is_authenticated %}
+                        
+                                <a href="{% url 'my_usuals' %}">
+                                    My Usuals
+                                </a>
+                            
+                                <a href="{% url 'profile' %}">
+                                    Profile
+                                </a>
+                            
+                            {% else %}
+                            
+                                <a href="{% url 'login' %}">
+                                    My Usuals
+                                </a>
+                            
+                                <a href="{% url 'login' %}">
+                                    Profile
+                                </a>
+                            
+                            {% endif %}
+                        
+                        </div>
+                    
+                    </details>
+
                 </div>
+
 
 
             </header>
@@ -259,6 +319,8 @@
         </div>
 
     </main>
+
+    <script src="{% static 'common/js/auto-dismiss-messages.js' %}"></script>
 
 
     <!-- =====================================================

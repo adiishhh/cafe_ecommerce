@@ -1,0 +1,189 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Scan Table QR | SmartCafe</title>
+
+    <link rel="stylesheet" href="{% static 'users/css/auth.css' %}">
+
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            background: #f7f1e8;
+            font-family: Arial, sans-serif;
+            color: #241c16;
+        }
+
+        .scanner-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .scanner-card {
+            width: 100%;
+            max-width: 450px;
+            padding: 30px;
+            background: white;
+            border-radius: 18px;
+            text-align: center;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.08);
+        }
+
+        .scanner-card h1 {
+            font-family: Georgia, serif;
+            font-size: 27px;
+            margin-bottom: 10px;
+        }
+
+        .scanner-card p {
+            color: #786b60;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        #qr-reader {
+            width: 100%;
+            margin: 25px auto;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        .scanner-error {
+            color: #b52d24;
+            font-size: 12px;
+            margin-top: 12px;
+        }
+
+        .scanner-back {
+            display: inline-block;
+            margin-top: 15px;
+            color: #8b3f16;
+            font-size: 13px;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+
+<main class="scanner-page">
+
+    <section class="scanner-card">
+
+        <h1>Scan Your Table QR</h1>
+
+        <p>
+            Allow camera access and point your camera
+            towards the QR code on your table.
+        </p>
+
+        <div id="qr-reader"></div>
+
+        <p id="scanner-error" class="scanner-error"></p>
+
+        <a href="{% url 'home' %}" class="scanner-back">
+            Back to Menu
+        </a>
+
+    </section>
+
+</main>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const errorElement =
+            document.getElementById("scanner-error");
+
+        const scanner = new Html5Qrcode("qr-reader");
+
+        let processing = false;
+
+        async function startScanner() {
+
+            try {
+
+                await scanner.start(
+                    { facingMode: "environment" },
+                    {
+                        fps: 10,
+                        qrbox: {
+                            width: 250,
+                            height: 250
+                        }
+                    },
+
+                    async function (decodedText) {
+
+                        if (processing) {
+                            return;
+                        }
+
+                        processing = true;
+
+                        try {
+
+                            const scannedURL = new URL(decodedText);
+
+                            const match = scannedURL.pathname.match(
+                                /^\/table\/([A-Za-z0-9_-]+)\/?$/
+                            );
+
+                            if (!match) {
+                                processing = false;
+
+                                errorElement.textContent =
+                                    "This is not a valid SmartCafe table QR code.";
+
+                                return;
+                            }
+
+                            await scanner.stop();
+
+                            // Use the current website's domain.
+                            // Do not trust the hostname embedded in the QR code.
+
+                            window.location.assign(
+                                window.location.origin +
+                                "/table/" +
+                                match[1] +
+                                "/"
+                            );
+
+                        } catch (error) {
+
+                            processing = false;
+
+                            errorElement.textContent =
+                                "Unable to process this QR code. Please try again.";
+
+                        }
+
+                    }
+                );
+
+            } catch (error) {
+
+                errorElement.textContent =
+                    "Unable to access your camera. Please allow camera permission and try again.";
+
+            }
+
+        }
+
+        startScanner();
+
+    });
+</script>
+
+</body>
+</html>

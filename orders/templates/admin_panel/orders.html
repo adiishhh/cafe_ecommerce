@@ -321,11 +321,19 @@
                         <td>
 
                             <div class="customer-name">
-                                {{ order.user.name|default:"No name" }}
+                                {% if order.user %}
+                                    {{ order.user.name|default:"No name" }}
+                                {% else %}
+                                    {{ order.guest_name|default:"Guest" }}
+                                {% endif %}
                             </div>
-
+                            
                             <div class="customer-id">
-                                User ID: {{ order.user.id }}
+                                {% if order.user %}
+                                    User ID: {{ order.user.id }}
+                                {% else %}
+                                    Guest Order
+                                {% endif %}
                             </div>
 
                         </td>

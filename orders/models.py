@@ -45,6 +45,11 @@ class Order(models.Model):
         related_name="orders",
     )
 
+    guest_name = models.CharField(
+        max_length=100,
+        blank=True,
+    )
+
     order_type = models.CharField(
         max_length=20,
         choices=OrderType.choices,

@@ -1,3 +1,28 @@
+:root {
+    --page-bg: #f7f3ed;
+    --card-bg: #fffdf9;
+    --card-border: #ead8c7;
+
+    --text-primary: #211b17;
+    --text-secondary: #766b63;
+    --text-muted: #a59a91;
+
+    --accent: #8b3f16;
+    --accent-dark: #743312;
+    --accent-soft: #f1e6d8;
+
+    --success-bg: #edf6ee;
+    --success-text: #397244;
+
+    --warning-bg: #fff6df;
+    --warning-text: #946617;
+
+    --danger-bg: #fff0ed;
+    --danger-text: #a83d25;
+
+    --shadow:
+        0 7px 22px rgba(72, 55, 39, 0.07);
+}
 * {
     box-sizing: border-box;
 }
@@ -11,8 +36,9 @@ body {
 
     font-family: Arial, sans-serif;
 
-    background: #f3eee5;
-    color: #2f2924;
+    background: var(--page-bg);
+
+    color: var(--text-primary);
 }
 
 a {

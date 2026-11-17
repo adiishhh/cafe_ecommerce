@@ -32,6 +32,11 @@
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
     >
 
+    <link
+        rel="stylesheet"
+        href="{% static 'common/css/auto-dismiss-messages.css' %}"
+    >
+
     {% block extra_css %}
     {% endblock %}
 </head>
@@ -152,9 +157,9 @@
                 </a>
             
             
-                {% comment %} <a
-                    href="#"
-                    class="nav-link {% if request.resolver_match.url_name == 'admin_tables' %}active{% endif %}"
+                 <a
+                    href="{% url 'admin_tables' %}"
+                    class="nav-link {% if 'tables' in request.resolver_match.url_name %}active{% endif %}"
                 >
             
                     <span class="nav-icon">
@@ -165,7 +170,7 @@
                         Tables & QR
                     </span>
                 
-                </a> {% endcomment %}
+                </a>
             
             
                 <a
@@ -269,6 +274,8 @@
 
 
     </div>
+
+    <script src="{% static 'common/js/auto-dismiss-messages.js' %}"></script>
 
     {% block extra_js %}
     {% endblock %}

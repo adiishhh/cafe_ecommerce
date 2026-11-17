@@ -626,6 +626,7 @@ body {
     border-radius: 10px;
 
     background: #faf6f0;
+
 }
 
 
@@ -1539,4 +1540,88 @@ when we replace the HTML.
         padding: 21px;
     }
 
+}
+/* =========================================================
+   ORDER HEADER - RESPONSIVE FIX
+   ========================================================= */
+
+.order-detail-header {
+    min-width: 0;
+}
+
+.order-header-actions {
+    min-width: 0;
+}
+
+.invoice-top-button,
+.save-order-top-button {
+    min-width: 0;
+    max-width: 100%;
+}
+
+
+/* =========================================================
+   MOBILE HEADER LAYOUT
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    .order-detail-header {
+        flex-wrap: wrap;
+        align-items: center;
+        row-gap: 10px;
+    }
+
+    .order-detail-header > div:nth-child(2) {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .order-header-actions {
+        flex: 0 0 100%;
+        width: 100%;
+        margin: 0;
+        display: flex;
+        gap: 8px;
+    }
+
+    .order-header-actions > a,
+    .order-header-actions > button {
+        flex: 1 1 0;
+        min-width: 0;
+        max-width: 100%;
+        white-space: normal;
+        overflow-wrap: break-word;
+        text-align: center;
+    }
+
+    .invoice-top-button {
+        width: auto;
+        margin-left: 0;
+        padding: 8px 6px;
+        font-size: 10px;
+    }
+
+    .save-order-top-button {
+        padding: 8px 6px;
+        font-size: 10px;
+    }
+}
+
+
+/* =========================================================
+   VERY SMALL SCREENS
+   ========================================================= */
+
+@media (max-width: 360px) {
+
+    .order-header-actions {
+        flex-direction: column;
+    }
+
+    .order-header-actions > a,
+    .order-header-actions > button {
+        width: 100%;
+        flex: none;
+    }
 }

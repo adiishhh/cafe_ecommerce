@@ -113,6 +113,21 @@ a {
     margin-bottom: 28px;
 }
 
+.auth-heading div{
+    display: flex;
+}
+
+.auth-heading p{
+    padding-left: 35px;
+}
+
+.back-link {
+        width: 36px;
+        height: 36px;
+        padding: 8px;
+        font-size: 18px;
+    }
+
 .auth-heading h1 {
     margin: 0 0 6px;
 

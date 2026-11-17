@@ -8,7 +8,6 @@ html {
 
 body {
     margin: 0;
-
     font-family: Arial, sans-serif;
 
     background:
@@ -149,6 +148,20 @@ select {
     border-radius: 2px;
 
     background: #8b3f16;
+}
+
+.scan-button{
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+
+    background: #f5ecdf;
+    color: black;
 }
 
 
@@ -908,6 +921,12 @@ select {
 
 }
 
+@media (min-width: 800px) {
+    .scan-button{
+        display: none;
+    }
+}
+
 
 /* =========================
    MOBILE
@@ -1015,4 +1034,455 @@ select {
         flex-direction: column;
     }
 
+}
+
+
+/* =========================
+   GUEST ORDER TRACKING
+========================= */
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.track-order-trigger {
+    border: 1px solid #d9c5ad;
+    border-radius: 20px;
+
+    padding: 9px 15px;
+
+    background: #fffaf3;
+    color: #7b3b18;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.track-order-trigger:hover {
+    background: #f3e5d4;
+}
+
+body.tracking-modal-open {
+    overflow: hidden;
+}
+
+
+/* =========================
+   TRACKING MODAL OVERLAY
+========================= */
+
+.tracking-modal-overlay {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 3000;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    padding: 18px;
+
+    background: rgba(25, 18, 13, 0.58);
+
+    backdrop-filter: blur(3px);
+}
+
+.tracking-modal-overlay.is-open {
+    display: flex;
+}
+
+
+/* =========================
+   TRACKING MODAL
+========================= */
+
+.tracking-modal {
+    position: relative;
+
+    width: min(430px, 100%);
+
+    padding: 32px;
+
+    border: 1px solid #eadccc;
+    border-radius: 18px;
+
+    background: #fffaf3;
+
+    box-shadow:
+        0 22px 65px rgba(22, 14, 8, 0.28);
+
+    animation: trackingModalIn 0.18s ease-out;
+}
+
+@keyframes trackingModalIn {
+
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.985);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+}
+
+.tracking-modal-close {
+    position: absolute;
+
+    top: 12px;
+    right: 15px;
+
+    width: 32px;
+    height: 32px;
+
+    border: 0;
+    border-radius: 50%;
+
+    background: #f0e6da;
+    color: #6d5543;
+
+    font-size: 22px;
+
+    cursor: pointer;
+}
+
+.tracking-modal-eyebrow {
+    color: #a46a3c;
+
+    font-size: 10px;
+    font-weight: 700;
+
+    letter-spacing: 1.5px;
+}
+
+.tracking-modal h2 {
+    margin: 9px 0 7px;
+
+    color: #2b211a;
+
+    font-family: Georgia, serif;
+
+    font-size: 27px;
+    font-weight: 500;
+}
+
+.tracking-modal > p {
+    margin: 0 0 22px;
+
+    color: #786b60;
+
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.tracking-modal form {
+    display: flex;
+    flex-direction: column;
+
+    gap: 9px;
+}
+
+.tracking-modal label {
+    color: #5f4c3d;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.tracking-modal input {
+    width: 100%;
+    height: 44px;
+
+    padding: 0 12px;
+
+    border: 1px solid #dfd1c2;
+    border-radius: 9px;
+
+    outline: none;
+
+    background: #fff;
+    color: #35291f;
+
+    font-size: 13px;
+}
+
+.tracking-modal input:focus {
+    border-color: #9a4b20;
+
+    box-shadow:
+        0 0 0 3px rgba(154, 75, 32, 0.1);
+}
+
+.tracking-modal-submit {
+    min-height: 43px;
+
+    margin-top: 5px;
+
+    border: 0;
+    border-radius: 9px;
+
+    background: #8b3f16;
+    color: #fff;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+.tracking-modal-submit:hover {
+    background: #70300f;
+}
+
+.tracking-modal-submit:disabled {
+    opacity: 0.65;
+    cursor: wait;
+}
+
+.tracking-modal-error {
+    min-height: 16px;
+
+    margin: 0;
+
+    color: #b52d24;
+
+    font-size: 11px;
+}
+
+
+/* =========================
+   TRACKING MODAL RESPONSIVE
+========================= */
+
+@media (max-width: 600px) {
+
+    .header-actions {
+        gap: 7px;
+    }
+
+    .track-order-trigger {
+        padding: 8px 10px;
+
+        font-size: 10px;
+    }
+
+    .tracking-modal {
+        padding: 28px 22px;
+    }
+
+    .tracking-modal h2 {
+        font-size: 24px;
+    }
+
+}
+
+/* =========================
+   RESPONSIVE NAVIGATION
+========================= */
+
+.mobile-nav-dropdown {
+    display: none;
+    position: relative;
+}
+
+.mobile-nav-dropdown summary {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid #e5d8c9;
+    border-radius: 10px;
+
+    background: #fffaf3;
+    color: #8b3f16;
+
+    font-size: 17px;
+
+    cursor: pointer;
+    list-style: none;
+}
+
+.mobile-nav-dropdown summary::-webkit-details-marker {
+    display: none;
+}
+
+.mobile-nav-panel {
+    position: absolute;
+
+    top: calc(100% + 12px);
+    right: 0;
+
+    z-index: 2500;
+
+    width: 190px;
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 8px;
+
+    border: 1px solid #eadccc;
+    border-radius: 12px;
+
+    background: #fffaf3;
+
+    box-shadow: 0 10px 30px rgba(0,0,0,0.13);
+}
+
+.mobile-nav-panel a,
+.mobile-track-order {
+    display: block;
+
+    padding: 12px;
+
+    border: none;
+    border-radius: 7px;
+
+    background: transparent;
+    color: #554538;
+
+    font-size: 13px;
+    text-align: left;
+
+    cursor: pointer;
+}
+
+.mobile-nav-panel a:hover,
+.mobile-track-order:hover {
+    background: #f3e8da;
+    color: #8b3f16;
+}
+
+.mobile-track-order {
+    color: #8b3f16;
+    font-weight: 700;
+}
+
+
+/* TABLET AND MOBILE */
+
+@media (max-width: 800px) {
+
+    .main-navigation {
+        display: none;
+    }
+
+    .mobile-nav-dropdown {
+        display: block;
+    }
+
+    .header-actions {
+        gap: 10px;
+    }
+
+}
+
+
+/* SMALL MOBILE */
+
+@media (max-width: 600px) {
+
+    .home-header {
+        height: 48px;
+    }
+
+    .header-actions {
+        gap: 8px;
+    }
+
+    .mobile-nav-dropdown summary {
+        width: 34px;
+        height: 34px;
+        font-size: 15px;
+    }
+
+}
+
+/* =========================================
+   QR SESSION SUCCESS NOTIFICATION
+========================================= */
+
+.qr-success-toast {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    width: min(100% - 30px, 480px);
+    margin: 20px auto;
+    padding: 17px 18px;
+
+    background: #ffffff;
+    border: 1px solid #dcefe1;
+    border-radius: 12px;
+
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.07);
+
+    z-index: 20;
+}
+
+.qr-toast-icon {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+
+    display: grid;
+    place-items: center;
+
+    background: #e6f5ea;
+    color: #32834b;
+
+    border-radius: 50%;
+    font-size: 17px;
+}
+
+.qr-toast-content {
+    flex: 1;
+}
+
+.qr-toast-eyebrow {
+    display: block;
+    margin-bottom: 5px;
+
+    color: #32834b;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.3px;
+}
+
+.qr-toast-content p {
+    margin: 0;
+
+    color: #514d48;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.qr-toast-close {
+    align-self: flex-start;
+
+    border: none;
+    background: transparent;
+
+    color: #999;
+    font-size: 22px;
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+.qr-toast-close:hover {
+    color: #333;
 }

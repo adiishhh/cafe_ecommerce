@@ -234,7 +234,7 @@ def create_coupon(request):
 
             messages.success(
                 request,
-                f"Coupon {coupon.code} was created successfully.",
+                "Coupon was created successfully.",
             )
 
             return redirect("coupon_list")

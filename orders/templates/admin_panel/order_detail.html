@@ -90,20 +90,32 @@
             <div class="customer-detail">
 
                 <div class="customer-avatar">
-                    {{ order.user.name|first|upper }}
+                    {% if order.user %}
+                        {{ order.user.name|first|upper }}
+                    {% else %}
+                        {{ order.guest_name|first|upper|default:"G" }}
+                    {% endif %}
                 </div>
 
 
                 <div>
 
                     <h3>
-                        {{ order.user.name|default:"No name" }}
+                        {% if order.user %}
+                            {{ order.user.name|default:"No name" }}
+                        {% else %}
+                            {{ order.guest_name|default:"Guest" }}
+                        {% endif %}
                     </h3>
-
+                
                     <p>
-                        User ID: {{ order.user.id }}
+                        {% if order.user %}
+                            User ID: {{ order.user.id }}
+                        {% else %}
+                            Guest Order
+                        {% endif %}
                     </p>
-
+                
                 </div>
 
             </div>
@@ -111,31 +123,27 @@
 
             <div class="info-list">
 
-                <div class="info-row">
-
-                    <span>
-                        Email
-                    </span>
-
-                    <strong>
-                        {{ order.user.email }}
-                    </strong>
-
-                </div>
-
-
-                <div class="info-row">
-
-                    <span>
-                        Phone
-                    </span>
-
-                    <strong>
-                        {{ order.user.phone|default:"—" }}
-                    </strong>
-
-                </div>
-
+                {% if order.user %}
+                        
+                    <div class="info-row">
+                        <span>Email</span>
+                        <strong>{{ order.user.email }}</strong>
+                    </div>
+                
+                    <div class="info-row">
+                        <span>Phone</span>
+                        <strong>{{ order.user.phone|default:"—" }}</strong>
+                    </div>
+                
+                {% else %}
+                
+                    <div class="info-row">
+                        <span>Customer Type</span>
+                        <strong>Guest</strong>
+                    </div>
+                
+                {% endif %}
+                
             </div>
 
         </section>

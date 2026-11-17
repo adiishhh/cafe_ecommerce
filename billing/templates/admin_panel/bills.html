@@ -477,7 +477,7 @@ SmartCafe Admin - Bills
 
                                             {% else %}
 
-                                                G
+                                                {{ bill_order.order.guest_name|first|upper|default:"G" }}
 
                                             {% endif %}
 
@@ -494,7 +494,7 @@ SmartCafe Admin - Bills
 
                                                 {% else %}
 
-                                                    Guest Customer
+                                                    {{ bill_order.order.guest_name|default:"Guest" }}
 
                                                 {% endif %}
 

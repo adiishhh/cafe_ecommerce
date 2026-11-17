@@ -9,6 +9,7 @@ from .forms import ProductForm, ProductImageFormSet
 from .models import Product
 from orders.models import Tax
 from category.models import Category
+from tables.views import get_qr_table
 from decimal import Decimal, InvalidOperation
 from django.utils import timezone
 from .models import ReviewRating
@@ -178,21 +179,31 @@ def customer_home(request):
                 product.price * quantity
             )
 
+    context = {
+        'page_obj': page_obj,
+        'categories': categories,
+        'query': query,
+        'category_id': category_id,
+        'sort': sort,
+        'min_price': min_price,
+        'max_price': max_price,
+        'cart_count': cart_count,
+        'cart_total': cart_total,
+        'today': timezone.localdate(),
+    }
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+
+        return render(
+            request,
+            'users_panel/users_products.html',
+            context
+        )
+
     return render(
         request,
         'users_panel/home.html',
-        {
-            'page_obj': page_obj,
-            'categories': categories,
-            'query': query,
-            'category_id': category_id,
-            'sort': sort,
-            'min_price': min_price,
-            'max_price': max_price,
-            'cart_count': cart_count,
-            'cart_total': cart_total,
-            'today': timezone.localdate(),
-        }
+        context
     )
 
 def customer_product_detail(request, product_id):
@@ -755,6 +766,8 @@ def add_to_cart(request, product_id):
     request.session["cart"] = cart
     request.session.modified = True
 
+    get_qr_table(request, update_activity=True)
+
     if request.session.get("save_order_mode"):
 
         messages.success(
@@ -1079,6 +1092,8 @@ def increase_cart_quantity(request, product_id):
     request.session["cart"] = cart
     request.session.modified = True
 
+    get_qr_table(request, update_activity=True)
+
     totals = cart_totals(request)
 
     if request.headers.get(
@@ -1158,6 +1173,8 @@ def decrease_cart_quantity(request, product_id):
     request.session["cart"] = cart
     request.session.modified = True
 
+    get_qr_table(request, update_activity=True)
+
     product = get_object_or_404(
         Product.objects.select_related("category"),
         id=product_id,
@@ -1208,6 +1225,8 @@ def remove_from_cart(request, product_id):
     request.session["cart"] = cart
     request.session.modified = True
 
+    get_qr_table(request, update_activity=True)
+
     totals = cart_totals(request)
 
     if request.headers.get(
@@ -1255,6 +1274,8 @@ def cancel_cart(request):
     )
 
     request.session.modified = True
+
+    get_qr_table(request, update_activity=True)
 
     messages.success(
         request,

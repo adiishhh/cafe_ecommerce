@@ -1,0 +1,562 @@
+/* =========================================
+   DINE-IN CHECKOUT
+========================================= */
+
+.dine-checkout-page {
+    padding: 35px 0 70px;
+}
+
+.dine-checkout-container {
+    max-width: 1150px;
+    margin: auto;
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.dine-checkout-header {
+    margin-bottom: 30px;
+}
+
+.dine-back-button {
+    display: inline-block;
+    margin-bottom: 25px;
+    color: var(--text-secondary, #777);
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.dine-back-button:hover {
+    color: var(--primary-color, #743312);
+}
+
+.dine-checkout-eyebrow {
+    display: block;
+    margin-bottom: 8px;
+    color: #a4774e;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+.dine-checkout-header h1 {
+    margin: 0;
+    font-size: 30px;
+    color: #292522;
+}
+
+.dine-checkout-header p {
+    margin-top: 8px;
+    color: #85817d;
+    font-size: 14px;
+}
+
+
+/* =========================================
+   LAYOUT
+========================================= */
+
+.dine-checkout-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 25px;
+    align-items: start;
+}
+
+.dine-checkout-main {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+
+/* =========================================
+   CARDS
+========================================= */
+
+.dine-checkout-card,
+.dine-coupon-card,
+.dine-price-card {
+    background: #fff;
+    border: 1px solid #eee9e3;
+    border-radius: 14px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.025);
+}
+
+.dine-card-heading {
+    margin-bottom: 22px;
+}
+
+.dine-card-heading > div {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.dine-card-step {
+    width: 35px;
+    height: 35px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: #f7f0e9;
+    color: #9b704c;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.dine-card-heading h2,
+.dine-coupon-card h2,
+.dine-price-card h2 {
+    margin: 0;
+    color: #302b27;
+    font-size: 17px;
+}
+
+.dine-card-heading p {
+    margin: 5px 0 0;
+    color: #918b85;
+    font-size: 12px;
+}
+
+
+/* =========================================
+   TABLE INFORMATION
+========================================= */
+
+.dine-table-information {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    background: #faf8f5;
+    border-radius: 10px;
+}
+
+.dine-table-icon {
+    width: 43px;
+    height: 43px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: #efe4d8;
+    color: #8b431c;
+    font-size: 18px;
+}
+
+.dine-table-information > div:nth-child(2) {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.dine-table-information strong {
+    color: #302b27;
+    font-size: 15px;
+}
+
+.dine-table-information span {
+    color: #85817d;
+    font-size: 12px;
+}
+
+.dine-active-badge {
+    margin-left: auto;
+    padding: 6px 10px;
+    border-radius: 20px;
+    background: #e9f6ed;
+    color: #32834b !important;
+    font-size: 11px !important;
+    font-weight: 600;
+}
+
+
+/* =========================================
+   GUEST INFORMATION
+========================================= */
+
+.dine-guest-field {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.dine-guest-field label {
+    color: #49433d;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.dine-guest-field input {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1px solid #e7e0d8;
+    border-radius: 8px;
+    outline: none;
+    font-size: 14px;
+}
+
+.dine-guest-field input:focus {
+    border-color: #a4774e;
+    box-shadow: 0 0 0 3px rgba(164, 119, 78, 0.1);
+}
+
+/* =========================================
+   GUEST NAME REMINDER
+========================================= */
+
+.dine-guest-reminder {
+    display: block;
+    margin-top: 8px;
+    color: #9a7656;
+    font-size: 10px;
+    line-height: 1;
+}
+
+
+/* =========================================
+   ORDER ITEMS
+========================================= */
+
+.dine-checkout-items {
+    display: flex;
+    flex-direction: column;
+}
+
+.dine-checkout-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 0;
+    border-bottom: 1px solid #f0ece7;
+}
+
+.dine-checkout-item:first-child {
+    padding-top: 0;
+}
+
+.dine-checkout-item:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.dine-item-image {
+    width: 65px;
+    height: 65px;
+    flex-shrink: 0;
+    overflow: hidden;
+    border-radius: 9px;
+    background: #f5f1ec;
+}
+
+.dine-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.dine-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    color: #a4774e;
+    font-size: 20px;
+}
+
+.dine-item-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.dine-item-details h3 {
+    margin: 0 0 6px;
+    color: #302b27;
+    font-size: 14px;
+}
+
+.dine-item-details span {
+    color: #85817d;
+    font-size: 12px;
+}
+
+.dine-item-details p {
+    margin: 7px 0 0;
+    color: #9a7656;
+    font-size: 12px;
+}
+
+.dine-item-price {
+    color: #302b27;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+
+/* =========================================
+   PAYMENT
+========================================= */
+
+.dine-payment-method {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 15px;
+    border: 1px solid #e9dfd4;
+    border-radius: 10px;
+    background: #fcfaf7;
+}
+
+.dine-payment-icon {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: #f0e5d9;
+    color: #8b6040;
+    font-size: 19px;
+    font-weight: 700;
+}
+
+.dine-payment-method > div:nth-child(2) {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.dine-payment-method strong {
+    color: #302b27;
+    font-size: 14px;
+}
+
+.dine-payment-method span {
+    color: #85817d;
+    font-size: 11px;
+}
+
+.dine-payment-selected {
+    color: #32834b !important;
+    font-size: 11px !important;
+    font-weight: 600;
+}
+
+
+/* =========================================
+   SIDEBAR
+========================================= */
+
+.dine-checkout-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    position: sticky;
+    top: 20px;
+}
+
+
+/* =========================================
+   COUPON
+========================================= */
+
+.dine-coupon-card h2 {
+    margin-bottom: 17px;
+}
+
+.dine-coupon-input {
+    display: flex;
+    gap: 8px;
+}
+
+.dine-coupon-input input {
+    min-width: 0;
+    flex: 1;
+    padding: 11px;
+    border: 1px solid #e7e0d8;
+    border-radius: 7px;
+    outline: none;
+    font-size: 12px;
+}
+
+.dine-coupon-input input:focus {
+    border-color: #a4774e;
+}
+
+.dine-coupon-input button {
+    padding: 0 14px;
+    border: none;
+    border-radius: 7px;
+    background: #8b3f16;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.dine-coupon-success {
+    margin: 12px 0 0;
+    color: #32834b;
+    font-size: 12px;
+}
+
+
+/* =========================================
+   PRICE SUMMARY
+========================================= */
+
+.dine-price-card h2 {
+    margin-bottom: 22px;
+}
+
+.dine-price-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 16px;
+    color: #77716b;
+    font-size: 13px;
+}
+
+.dine-price-row span:last-child {
+    color: #39332e;
+    font-weight: 500;
+}
+
+.dine-price-divider {
+    height: 1px;
+    margin: 20px 0;
+    background: #eee8e1;
+}
+
+.dine-price-total {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 22px;
+    color: #302b27;
+    font-size: 16px;
+}
+
+.dine-price-total strong:last-child {
+    color: #8b6040;
+    font-size: 19px;
+}
+
+
+/* =========================================
+   PLACE ORDER
+========================================= */
+
+.dine-place-order-button {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 17px;
+    border: none;
+    border-radius: 9px;
+    background: #8b3f16;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.dine-place-order-button:hover {
+    background: #743312;
+}
+
+.dine-place-order-button span {
+    font-size: 13px;
+}
+
+.dine-cancel-link {
+    display: block;
+    margin-top: 17px;
+    color: #827b74;
+    text-align: center;
+    text-decoration: none;
+    font-size: 12px;
+}
+
+.dine-cancel-link:hover {
+    color: #8b6040;
+}
+
+.dine-checkout-note {
+    margin: 20px 0 0;
+    padding-top: 15px;
+    border-top: 1px solid #eee8e1;
+    color: #8b847d;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.dine-checkout-note i {
+    margin-right: 5px;
+    color: #a4774e;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 900px) {
+
+    .dine-checkout-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .dine-checkout-sidebar {
+        position: static;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .dine-checkout-page {
+        padding: 20px 0 45px;
+    }
+
+    .dine-checkout-container {
+        padding: 0 14px;
+    }
+
+    .dine-checkout-header h1 {
+        font-size: 24px;
+    }
+
+    .dine-checkout-card,
+    .dine-coupon-card,
+    .dine-price-card {
+        padding: 18px;
+    }
+
+    .dine-checkout-item {
+        gap: 10px;
+    }
+
+    .dine-item-image {
+        width: 55px;
+        height: 55px;
+    }
+
+    .dine-item-price {
+        font-size: 12px;
+    }
+
+    .dine-payment-method {
+        flex-wrap: wrap;
+    }
+
+}

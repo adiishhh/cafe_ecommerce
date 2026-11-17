@@ -1,0 +1,26 @@
+/* =========================================
+   GLOBAL MESSAGE DISMISSAL
+========================================= */
+
+.messages .message,
+.messages .qr-success-toast {
+
+    transition:
+        opacity 0.35s ease,
+        transform 0.35s ease;
+
+}
+
+
+/* EXIT ANIMATION */
+
+.messages .message.message-exit,
+.messages .qr-success-toast.message-exit {
+
+    opacity: 0;
+
+    transform: translateY(-12px);
+
+    pointer-events: none;
+
+}

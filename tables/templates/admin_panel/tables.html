@@ -1,0 +1,426 @@
+{% extends "admin_panel/base.html" %}
+
+{% load static %}
+
+{% block title %}
+    SmartCafe Admin - Tables & QR
+{% endblock %}
+
+
+{% block extra_css %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'admin_panel/css/tables.css' %}"
+>
+
+{% endblock %}
+
+
+{% block content %}
+
+{% if messages %}
+
+<div class="messages">
+
+    {% for message in messages %}
+
+        <div class="message {{ message.tags }}">
+            {{ message }}
+        </div>
+
+    {% endfor %}
+
+</div>
+
+{% endif %}
+
+
+<div class="tables-page">
+
+
+    <!-- =================================================
+         PAGE HEADER
+         ================================================= -->
+
+    <div class="tables-header">
+
+        <div>
+
+            <h1>
+                Tables & QR
+            </h1>
+
+            <p>
+                Manage restaurant tables and their QR codes.
+            </p>
+
+        </div>
+
+
+        <a
+            href="{% url 'admin_add_table' %}"
+            class="add-table-button"
+        >
+
+            <i class="fa fa-plus"></i>
+
+            Add Table
+
+        </a>
+
+    </div>
+
+
+
+    <!-- =================================================
+         SUMMARY CARDS
+         ================================================= -->
+
+    <div class="table-summary-grid">
+
+
+        <div class="summary-card">
+
+            <div class="summary-icon total-icon">
+                <i class="fa fa-th-large"></i>
+            </div>
+
+            <div>
+
+                <span>
+                    Total Tables
+                </span>
+
+                <strong>
+                    {{ total_tables }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-icon active-icon">
+                <i class="fa fa-check-circle"></i>
+            </div>
+
+            <div>
+
+                <span>
+                    Active Tables
+                </span>
+
+                <strong>
+                    {{ active_tables }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-icon inactive-icon">
+                <i class="fa fa-ban"></i>
+            </div>
+
+            <div>
+
+                <span>
+                    Inactive Tables
+                </span>
+
+                <strong>
+                    {{ inactive_tables }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- =================================================
+         SEARCH
+         ================================================= -->
+
+    <div class="tables-toolbar">
+
+        <form
+            method="get"
+            class="tables-search-form"
+        >
+
+            <div class="search-box">
+
+                <i class="fa fa-search"></i>
+
+                <input
+                    type="search"
+                    name="q"
+                    value="{{ search_query }}"
+                    placeholder="Search table number..."
+                >
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="search-button"
+            >
+                Search
+            </button>
+
+
+            {% if search_query %}
+
+                <a
+                    href="{% url 'admin_tables' %}"
+                    class="clear-button"
+                >
+                    Clear
+                </a>
+
+            {% endif %}
+
+        </form>
+
+    </div>
+
+
+
+<!-- =================================================
+     TABLE GRID
+     ================================================= -->
+
+<div class="tables-grid">
+
+    {% for table in page_obj %}
+
+        <div class="table-card">
+
+            <!-- CARD HEADER -->
+
+            <div class="table-card-header">
+
+                <div class="table-card-title">
+
+                    <div class="table-icon">
+                        <i class="fa fa-cutlery"></i>
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Table {{ table.table_number }}
+                        </h3>
+
+                        <small>
+                            ID: {{ table.id }}
+                        </small>
+
+                    </div>
+
+                </div>
+
+
+                {% if table.is_active %}
+
+                    <span class="status-badge active">
+                        Active
+                    </span>
+
+                {% else %}
+
+                    <span class="status-badge inactive">
+                        Inactive
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- QR CODE -->
+
+            <div class="table-qr-container">
+
+                <img
+                    src="{% url 'admin_table_qr' table.id %}"
+                    alt="QR code for Table {{ table.table_number }}"
+                    class="table-qr-image"
+                >
+
+                <span>
+                    Scan to access this table
+                </span>
+
+            </div>
+
+
+            <!-- TABLE DETAILS -->
+
+            <div class="table-card-details">
+
+                <div class="capacity-info">
+
+                    <i class="fa fa-users"></i>
+
+                    <span>
+                        {% if table.capacity %}
+                            {{ table.capacity }} seats
+                        {% else %}
+                            Capacity not specified
+                        {% endif %}
+                    </span>
+
+                </div>
+
+
+                <a
+                    href="{% url 'admin_table_qr' table.id %}"
+                    class="qr-button"
+                >
+
+                    <i class="fa fa-download"></i>
+
+                    Download QR
+
+                </a>
+
+            </div>
+
+
+            <!-- ACTIONS -->
+
+            <div class="table-card-actions">
+
+                <a
+                    href="{% url 'admin_edit_table' table.id %}"
+                    class="edit-button"
+                >
+
+                    <i class="fa fa-pencil"></i>
+
+                    Edit
+
+                </a>
+
+
+                <form
+                    method="post"
+                    action="{% url 'admin_toggle_table_status' table.id %}"
+                >
+
+                    {% csrf_token %}
+
+                    <button
+                        type="submit"
+                        class="toggle-button {% if table.is_active %}deactivate{% else %}activate{% endif %}"
+                    >
+
+                        {% if table.is_active %}
+
+                            <i class="fa fa-ban"></i>
+                            Deactivate
+
+                        {% else %}
+
+                            <i class="fa fa-check"></i>
+                            Activate
+
+                        {% endif %}
+
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+
+    {% empty %}
+
+        <div class="empty-tables">
+
+            {% if search_query %}
+
+                No tables found matching "{{ search_query }}".
+
+            {% else %}
+
+                No tables have been added yet.
+
+            {% endif %}
+
+        </div>
+
+    {% endfor %}
+
+</div>
+
+
+
+    <!-- =================================================
+         PAGINATION
+         ================================================= -->
+
+    {% if page_obj.paginator.num_pages > 1 %}
+
+        <div class="tables-pagination">
+
+
+            {% if page_obj.has_previous %}
+
+                <a
+                    href="?q={{ search_query|urlencode }}&page={{ page_obj.previous_page_number }}"
+                    class="pagination-button"
+                >
+
+                    Previous
+
+                </a>
+
+            {% endif %}
+
+
+            <span class="pagination-info">
+
+                Page {{ page_obj.number }}
+
+                of {{ page_obj.paginator.num_pages }}
+
+            </span>
+
+
+            {% if page_obj.has_next %}
+
+                <a
+                    href="?q={{ search_query|urlencode }}&page={{ page_obj.next_page_number }}"
+                    class="pagination-button"
+                >
+
+                    Next
+
+                </a>
+
+            {% endif %}
+
+
+        </div>
+
+    {% endif %}
+
+
+</div>
+
+{% endblock %}

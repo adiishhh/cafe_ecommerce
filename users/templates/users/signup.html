@@ -31,7 +31,15 @@
             <section class="auth-card">
 
                 <div class="auth-heading">
-                    <h1>Create Account</h1>
+                    <div>
+                        <a
+                            href="{% url 'home' %}"
+                            class="back-link"
+                            >
+                            ←
+                        </a>
+                        <h1>Create Account</h1>
+                    </div>
                     <p>Create your SmartCafe account</p>
                 </div>
 
@@ -132,8 +140,9 @@
                 </div>
 
 
-                <a href="/" class="guest-button">
-                    🛒 &nbsp; Order as Guest (Scan QR)
+                <a href="{% url 'guest_qr_scanner' %}" class="guest-button">
+                    <i class="fa fa-qrcode"></i>
+                    &nbsp; Order as Guest (Scan QR)
                 </a>
 
 

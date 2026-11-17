@@ -35,6 +35,11 @@
         rel="stylesheet"
     >
 
+    <link
+        rel="stylesheet"
+        href="{% static 'common/css/auto-dismiss-messages.css' %}"
+    >
+
 </head>
 
 
@@ -46,9 +51,43 @@
 
         {% for message in messages %}
 
-            <div class="message {{ message.tags }}">
-                {{ message }}
-            </div>
+            {% if "qr-session-started" in message.tags %}
+
+                <div class="qr-success-toast">
+
+                    <div class="qr-toast-icon">
+                        <i class="fa fa-check"></i>
+                    </div>
+
+                    <div class="qr-toast-content">
+
+                        <span class="qr-toast-eyebrow">
+                            YOU'RE CHECKED IN
+                        </span>
+
+                        <p>
+                            {{ message }}
+                        </p>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        class="qr-toast-close"
+                        aria-label="Dismiss notification"
+                    >
+                        &times;
+                    </button>
+
+                </div>
+
+            {% else %}
+
+                <div class="message {{ message.tags }}">
+                    {{ message }}
+                </div>
+
+            {% endif %}
 
         {% endfor %}
 
@@ -68,116 +107,163 @@
 
         <header class="home-header">
 
-            <a
-                href="{% url 'home' %}"
-                class="brand"
-            >
-
-                <span class="brand-icon">
-                    ☕
-                </span>
-
-                <span class="brand-name">
-                    CAFE
-                </span>
-
+            <a href="{% url 'home' %}" class="brand">
+            
+                <span class="brand-icon">☕</span>
+            
+                <span class="brand-name">CAFE</span>
+            
             </a>
-
+        
+        
+            <!-- Desktop Navigation -->
+        
             <nav class="main-navigation">
             
-                <a
-                    href="{% url 'home' %}"
-                    class="main-nav-item active"
-                >
+                <a href="{% url 'home' %}" class="main-nav-item active">
                     Menu
                 </a>
             
-            
-                <a
-                    href="{% url "placed_orders" %}"
-                    class="main-nav-item"
-                >
-                    Orders
-                </a>
-            
-            
                 {% if user.is_authenticated %}
+
+                    <a href="{% url 'placed_orders' %}" class="main-nav-item">
+                        Orders
+                    </a>
             
-                    <a
-                        href="{% url 'my_usuals' %}"
-                        class="main-nav-item"
-                    >
+                    <a href="{% url 'my_usuals' %}" class="main-nav-item">
                         My Usuals
                     </a>
                 
-                
-                    <a
-                        href="{% url 'profile' %}"
-                        class="main-nav-item"
-                    >
+                    <a href="{% url 'profile' %}" class="main-nav-item">
                         Profile
                     </a>
                 
                 {% else %}
                 
-                    <a
-                        href="{% url 'login' %}"
-                        class="main-nav-item"
-                    >
+                    <a href="{% url 'login' %}" class="main-nav-item">
+                        Orders
+                    </a>
+
+                    <a href="{% url 'login' %}" class="main-nav-item">
                         My Usuals
                     </a>
                 
-                
-                    <a
-                        href="{% url 'login' %}"
-                        class="main-nav-item"
-                    >
+                    <a href="{% url 'login' %}" class="main-nav-item">
                         Profile
                     </a>
                 
                 {% endif %}
                 
             </nav>
-
-
+        
+        
             <div class="header-actions">
 
-                {% if user.is_authenticated %}
-
-                    <a
-                        href="{% url 'profile' %}"
-                        class="profile-avatar"
+                {% if not user.is_authenticated %}
+            
+                    <button
+                        type="button"
+                        class="track-order-trigger"
+                        id="open-track-order"
                     >
+                        Track Order
+                    </button>
 
+                    
+                {% else %}
+
+                    <a href="{% url 'guest_qr_scanner' %}" class="scan-button">
+                        <i class="fa fa-qrcode"></i>
+                    </a>
+                    
+                {% endif %}
+            
+                {% if user.is_authenticated %}
+            
+                    <a href="{% url 'profile' %}" class="profile-avatar">
+                    
                         {% if user.profile_image %}
-
+                    
                             <img
                                 src="{{ user.profile_image.url }}"
                                 alt="Profile image"
                             >
-
+                    
                         {% else %}
-
+                    
                             {{ user.name|first|upper }}
-
+                    
                         {% endif %}
-
+                    
                     </a>
-
+                
                 {% else %}
-
-                    <a
-                        href="{% url 'login' %}"
-                        class="sign-in-button"
-                    >
+                
+                    <a href="{% url 'login' %}" class="sign-in-button">
                         Sign In
                     </a>
-
+                
                 {% endif %}
+                
+                
+                <!-- Mobile Dropdown -->
 
+            {% if user.is_authenticated%}
+                
+                <details class="mobile-nav-dropdown">
+                
+                    <summary aria-label="Open navigation menu">
+                        <i class="fa fa-bars"></i>
+                    </summary>
+                
+                    <div class="mobile-nav-panel">
+                    
+                        <a href="{% url 'home' %}">
+                            Menu
+                        </a>
+                    
+                        <a href="{% url 'placed_orders' %}">
+                            Orders
+                        </a>
+                    
+                        {% if user.is_authenticated %}
+                    
+                            <a href="{% url 'my_usuals' %}">
+                                My Usuals
+                            </a>
+                        
+                            <a href="{% url 'profile' %}">
+                                Profile
+                            </a>
+                        
+                        {% else %}
+                        
+                            <a href="{% url 'login' %}">
+                                My Usuals
+                            </a>
+                        
+                            <a href="{% url 'login' %}">
+                                Profile
+                            </a>
+                        
+                        {% endif %}
+                    
+                    </div>
+                
+                </details>
+
+            {% else %}
+
+                    <a href="{% url 'guest_qr_scanner' %}" class="scan-button">
+                        <i class="fa fa-qrcode"></i>
+                    </a>
+                    
+            {% endif %}
+            
             </div>
-
+        
         </header>
+
 
 
         <!-- =========================
@@ -225,6 +311,7 @@
         </section>
 
 
+
         <!-- =========================
              SEARCH
         ========================== -->
@@ -247,35 +334,43 @@
             >
 
             {% if category_id %}
+
                 <input
                     type="hidden"
                     name="category"
                     value="{{ category_id }}"
                 >
+
             {% endif %}
 
             {% if sort %}
+
                 <input
                     type="hidden"
                     name="sort"
                     value="{{ sort }}"
                 >
+
             {% endif %}
 
             {% if min_price %}
+
                 <input
                     type="hidden"
                     name="min_price"
                     value="{{ min_price }}"
                 >
+
             {% endif %}
 
             {% if max_price %}
+
                 <input
                     type="hidden"
                     name="max_price"
                     value="{{ max_price }}"
                 >
+
             {% endif %}
 
             <button
@@ -286,6 +381,7 @@
             </button>
 
         </form>
+
 
 
         <!-- =========================
@@ -301,6 +397,7 @@
                 All
             </a>
 
+
             {% for category in categories %}
 
                 <a
@@ -315,6 +412,7 @@
         </div>
 
 
+
         <!-- =========================
              FILTERS
         ========================== -->
@@ -322,6 +420,7 @@
         <details class="filter-panel">
 
             <summary>
+
                 <span>
                     <i class="fa fa-sliders"></i>
                     Filters & Sorting
@@ -330,6 +429,7 @@
                 <span class="filter-arrow">
                     ↓
                 </span>
+
             </summary>
 
 
@@ -468,6 +568,7 @@
         </details>
 
 
+
         <!-- =========================
              MENU
         ========================== -->
@@ -497,7 +598,12 @@
         </section>
 
 
-        {% include "users_panel/users_products.html" %}
+        <div id="product-results">
+
+            {% include "users_panel/users_products.html" %}
+
+        </div>
+
 
 
         <!-- =========================
@@ -536,6 +642,7 @@
     </div>
 
 </main>
+
 
 
 <!-- =========================
@@ -613,6 +720,780 @@
 
 </footer>
 
+
+
+<!-- =========================================================
+     FIRST MODAL: TRACKING NUMBER
+========================================================= -->
+
+<div
+    class="tracking-modal-overlay"
+    id="tracking-number-modal"
+    aria-hidden="true"
+>
+
+    <section
+        class="tracking-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="tracking-number-title"
+    >
+
+        <button
+            type="button"
+            class="tracking-modal-close"
+            data-close-tracking-modal
+            aria-label="Close"
+        >
+            ×
+        </button>
+
+
+        <span class="tracking-modal-eyebrow">
+            GUEST ORDER
+        </span>
+
+
+        <h2 id="tracking-number-title">
+            Track your order
+        </h2>
+
+
+        <p>
+            Enter the tracking number shown on your order confirmation
+            to continue.
+        </p>
+
+
+        <form id="tracking-number-form">
+
+            {% csrf_token %}
+
+            <label for="guest-tracking-number">
+                Tracking Number
+            </label>
+
+            <input
+                type="text"
+                id="guest-tracking-number"
+                name="tracking_no"
+                maxlength="50"
+                placeholder="e.g. TRK-A1B2C3D4E5"
+                autocomplete="off"
+                required
+            >
+
+            <p
+                class="tracking-modal-error"
+                id="tracking-number-error"
+                role="alert"
+            ></p>
+
+            <button
+                type="submit"
+                class="tracking-modal-submit"
+                id="check-tracking-number"
+            >
+                Continue
+            </button>
+
+        </form>
+
+    </section>
+
+</div>
+
+
+
+<!-- =========================================================
+     SECOND MODAL: GUEST NAME
+========================================================= -->
+
+<div
+    class="tracking-modal-overlay"
+    id="tracking-name-modal"
+    aria-hidden="true"
+>
+
+    <section
+        class="tracking-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="tracking-name-title"
+    >
+
+        <button
+            type="button"
+            class="tracking-modal-close"
+            data-close-tracking-modal
+            aria-label="Close"
+        >
+            ×
+        </button>
+
+
+        <span class="tracking-modal-eyebrow">
+            ORDER VERIFICATION
+        </span>
+
+
+        <h2 id="tracking-name-title">
+            Confirm your name
+        </h2>
+
+
+        <p>
+            Enter the name used
+            when placing this order.
+        </p>
+
+
+        <form
+            method="POST"
+            action="{% url 'track_guest_order' %}"
+            id="tracking-name-form"
+        >
+
+            {% csrf_token %}
+
+            <input
+                type="hidden"
+                name="tracking_no"
+                id="verified-tracking-number"
+            >
+
+            <label for="guest-order-name">
+                Guest Name
+            </label>
+
+            <input
+                type="text"
+                id="guest-order-name"
+                name="guest_name"
+                maxlength="100"
+                placeholder="Enter the name used for the order"
+                autocomplete="name"
+                required
+            >
+
+            <button
+                type="submit"
+                class="tracking-modal-submit"
+            >
+                View Order
+            </button>
+
+        </form>
+
+    </section>
+
+</div>
+
+
+
+<!-- =========================================================
+     TRACKING MODAL JAVASCRIPT
+========================================================= -->
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const openButtons = document.querySelectorAll(
+        "#open-track-order, #mobile-track-order"
+    );
+
+    const trackingModal =
+        document.getElementById("tracking-number-modal");
+
+    const nameModal =
+        document.getElementById("tracking-name-modal");
+
+    const trackingForm =
+        document.getElementById("tracking-number-form");
+
+    const trackingInput =
+        document.getElementById("guest-tracking-number");
+
+    const trackingError =
+        document.getElementById("tracking-number-error");
+
+    const checkButton =
+        document.getElementById("check-tracking-number");
+
+    const verifiedTrackingInput =
+        document.getElementById("verified-tracking-number");
+
+    const guestNameInput =
+        document.getElementById("guest-order-name");
+
+
+    // OPEN MODAL
+
+    function openModal(modal) {
+
+        if (!modal) {
+            return;
+        }
+
+        modal.classList.add("is-open");
+
+        modal.setAttribute("aria-hidden", "false");
+
+        document.body.classList.add("tracking-modal-open");
+
+    }
+
+
+    // CLOSE MODAL
+
+    function closeModal(modal) {
+
+        if (!modal) {
+            return;
+        }
+
+        modal.classList.remove("is-open");
+
+        modal.setAttribute("aria-hidden", "true");
+
+        if (
+            !document.querySelector(
+                ".tracking-modal-overlay.is-open"
+            )
+        ) {
+
+            document.body.classList.remove(
+                "tracking-modal-open"
+            );
+
+        }
+
+    }
+
+
+    // OPEN TRACK ORDER FROM DESKTOP OR MOBILE
+
+    openButtons.forEach(function (button) {
+
+        button.addEventListener("click", function () {
+
+            trackingForm.reset();
+
+            trackingError.textContent = "";
+
+            openModal(trackingModal);
+
+            const mobileDropdown =
+                document.querySelector(".mobile-nav-dropdown");
+
+            if (mobileDropdown) {
+                mobileDropdown.open = false;
+            }
+
+            trackingInput.focus();
+
+        });
+
+    });
+
+
+    // CLOSE BUTTONS
+
+    document
+        .querySelectorAll("[data-close-tracking-modal]")
+        .forEach(function (button) {
+
+            button.addEventListener("click", function () {
+
+                closeModal(
+                    button.closest(".tracking-modal-overlay")
+                );
+
+            });
+
+        });
+
+
+    // CLOSE WHEN CLICKING OUTSIDE THE MODAL
+
+    [trackingModal, nameModal].forEach(function (modal) {
+
+        if (!modal) {
+            return;
+        }
+
+        modal.addEventListener("click", function (event) {
+
+            if (event.target === modal) {
+                closeModal(modal);
+            }
+
+        });
+
+    });
+
+
+    // CLOSE USING ESCAPE KEY
+
+    document.addEventListener("keydown", function (event) {
+
+        if (event.key === "Escape") {
+
+            closeModal(trackingModal);
+
+            closeModal(nameModal);
+
+        }
+
+    });
+
+
+    // VERIFY TRACKING NUMBER
+
+    if (trackingForm) {
+
+        trackingForm.addEventListener(
+            "submit",
+            async function (event) {
+
+                event.preventDefault();
+
+                const trackingNumber =
+                    trackingInput.value.trim().toUpperCase();
+
+                const csrfInput =
+                    trackingForm.querySelector(
+                        'input[name="csrfmiddlewaretoken"]'
+                    );
+
+                trackingError.textContent = "";
+
+                if (!trackingNumber) {
+
+                    trackingError.textContent =
+                        "Enter your tracking number.";
+
+                    trackingInput.focus();
+
+                    return;
+
+                }
+
+                checkButton.disabled = true;
+
+                checkButton.textContent = "Checking...";
+
+
+                try {
+
+                    const response = await fetch(
+                        "{% url 'check_guest_tracking' %}",
+                        {
+                            method: "POST",
+
+                            credentials: "same-origin",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/x-www-form-urlencoded",
+
+                                "X-CSRFToken":
+                                    csrfInput.value,
+
+                                "X-Requested-With":
+                                    "XMLHttpRequest"
+                            },
+
+                            body: new URLSearchParams({
+                                tracking_no: trackingNumber
+                            })
+                        }
+                    );
+
+
+                    const result = await response.json();
+
+
+                    if (!response.ok || !result.exists) {
+
+                        trackingError.textContent =
+                            result.message ||
+                            "No guest order was found with that tracking number.";
+
+                        return;
+
+                    }
+
+
+                    // Tracking number exists.
+                    // Open the guest-name verification modal.
+
+                    verifiedTrackingInput.value = trackingNumber;
+
+                    closeModal(trackingModal);
+
+                    openModal(nameModal);
+
+                    guestNameInput.focus();
+
+
+                } catch (error) {
+
+                    trackingError.textContent =
+                        "Unable to verify the tracking number. Please try again.";
+
+                } finally {
+
+                    checkButton.disabled = false;
+
+                    checkButton.textContent = "Continue";
+
+                }
+
+            }
+        );
+
+    }
+
+});
+
+</script>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const productResults = document.getElementById("product-results");
+
+    const searchForm = document.querySelector(".search-box");
+    const filterForm = document.querySelector(".product-filters");
+    const categories = document.querySelector(".categories");
+
+    let currentRequest = null;
+
+
+    // =========================================
+    // FETCH PRODUCTS
+    // =========================================
+
+    async function fetchProducts(url, updateHistory = true) {
+
+        if (currentRequest) {
+            currentRequest.abort();
+        }
+
+        currentRequest = new AbortController();
+
+        try {
+
+            productResults.style.opacity = "0.5";
+
+            const response = await fetch(url, {
+
+                method: "GET",
+
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+
+                signal: currentRequest.signal
+
+            });
+
+
+            if (!response.ok) {
+                throw new Error("Unable to fetch products.");
+            }
+
+
+            const html = await response.text();
+
+
+            productResults.innerHTML = html;
+
+
+            // Update browser URL without refreshing the page.
+
+            if (updateHistory) {
+
+                history.pushState(
+                    {},
+                    "",
+                    url
+                );
+
+            }
+
+
+            // Synchronize the search and filter forms.
+
+            const currentUrl = new URL(window.location.href);
+            const params = currentUrl.searchParams;
+
+            updateFormValues(params);
+            updateCategoryLinks(params);
+
+
+        } catch (error) {
+
+            if (error.name !== "AbortError") {
+
+                console.error("Product fetching failed:", error);
+
+            }
+
+        } finally {
+
+            productResults.style.opacity = "1";
+
+            currentRequest = null;
+
+        }
+
+    }
+
+
+    // =========================================
+    // UPDATE FORM VALUES
+    // =========================================
+
+    function updateFormValues(params) {
+
+        if (searchForm) {
+
+            const searchInput = searchForm.querySelector('[name="q"]');
+
+            if (searchInput) {
+                searchInput.value = params.get("q") || "";
+            }
+
+        }
+
+
+        if (filterForm) {
+
+            ["q", "category"].forEach(function (name) {
+
+                let input = filterForm.querySelector(
+                    `input[name="${name}"]`
+                );
+
+                const value = params.get(name);
+
+
+                if (value) {
+
+                    if (!input) {
+
+                        input = document.createElement("input");
+
+                        input.type = "hidden";
+                        input.name = name;
+
+                        filterForm.appendChild(input);
+
+                    }
+
+                    input.value = value;
+
+                } else if (input) {
+
+                    input.remove();
+
+                }
+
+            });
+
+
+            ["sort", "min_price", "max_price"].forEach(function (name) {
+
+                const input = filterForm.querySelector(`[name="${name}"]`);
+
+                if (input) {
+                    input.value = params.get(name) || "";
+                }
+
+            });
+
+        }
+
+    }
+
+
+    // =========================================
+    // UPDATE CATEGORY LINKS
+    // =========================================
+
+    function updateCategoryLinks(params) {
+
+        if (!categories) {
+            return;
+        }
+
+        categories.querySelectorAll(".category").forEach(function (link) {
+
+            const url = new URL(link.href);
+
+            const category = url.searchParams.get("category");
+
+            link.classList.toggle(
+                "active",
+                category === params.get("category") ||
+                (!category && !params.get("category"))
+            );
+
+
+            const updatedParams = new URLSearchParams(params);
+
+            updatedParams.delete("page");
+
+            if (category) {
+
+                updatedParams.set("category", category);
+
+            } else {
+
+                updatedParams.delete("category");
+
+            }
+
+            link.href = "?" + updatedParams.toString();
+
+        });
+
+    }
+
+
+    // =========================================
+    // SEARCH FORM
+    // =========================================
+
+    if (searchForm) {
+
+        searchForm.addEventListener("submit", function (event) {
+
+            event.preventDefault();
+
+            const params = new URLSearchParams(
+                new FormData(searchForm)
+            );
+
+            params.delete("page");
+
+            fetchProducts("?" + params.toString());
+
+        });
+
+    }
+
+
+    // =========================================
+    // FILTER FORM
+    // =========================================
+
+    if (filterForm) {
+
+        filterForm.addEventListener("submit", function (event) {
+
+            event.preventDefault();
+
+            const params = new URLSearchParams(
+                new FormData(filterForm)
+            );
+
+            params.delete("page");
+
+            fetchProducts("?" + params.toString());
+
+        });
+
+    }
+
+
+    // =========================================
+    // CATEGORY SELECTION
+    // =========================================
+
+    if (categories) {
+
+        categories.addEventListener("click", function (event) {
+
+            const link = event.target.closest("a.category");
+
+            if (!link) {
+                return;
+            }
+
+            event.preventDefault();
+
+            fetchProducts(link.href);
+
+        });
+
+    }
+
+
+    // =========================================
+    // PAGINATION
+    // =========================================
+
+    productResults.addEventListener("click", function (event) {
+
+        const link = event.target.closest(".pagination a");
+
+        if (!link) {
+            return;
+        }
+
+        event.preventDefault();
+
+        fetchProducts(link.href);
+
+    });
+
+
+    // =========================================
+    // CLEAR FILTERS
+    // =========================================
+
+    if (filterForm) {
+
+        filterForm.addEventListener("click", function (event) {
+
+            const link = event.target.closest(".clear-filter-button");
+
+            if (!link) {
+                return;
+            }
+
+            event.preventDefault();
+
+            fetchProducts(link.href);
+
+        });
+
+    }
+
+
+    // =========================================
+    // BROWSER BACK / FORWARD
+    // =========================================
+
+    window.addEventListener("popstate", function () {
+
+        fetchProducts(
+            window.location.pathname + window.location.search,
+            false
+        );
+
+    });
+
+});
+
+</script>
+
+<script src="{% static 'common/js/auto-dismiss-messages.js' %}"></script>
 
 </body>
 

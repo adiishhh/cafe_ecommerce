@@ -8,6 +8,8 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.views.decorators.http import require_POST
 from users.models import Address
+import secrets
+from tables.views import get_qr_table
 from .models import Order, OrderItem, Tax
 from django.http import HttpResponse, JsonResponse
 from django.conf import settings
@@ -166,6 +168,915 @@ def _generate_order_number():
 
             return order_no
 
+def _generate_tracking_number():
+
+    while True:
+
+        tracking_no = (
+            f"TRK-{secrets.token_hex(5).upper()}"
+        )
+
+        if not Order.objects.filter(
+            tracking_no=tracking_no
+        ).exists():
+
+            return tracking_no
+
+def _get_guest_accessible_order(request, order_id):
+
+    guest_order_ids = request.session.get(
+        "guest_order_access",
+        []
+    )
+
+    if str(order_id) not in guest_order_ids:
+        return None
+
+    return Order.objects.filter(
+        id=order_id,
+        user__isnull=True,
+        tracking_no__isnull=False,
+        order_type=Order.OrderType.TABLE,
+    ).first()
+
+def continue_checkout(request):
+
+    checkout = _get_checkout_cart(request)
+
+    if checkout is None:
+
+        messages.info(
+            request,
+            "Your order is empty."
+        )
+
+        return redirect("cart")
+
+    table = get_qr_table(
+        request,
+        update_activity=False
+    )
+
+    if table:
+
+        return redirect("dine_in_checkout")
+
+    # Check whether a previous QR session expired.
+    if request.session.pop(
+        "qr_session_expired",
+        False
+    ):
+
+        messages.warning(
+            request,
+            "Your table session has expired. "
+            "Please scan the table QR code again "
+            "to continue ordering."
+        )
+
+        return redirect("home")
+
+    return redirect("order_type")
+
+def dine_in_checkout(request):
+
+    table = get_qr_table(
+        request,
+        update_activity=False
+    )
+
+    if table is None:
+
+        messages.warning(
+            request,
+            "Your table session has expired. "
+            "Please scan the QR code again."
+        )
+
+        return redirect("home")
+
+    checkout = _get_checkout_cart(request)
+
+    if checkout is None:
+
+        messages.info(
+            request,
+            "Your order is empty."
+        )
+
+        return redirect("cart")
+
+    # ------------------------------------------------------
+    # COUPON APPLICATION / REMOVAL
+    # ------------------------------------------------------
+
+    if request.method == "POST":
+
+        coupon_code = request.POST.get(
+            "coupon_code",
+            ""
+        ).strip()
+
+        if coupon_code:
+
+            result = apply_coupon(
+                coupon_code,
+                checkout["subtotal"]
+            )
+
+            if result["success"]:
+
+                request.session[
+                    "checkout_coupon_code"
+                ] = result["coupon"].code
+
+                messages.success(
+                    request,
+                    result["message"]
+                )
+
+            else:
+
+                request.session.pop(
+                    "checkout_coupon_code",
+                    None
+                )
+
+                messages.error(
+                    request,
+                    result["message"]
+                )
+
+        else:
+
+            request.session.pop(
+                "checkout_coupon_code",
+                None
+            )
+
+            messages.info(
+                request,
+                "Coupon removed."
+            )
+
+        request.session.modified = True
+
+        return redirect("dine_in_checkout")
+
+    # ------------------------------------------------------
+    # EXISTING COUPON VALIDATION
+    # ------------------------------------------------------
+
+    coupon_code = request.session.get(
+        "checkout_coupon_code"
+    )
+
+    discount = Decimal("0.00")
+    applied_coupon = None
+
+    if coupon_code:
+
+        result = apply_coupon(
+            coupon_code,
+            checkout["subtotal"]
+        )
+
+        if result["success"]:
+
+            applied_coupon = result["coupon"]
+            discount = result["discount"]
+
+        else:
+
+            request.session.pop(
+                "checkout_coupon_code",
+                None
+            )
+
+            request.session.modified = True
+
+            messages.warning(
+                request,
+                result["message"]
+            )
+
+    # ------------------------------------------------------
+    # FINAL TOTAL
+    # ------------------------------------------------------
+
+    subtotal = checkout["subtotal"]
+    gst = checkout["gst"]
+
+    total = (
+        subtotal
+        + gst
+        - discount
+    ).quantize(
+        Decimal("0.01")
+    )
+
+    # ------------------------------------------------------
+    # GUEST / AUTHENTICATED CUSTOMER
+    # ------------------------------------------------------
+
+    is_guest = not request.user.is_authenticated
+
+    # ------------------------------------------------------
+    # RENDER CHECKOUT
+    # ------------------------------------------------------
+
+    return render(
+        request,
+        "users_panel/dine_in_checkout.html",
+        {
+            **checkout,
+            "table": table,
+            "is_guest": is_guest,
+            "applied_coupon": applied_coupon,
+            "discount": discount,
+            "total": total,
+        }
+    )
+
+@require_POST
+@transaction.atomic
+def place_dine_in_order(request):
+
+    # ------------------------------------------------------
+    # VALIDATE QR SESSION
+    # ------------------------------------------------------
+
+    table = get_qr_table(
+        request,
+        update_activity=False
+    )
+
+    if table is None:
+
+        messages.error(
+            request,
+            "Your table session has expired. "
+            "Please scan the QR code again."
+        )
+
+        return redirect("home")
+
+    # ------------------------------------------------------
+    # VALIDATE CART
+    # ------------------------------------------------------
+
+    checkout = _get_checkout_cart(request)
+
+    if checkout is None:
+
+        messages.error(
+            request,
+            "Your order is empty."
+        )
+
+        return redirect("cart")
+
+    # ------------------------------------------------------
+    # VALIDATE GUEST NAME
+    # ------------------------------------------------------
+
+    is_guest = not request.user.is_authenticated
+
+    guest_name = ""
+
+    if is_guest:
+
+        guest_name = request.POST.get(
+            "guest_name",
+            ""
+        ).strip()
+
+        if not guest_name:
+
+            messages.error(
+                request,
+                "Please enter your name."
+            )
+
+            return redirect("dine_in_checkout")
+
+        if len(guest_name) > 100:
+
+            messages.error(
+                request,
+                "Your name cannot exceed 100 characters."
+            )
+
+            return redirect("dine_in_checkout")
+
+    # ------------------------------------------------------
+    # VALIDATE PRODUCTS AGAINST DATABASE
+    # ------------------------------------------------------
+
+    for item in checkout["cart_items"]:
+
+        product = item["product"]
+
+        if not product.is_active or not product.category.is_active:
+
+            messages.error(
+                request,
+                f"{product.name} is currently unavailable."
+            )
+
+            return redirect("cart")
+
+    # ------------------------------------------------------
+    # VALIDATE COUPON
+    # ------------------------------------------------------
+
+    coupon = None
+    discount = Decimal("0.00")
+
+    coupon_code = request.session.get(
+        "checkout_coupon_code",
+        ""
+    )
+
+    if coupon_code:
+
+        result = apply_coupon(
+            coupon_code,
+            checkout["subtotal"]
+        )
+
+        if not result["success"]:
+
+            request.session.pop(
+                "checkout_coupon_code",
+                None
+            )
+
+            request.session.modified = True
+
+            messages.error(
+                request,
+                result["message"]
+            )
+
+            return redirect("dine_in_checkout")
+
+        coupon = result["coupon"]
+        discount = result["discount"]
+
+    # ------------------------------------------------------
+    # CALCULATE TOTAL
+    # ------------------------------------------------------
+
+    subtotal = checkout["subtotal"]
+    tax_amount = checkout["gst"]
+
+    total = (
+        subtotal
+        + tax_amount
+        - discount
+    ).quantize(
+        Decimal("0.01")
+    )
+
+    if total < Decimal("0.00"):
+
+        messages.error(
+            request,
+            "Invalid order total."
+        )
+
+        return redirect("dine_in_checkout")
+
+    # ------------------------------------------------------
+    # CREATE ORDER
+    # ------------------------------------------------------
+
+    order = Order.objects.create(
+
+        user=(
+            request.user
+            if request.user.is_authenticated
+            else None
+        ),
+
+        guest_name=guest_name,
+
+        order_no=_generate_order_number(),
+
+        tracking_no=(
+            _generate_tracking_number()
+            if is_guest
+            else None
+        ),
+
+        order_type=Order.OrderType.TABLE,
+
+        table=table,
+
+        status=Order.Status.CONFIRMED,
+
+        subtotal=subtotal,
+
+        tax_percentage=checkout["tax_percentage"],
+
+        tax_amount=tax_amount,
+
+        coupon_code=(
+            coupon.code
+            if coupon
+            else ""
+        ),
+
+        coupon_discount_type=(
+            coupon.discount_type
+            if coupon
+            else ""
+        ),
+
+        coupon_discount_value=(
+            coupon.discount_value
+            if coupon
+            else None
+        ),
+
+        coupon_minimum_order_amount=(
+            coupon.minimum_order_amount
+            if coupon
+            else None
+        ),
+
+        coupon_maximum_discount_amount=(
+            coupon.maximum_discount_amount
+            if coupon
+            else None
+        ),
+
+        discount_amount=discount,
+
+        total_amount=total,
+    )
+
+    # ------------------------------------------------------
+    # CREATE ORDER ITEMS
+    # ------------------------------------------------------
+
+    for item in checkout["cart_items"]:
+
+        product = item["product"]
+
+        OrderItem.objects.create(
+
+            order=order,
+
+            product=product,
+
+            quantity=item["quantity"],
+
+            unit_price=product.price,
+
+            instructions=item["instructions"],
+
+            subtotal=item["item_total"],
+        )
+
+    # ------------------------------------------------------
+    # UPDATE COUPON USAGE
+    # ------------------------------------------------------
+
+    if coupon:
+
+        coupon.used_count += 1
+
+        coupon.save(
+            update_fields=[
+                "used_count",
+                "updated_at",
+            ]
+        )
+
+    # ------------------------------------------------------
+    # CREATE BILL ORDER
+    # ------------------------------------------------------
+
+    BillOrder.objects.create(
+
+        order=order,
+
+        total=order.total_amount,
+
+        payment_method=(
+            BillOrder.PaymentMethod.COD
+        ),
+    )
+
+    # ------------------------------------------------------
+    # PAYMENT METHOD
+    # ------------------------------------------------------
+
+    request.session[
+        "last_order_payment_method"
+    ] = "Cash at Counter"
+
+    # ------------------------------------------------------
+    # CLEAR CART / CHECKOUT SESSION
+    # ------------------------------------------------------
+
+    request.session.pop(
+        "cart",
+        None
+    )
+
+    request.session.pop(
+        "checkout_order_type",
+        None
+    )
+
+    request.session.pop(
+        "checkout_address_id",
+        None
+    )
+
+    request.session.pop(
+        "checkout_address_modal",
+        None
+    )
+
+    request.session.pop(
+        "checkout_coupon_code",
+        None
+    )
+
+    request.session.pop(
+        "razorpay_pending_checkout",
+        None
+    )
+
+    request.session.modified = True
+
+    # ------------------------------------------------------
+    # REDIRECT TO CONFIRMATION
+    # ------------------------------------------------------
+
+    if is_guest:
+
+        guest_order_ids = request.session.get(
+            "guest_order_access",
+            []
+        )
+
+        guest_order_ids.append(str(order.id))
+
+        request.session["guest_order_access"] = guest_order_ids[-20:]
+
+        request.session.modified = True
+
+        return redirect(
+            "guest_order_detail",
+            order_id=order.id
+        )
+
+    return redirect(
+        "order_detail",
+        order_id=order.id
+    )
+
+
+@require_POST
+def track_guest_order(request):
+
+    tracking_no = request.POST.get(
+        "tracking_no",
+        ""
+    ).strip().upper()
+
+    guest_name = request.POST.get(
+        "guest_name",
+        ""
+    ).strip()
+
+    if not tracking_no or not guest_name:
+
+        messages.error(
+            request,
+            "Please enter both your tracking number and name."
+        )
+
+        return redirect("home")
+
+    order = Order.objects.filter(
+        tracking_no=tracking_no,
+        guest_name__iexact=guest_name,
+        user__isnull=True,
+        order_type=Order.OrderType.TABLE,
+    ).first()
+
+    if order is None:
+
+        messages.error(
+            request,
+            "No matching order was found. Please check your details."
+        )
+
+        return redirect("home")
+
+    guest_order_ids = request.session.get(
+        "guest_order_access",
+        []
+    )
+
+    order_id = str(order.id)
+
+    if order_id not in guest_order_ids:
+        guest_order_ids.append(order_id)
+
+    request.session["guest_order_access"] = guest_order_ids
+    request.session.modified = True
+
+    return redirect(
+        "guest_order_detail",
+        order_id=order.id
+    )
+
+@require_POST
+def check_guest_tracking(request):
+
+    tracking_no = request.POST.get(
+        "tracking_no",
+        ""
+    ).strip().upper()
+
+    if not tracking_no:
+        return JsonResponse(
+            {
+                "exists": False,
+                "message": "Please enter a tracking number."
+            },
+            status=400
+        )
+
+    exists = Order.objects.filter(
+        tracking_no__iexact=tracking_no,
+        user__isnull=True,
+        order_type=Order.OrderType.TABLE,
+    ).exists()
+
+    if not exists:
+        return JsonResponse(
+            {
+                "exists": False,
+                "message": "No guest order was found with that tracking number."
+            },
+            status=404
+        )
+
+    return JsonResponse({
+        "exists": True
+    })
+
+def guest_order_detail(request, order_id):
+
+    order = _get_guest_accessible_order(
+        request,
+        order_id
+    )
+
+    if order is None:
+
+        messages.error(
+            request,
+            "Please verify your tracking number and name to access this order."
+        )
+
+        return redirect("home")
+
+    order = get_object_or_404(
+        Order.objects.prefetch_related(
+            "items__product__images"
+        ),
+        id=order.id
+    )
+
+    bill_order = getattr(
+        order,
+        "bill_order",
+        None
+    )
+
+    can_cancel = order.status in {
+        Order.Status.CONFIRMED,
+        Order.Status.PREPARING,
+    }
+
+    active_items = [
+        item
+        for item in order.items.all()
+        if not item.is_cancelled
+    ]
+
+    return render(
+        request,
+        "users_panel/order_detail.html",
+        {
+            "order": order,
+            "bill_order": bill_order,
+            "payment_method": (
+                "Cash at Counter"
+            ),
+            "can_cancel": can_cancel,
+            "active_items": active_items,
+            "can_save_as_usual": False,
+            "is_guest_order": True,
+            "is_paid_online": False,
+            "can_request_order_refund": False,
+        }
+    )
+
+@require_POST
+@transaction.atomic
+def guest_cancel_order_item(request, item_id):
+
+    item = get_object_or_404(
+        OrderItem.objects.select_related("order"),
+        id=item_id,
+        order__user__isnull=True,
+        order__tracking_no__isnull=False,
+        order__order_type=Order.OrderType.TABLE,
+    )
+
+    order = _get_guest_accessible_order(
+        request,
+        item.order_id
+    )
+
+    if order is None:
+        return HttpResponse(
+            "You do not have permission to access this order.",
+            status=403
+        )
+
+    order = Order.objects.select_for_update().get(
+        id=order.id
+    )
+
+    item = OrderItem.objects.select_for_update().get(
+        id=item_id,
+        order=order
+    )
+
+    if order.status not in {
+        Order.Status.CONFIRMED,
+        Order.Status.PREPARING,
+    }:
+
+        messages.error(
+            request,
+            "Items can no longer be removed from this order."
+        )
+
+        return redirect(
+            "guest_order_detail",
+            order_id=order.id
+        )
+
+    if item.is_cancelled:
+
+        messages.info(
+            request,
+            "This item has already been cancelled."
+        )
+
+        return redirect(
+            "guest_order_detail",
+            order_id=order.id
+        )
+
+    reason = request.POST.get(
+        "reason",
+        ""
+    ).strip()
+
+    item.is_cancelled = True
+    item.cancellation_reason = reason
+    item.cancelled_at = timezone.now()
+
+    item.save(
+        update_fields=[
+            "is_cancelled",
+            "cancellation_reason",
+            "cancelled_at",
+        ]
+    )
+
+    _recalculate_order_totals(order)
+
+    remaining_items = order.items.filter(
+        is_cancelled=False
+    ).exists()
+
+    if not remaining_items:
+
+        order.status = Order.Status.CANCELLED
+        order.cancelled_at = timezone.now()
+        order.cancellation_reason = (
+            "All items in this order were cancelled."
+        )
+
+        order.save(
+            update_fields=[
+                "status",
+                "cancelled_at",
+                "cancellation_reason",
+                "updated_at",
+            ]
+        )
+
+        messages.success(
+            request,
+            "Your order has been cancelled because all items were removed."
+        )
+
+    else:
+
+        messages.success(
+            request,
+            f"{item.product.name} was removed from your order."
+        )
+
+    return redirect(
+        "guest_order_detail",
+        order_id=order.id
+    )
+
+@require_POST
+@transaction.atomic
+def guest_cancel_order(request, order_id):
+
+    order = _get_guest_accessible_order(
+        request,
+        order_id
+    )
+
+    if order is None:
+        return HttpResponse(
+            "You do not have permission to access this order.",
+            status=403
+        )
+
+    order = Order.objects.select_for_update().get(
+        id=order.id
+    )
+
+    if order.status not in {
+        Order.Status.CONFIRMED,
+        Order.Status.PREPARING,
+    }:
+
+        messages.error(
+            request,
+            "This order can no longer be cancelled."
+        )
+
+        return redirect(
+            "guest_order_detail",
+            order_id=order.id
+        )
+
+    reason = request.POST.get(
+        "reason",
+        ""
+    ).strip()
+
+    order.status = Order.Status.CANCELLED
+    order.cancellation_reason = reason
+    order.cancelled_at = timezone.now()
+
+    order.save(
+        update_fields=[
+            "status",
+            "cancellation_reason",
+            "cancelled_at",
+            "updated_at",
+        ]
+    )
+
+    order.items.filter(
+        is_cancelled=False
+    ).update(
+        is_cancelled=True,
+        cancellation_reason=reason,
+        cancelled_at=timezone.now()
+    )
+
+    messages.success(
+        request,
+        f"Order {order.order_no} has been cancelled."
+    )
+
+    return redirect(
+        "guest_order_detail",
+        order_id=order.id
+    )   
 
 @login_required(login_url="login")
 def order_type(request):
