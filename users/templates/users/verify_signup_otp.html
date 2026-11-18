@@ -82,24 +82,43 @@
 
                 <!-- Resend OTP -->
                 <div class="switch-auth">
-
+                
                     <p>
                         Didn't receive the code?
-                        <a href="{% url 'resend_signup_otp'%}"
-                           id="resend-link">
-                            Resend OTP
-                        </a>
+                    
+                        <form
+                            method="POST"
+                            action="{% url 'resend_signup_otp' %}"
+                            style="display: inline;"
+                        >
+                            {% csrf_token %}
+                    
+                            <button
+                                type="submit"
+                                id="resend-link"
+                                {% if resend_available_in > 0 %}disabled{% endif %}
+                            >
+                                Resend OTP
+                            </button>
+                        
+                        </form>
                     </p>
-
+                
                     <p class="otp-timer" id="otp-timer">
-                    {% if resend_available_in > 0 %}
-                    Resend available in
-                    <span id="timer">{{ resend_available_in }}</span>s
-                    {% else %}
-                    You can resend the OTP now.
-                    {% endif %}
+                    
+                        {% if resend_available_in > 0 %}
+                    
+                            Resend available in
+                            <span id="timer">{{ resend_available_in }}</span>s
+                    
+                        {% else %}
+                    
+                            You can resend the OTP now.
+                    
+                        {% endif %}
+                    
                     </p>
-
+                
                 </div>
 
             </div>
@@ -111,33 +130,36 @@
 
     <script>
 
-        const resendLink = document.getElementById("resend-link");
+        const resendButton = document.getElementById("resend-link");
         const timerElement = document.getElementById("timer");
-
-        let seconds = {{ resend_available_in }};
-
-        resendLink.style.pointerEvents = "none";
-        resendLink.style.opacity = "0.5";
-
-        const timer = setInterval(() => {
-
-            seconds--;
-
-            timerElement.textContent = seconds;
-
-            if (seconds <= 0) {
-
-                clearInterval(timer);
-
-                resendLink.style.pointerEvents = "auto";
-                resendLink.style.opacity = "1";
-
-                timerElement.parentElement.textContent =
-                    "You can resend the OTP now.";
-
-            }
-
-        }, 1000);
+            
+        let seconds = Number("{{ resend_available_in|default:0 }}");
+            
+            
+        if (resendButton && seconds > 0 && timerElement) {
+        
+            resendButton.disabled = true;
+        
+            const timer = setInterval(() => {
+            
+                seconds--;
+            
+                timerElement.textContent = seconds;
+            
+                if (seconds <= 0) {
+                
+                    clearInterval(timer);
+                
+                    resendButton.disabled = false;
+                
+                    timerElement.parentElement.textContent =
+                        "You can resend the OTP now.";
+                
+                }
+            
+            }, 1000);
+        
+        }
 
     </script>
 

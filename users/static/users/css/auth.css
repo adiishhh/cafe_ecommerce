@@ -446,6 +446,24 @@ a {
     color: #24311f;
 }
 
+#resend-link {
+    padding: 0;
+    border: none;
+
+    background: transparent;
+    color: #8b3f16;
+
+    font: inherit;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+#resend-link:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 
 /* =========================================================
    RESPONSIVE
