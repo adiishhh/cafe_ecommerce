@@ -15,7 +15,7 @@ from orders.models import Order, OrderItem
 from orders.views import _get_checkout_cart
 from coupons.views import apply_coupon
 from coupons.models import Coupon
-import logging  
+import logging
 from django.urls import reverse
 from orders.views import _generate_order_number
 from product.models import Product
@@ -32,6 +32,7 @@ from django.core.paginator import Paginator
 
 logger = logging.getLogger(__name__)
 
+
 def _admin_staff_check(request):
 
     if not request.user.is_staff:
@@ -44,6 +45,7 @@ def _admin_staff_check(request):
         return redirect("home")
 
     return None
+
 
 @login_required(login_url="login")
 def admin_bill_list(request):
@@ -89,17 +91,12 @@ def admin_bill_list(request):
         start_date = parse_date(start_date_param) or today
         end_date = parse_date(end_date_param) or today
 
-    elif (
-        request.session.get(session_key_start)
-        and request.session.get(session_key_end)
+    elif request.session.get(session_key_start) and request.session.get(
+        session_key_end
     ):
         # Navigating between sections preserves the range.
-        start_date = (
-            parse_date(request.session[session_key_start]) or today
-        )
-        end_date = (
-            parse_date(request.session[session_key_end]) or today
-        )
+        start_date = parse_date(request.session[session_key_start]) or today
+        end_date = parse_date(request.session[session_key_end]) or today
 
     else:
         start_date = today
@@ -148,8 +145,7 @@ def admin_bill_list(request):
     # --------------------------------------------------
 
     unpaid_orders = (
-        BillOrder.objects
-        .filter(
+        BillOrder.objects.filter(
             bill__isnull=True,
             payment_method=BillOrder.PaymentMethod.COD,
             order__status=Order.Status.DELIVERED,
@@ -167,8 +163,7 @@ def admin_bill_list(request):
     )
 
     unpaid_bills = (
-        Bill.objects
-        .filter(
+        Bill.objects.filter(
             status=Bill.Status.UNPAID,
             created_at__date__gte=start_date,
             created_at__date__lte=end_date,
@@ -181,8 +176,7 @@ def admin_bill_list(request):
     )
 
     paid_bills = (
-        Bill.objects
-        .filter(
+        Bill.objects.filter(
             status=Bill.Status.PAID,
             created_at__date__gte=start_date,
             created_at__date__lte=end_date,
@@ -196,8 +190,7 @@ def admin_bill_list(request):
     )
 
     refunds = (
-        RefundRequest.objects
-        .filter(
+        RefundRequest.objects.filter(
             created_at__date__gte=start_date,
             created_at__date__lte=end_date,
         )
@@ -225,27 +218,21 @@ def admin_bill_list(request):
     if active_view == "unpaid_bills":
         unpaid_bills_paginator = Paginator(unpaid_bills, 10)
 
-        unpaid_bills_page = unpaid_bills_paginator.get_page(
-            request.GET.get("page")
-        )
+        unpaid_bills_page = unpaid_bills_paginator.get_page(request.GET.get("page"))
 
         unpaid_bills = unpaid_bills_page.object_list
 
     elif active_view == "paid_bills":
         paid_bills_paginator = Paginator(paid_bills, 10)
 
-        paid_bills_page = paid_bills_paginator.get_page(
-            request.GET.get("page")
-        )
+        paid_bills_page = paid_bills_paginator.get_page(request.GET.get("page"))
 
         paid_bills = paid_bills_page.object_list
 
     elif active_view == "refunds":
         refunds_paginator = Paginator(refunds, 10)
 
-        refunds_page = refunds_paginator.get_page(
-            request.GET.get("page")
-        )
+        refunds_page = refunds_paginator.get_page(request.GET.get("page"))
 
         refunds = refunds_page.object_list
 
@@ -276,29 +263,23 @@ def admin_bill_list(request):
         "admin_panel/bills.html",
         {
             "active_view": active_view,
-
             "start_date": start_date,
             "end_date": end_date,
-
             "start_date_value": start_date.strftime("%Y-%m-%d"),
             "end_date_value": end_date.strftime("%Y-%m-%d"),
-
             "unpaid_orders": unpaid_orders,
             "unpaid_bills": unpaid_bills,
             "paid_bills": paid_bills,
             "refunds": refunds,
-
             # Total records across ALL pages.
             "total_unpaid_orders": total_unpaid_orders,
             "total_unpaid_bills": total_unpaid_bills,
             "total_paid_bills": total_paid_bills,
             "total_refunds": total_refunds,
-
             # Pagination objects.
             "unpaid_bills_page": unpaid_bills_page,
             "paid_bills_page": paid_bills_page,
             "refunds_page": refunds_page,
-
             # Preserve existing unread counts.
             "unread_unpaid_orders": unread_unpaid_orders,
             "unread_unpaid_bills": unread_unpaid_bills,
@@ -306,6 +287,7 @@ def admin_bill_list(request):
             "unread_refunds": unread_refunds,
         },
     )
+
 
 @login_required(login_url="login")
 @require_POST
@@ -395,9 +377,7 @@ def admin_review_refund(request, refund_id):
         return JsonResponse(
             {
                 "success": False,
-                "message": (
-                    "This order is no longer eligible for refund approval."
-                ),
+                "message": ("This order is no longer eligible for refund approval."),
             },
             status=409,
         )
@@ -447,17 +427,19 @@ def admin_review_refund(request, refund_id):
                 status=409,
             )
 
-        if RefundRequest.objects.filter(
-            order=order,
-            refund_type=RefundRequest.RefundType.ORDER,
-            status__in=active_statuses,
-        ).exclude(pk=refund.pk).exists():
+        if (
+            RefundRequest.objects.filter(
+                order=order,
+                refund_type=RefundRequest.RefundType.ORDER,
+                status__in=active_statuses,
+            )
+            .exclude(pk=refund.pk)
+            .exists()
+        ):
             return JsonResponse(
                 {
                     "success": False,
-                    "message": (
-                        "A full-order refund request already exists."
-                    ),
+                    "message": ("A full-order refund request already exists."),
                 },
                 status=409,
             )
@@ -494,8 +476,7 @@ def admin_review_refund(request, refund_id):
 
     # Locate the original successful payment.
     original_payment = (
-        Payment.objects
-        .select_for_update()
+        Payment.objects.select_for_update()
         .filter(
             bill_id=refund.bill_id,
             status=Payment.Status.SUCCESSFUL,
@@ -535,10 +516,7 @@ def admin_review_refund(request, refund_id):
         order=order,
         payment=refund_payment,
         refund_request=refund,
-        description=(
-            f"Refund for {refund.request_no}, "
-            f"order {order.order_no}."
-        ),
+        description=(f"Refund for {refund.request_no}, " f"order {order.order_no}."),
     )
 
     # Only now, after successful wallet credit, change the order/item.
@@ -620,17 +598,12 @@ def admin_generate_bill(request):
         return JsonResponse(
             {
                 "success": False,
-                "message": (
-                    "You do not have permission "
-                    "to access the admin area."
-                ),
+                "message": ("You do not have permission " "to access the admin area."),
             },
             status=403,
         )
 
-    selected_ids = request.POST.getlist(
-        "bill_order_ids"
-    )
+    selected_ids = request.POST.getlist("bill_order_ids")
 
     if not selected_ids:
 
@@ -642,10 +615,14 @@ def admin_generate_bill(request):
             status=400,
         )
 
-    status = request.POST.get(
-        "status",
-        "unpaid",
-    ).strip().lower()
+    status = (
+        request.POST.get(
+            "status",
+            "unpaid",
+        )
+        .strip()
+        .lower()
+    )
 
     if status not in {
         "unpaid",
@@ -660,10 +637,14 @@ def admin_generate_bill(request):
             status=400,
         )
 
-    transaction_method = request.POST.get(
-        "transaction_method",
-        "",
-    ).strip().lower()
+    transaction_method = (
+        request.POST.get(
+            "transaction_method",
+            "",
+        )
+        .strip()
+        .lower()
+    )
 
     payment_reference = request.POST.get(
         "payment_reference",
@@ -681,25 +662,17 @@ def admin_generate_bill(request):
             return JsonResponse(
                 {
                     "success": False,
-                    "message": (
-                        "Please select Cash, UPI or Card."
-                    ),
+                    "message": ("Please select Cash, UPI or Card."),
                 },
                 status=400,
             )
 
-        if (
-            transaction_method in {"upi", "card"}
-            and not payment_reference
-        ):
+        if transaction_method in {"upi", "card"} and not payment_reference:
 
             return JsonResponse(
                 {
                     "success": False,
-                    "message": (
-                        "Payment reference is required "
-                        "for UPI or Card."
-                    ),
+                    "message": ("Payment reference is required " "for UPI or Card."),
                 },
                 status=400,
             )
@@ -709,13 +682,10 @@ def admin_generate_bill(request):
         transaction_method = None
         payment_reference = ""
 
-    selected_ids = list(
-        dict.fromkeys(selected_ids)
-    )
+    selected_ids = list(dict.fromkeys(selected_ids))
 
     bill_orders = list(
-        BillOrder.objects
-        .select_for_update()
+        BillOrder.objects.select_for_update()
         .select_related(
             "order",
         )
@@ -732,10 +702,7 @@ def admin_generate_bill(request):
         return JsonResponse(
             {
                 "success": False,
-                "message": (
-                    "One or more selected orders "
-                    "could not be found."
-                ),
+                "message": ("One or more selected orders " "could not be found."),
             },
             status=400,
         )
@@ -755,63 +722,38 @@ def admin_generate_bill(request):
                 status=409,
             )
 
-        if (
-            bill_order.payment_method
-            != BillOrder.PaymentMethod.COD
-        ):
+        if bill_order.payment_method != BillOrder.PaymentMethod.COD:
 
             return JsonResponse(
                 {
                     "success": False,
-                    "message": (
-                        f"{bill_order.order.order_no} "
-                        "is not a COD order."
-                    ),
+                    "message": (f"{bill_order.order.order_no} " "is not a COD order."),
                 },
                 status=400,
             )
 
     subtotal = sum(
-        (
-            bill_order.order.subtotal
-            for bill_order in bill_orders
-        ),
+        (bill_order.order.subtotal for bill_order in bill_orders),
         Decimal("0.00"),
     )
 
     tax_amount = sum(
-        (
-            bill_order.order.tax_amount
-            for bill_order in bill_orders
-        ),
+        (bill_order.order.tax_amount for bill_order in bill_orders),
         Decimal("0.00"),
     )
 
     total_amount = sum(
-        (
-            bill_order.total
-            for bill_order in bill_orders
-        ),
+        (bill_order.total for bill_order in bill_orders),
         Decimal("0.00"),
     )
 
     bill = Bill.objects.create(
-
         subtotal=subtotal,
-
         tax_amount=tax_amount,
-
         total_amount=total_amount,
-
         payment_method=Bill.PaymentMethod.COD,
-
         transaction_method=transaction_method,
-
-        status=(
-            Bill.Status.PAID
-            if status == "paid"
-            else Bill.Status.UNPAID
-        ),
+        status=(Bill.Status.PAID if status == "paid" else Bill.Status.UNPAID),
     )
 
     for bill_order in bill_orders:
@@ -827,51 +769,28 @@ def admin_generate_bill(request):
     if status == "paid":
 
         Payment.objects.create(
-
             bill=bill,
-
-            payment_reference=(
-                payment_reference
-                or None
-            ),
-
+            payment_reference=(payment_reference or None),
             amount=total_amount,
-
             transaction_method=transaction_method,
-
             status=Payment.Status.SUCCESSFUL,
-
             gateway=None,
-
             gateway_payment_id=None,
-
             paid_at=timezone.now(),
         )
 
     return JsonResponse(
         {
             "success": True,
-
-            "message": (
-                f"{bill.bill_no} saved successfully."
-            ),
-
+            "message": (f"{bill.bill_no} saved successfully."),
             "bill_id": bill.id,
-
             "bill_no": bill.bill_no,
-
             "status": status,
-
-            "transaction_method": (
-                transaction_method
-                or ""
-            ),
-
-            "total_amount": str(
-                total_amount
-            ),
+            "transaction_method": (transaction_method or ""),
+            "total_amount": str(total_amount),
         }
     )
+
 
 @login_required(login_url="login")
 @require_GET
@@ -901,37 +820,35 @@ def admin_bill_data(request, bill_id):
         products = []
 
         for item in bill_order.order.items.all():
-            products.append({
-                "name": item.product.name,
-                "quantity": item.quantity,
-            })
+            products.append(
+                {
+                    "name": item.product.name,
+                    "quantity": item.quantity,
+                }
+            )
 
-        orders.append({
-            "order_no": bill_order.order.order_no,
-            "total": str(bill_order.total),
-            "products": products,
-        })
+        orders.append(
+            {
+                "order_no": bill_order.order.order_no,
+                "total": str(bill_order.total),
+                "products": products,
+            }
+        )
 
     # Retrieve actual successful payment records.
     # Exclude refund transactions from the original
-    payments = (
-        bill.payments
-        .filter(
-            status=Payment.Status.SUCCESSFUL,
-            refund_request__isnull=True,
-            refund_of__isnull=True,
-        )
-        .order_by("-created_at", "-id")
-    )
+    payments = bill.payments.filter(
+        status=Payment.Status.SUCCESSFUL,
+        refund_request__isnull=True,
+        refund_of__isnull=True,
+    ).order_by("-created_at", "-id")
 
     payment_data = [
         {
             "id": payment.id,
             "amount": str(payment.amount),
             "transaction_method": payment.transaction_method,
-            "transaction_method_display": (
-                payment.get_transaction_method_display()
-            ),
+            "transaction_method_display": (payment.get_transaction_method_display()),
             "status": payment.status,
             "status_display": payment.get_status_display(),
             "payment_reference": payment.payment_reference or "",
@@ -939,16 +856,12 @@ def admin_bill_data(request, bill_id):
             "gateway_order_id": payment.gateway_order_id or "",
             "gateway_payment_id": payment.gateway_payment_id or "",
             "paid_at": (
-                timezone.localtime(payment.paid_at).strftime(
-                    "%d %b %Y, %I:%M %p"
-                )
+                timezone.localtime(payment.paid_at).strftime("%d %b %Y, %I:%M %p")
                 if payment.paid_at
                 else ""
             ),
             "created_at": (
-                timezone.localtime(payment.created_at).strftime(
-                    "%d %b %Y, %I:%M %p"
-                )
+                timezone.localtime(payment.created_at).strftime("%d %b %Y, %I:%M %p")
                 if payment.created_at
                 else ""
             ),
@@ -956,25 +869,26 @@ def admin_bill_data(request, bill_id):
         for payment in payments
     ]
 
-    return JsonResponse({
-        "success": True,
+    return JsonResponse(
+        {
+            "success": True,
+            "bill": {
+                "id": bill.id,
+                "bill_no": bill.bill_no,
+                "status": bill.status,
+                "status_display": bill.get_status_display(),
+                "payment_method": bill.payment_method,
+                "subtotal": str(bill.subtotal),
+                "tax_amount": str(bill.tax_amount),
+                "total_amount": str(bill.total_amount),
+                "orders": orders,
+            },
+            # Transaction details come from Payment records,
+            # not from the Bill model.
+            "payments": payment_data,
+        }
+    )
 
-        "bill": {
-            "id": bill.id,
-            "bill_no": bill.bill_no,
-            "status": bill.status,
-            "status_display": bill.get_status_display(),
-            "payment_method": bill.payment_method,
-            "subtotal": str(bill.subtotal),
-            "tax_amount": str(bill.tax_amount),
-            "total_amount": str(bill.total_amount),
-            "orders": orders,
-        },
-
-        # Transaction details come from Payment records,
-        # not from the Bill model.
-        "payments": payment_data,
-    })
 
 @login_required(login_url="login")
 @require_GET
@@ -1016,8 +930,7 @@ def admin_refund_data(request, refund_id):
             {
                 "success": False,
                 "message": (
-                    "Payment details are available only "
-                    "for completed refunds."
+                    "Payment details are available only " "for completed refunds."
                 ),
             },
             status=409,
@@ -1025,15 +938,10 @@ def admin_refund_data(request, refund_id):
 
     refund_payment = refund.refund_payment
 
-    original_payment = (
-        refund_payment.refund_of
-        if refund_payment
-        else None
-    )
+    original_payment = refund_payment.refund_of if refund_payment else None
 
     wallet_transaction = (
-        WalletTransaction.objects
-        .filter(refund_request=refund)
+        WalletTransaction.objects.filter(refund_request=refund)
         .select_related("wallet")
         .first()
     )
@@ -1053,9 +961,7 @@ def admin_refund_data(request, refund_id):
                 "status": refund.status,
                 "status_display": refund.get_status_display(),
                 "refund_type": refund.refund_type,
-                "refund_type_display": (
-                    refund.get_refund_type_display()
-                ),
+                "refund_type_display": (refund.get_refund_type_display()),
                 "amount": str(refund.amount),
                 "reason": refund.reason,
                 "admin_note": refund.admin_note or "",
@@ -1074,26 +980,14 @@ def admin_refund_data(request, refund_id):
                     if refund.completed_at
                     else ""
                 ),
-                "reviewed_by": (
-                    str(refund.reviewed_by)
-                    if refund.reviewed_by
-                    else "—"
-                ),
+                "reviewed_by": (str(refund.reviewed_by) if refund.reviewed_by else "—"),
                 "customer_name": customer_name,
-                "customer_email": (
-                    getattr(refund.user, "email", "") or "—"
-                ),
+                "customer_email": (getattr(refund.user, "email", "") or "—"),
                 "order_no": refund.order.order_no,
                 "item_name": (
-                    refund.order_item.product.name
-                    if refund.order_item
-                    else ""
+                    refund.order_item.product.name if refund.order_item else ""
                 ),
-                "bill_no": (
-                    refund.bill.bill_no
-                    if refund.bill
-                    else "—"
-                ),
+                "bill_no": (refund.bill.bill_no if refund.bill else "—"),
                 "refund_payment": (
                     {
                         "id": refund_payment.id,
@@ -1119,7 +1013,6 @@ def admin_refund_data(request, refund_id):
                     if refund_payment
                     else None
                 ),
-
                 "original_payment": (
                     {
                         "id": original_payment.id,
@@ -1146,18 +1039,15 @@ def admin_refund_data(request, refund_id):
                     else None
                 ),
                 "wallet_credited": (
-                    str(wallet_transaction.amount)
-                    if wallet_transaction
-                    else "0.00"
+                    str(wallet_transaction.amount) if wallet_transaction else "0.00"
                 ),
                 "wallet_balance_after": (
-                    str(wallet_transaction.balance_after)
-                    if wallet_transaction
-                    else ""
+                    str(wallet_transaction.balance_after) if wallet_transaction else ""
                 ),
             },
         }
     )
+
 
 @login_required(login_url="login")
 @require_POST
@@ -1168,36 +1058,19 @@ def admin_update_bill(request, bill_id):
 
     if forbidden:
         return JsonResponse(
-            {
-                "success": False,
-                "message": "Permission denied."
-            },
-            status=403
+            {"success": False, "message": "Permission denied."}, status=403
         )
-
 
     bill = get_object_or_404(
         Bill.objects.select_for_update(),
         id=bill_id,
     )
 
-
     status = request.POST.get("status", "").strip()
 
-    transaction_method = (
-        request.POST.get(
-            "transaction_method",
-            ""
-        ).strip()
-    )
+    transaction_method = request.POST.get("transaction_method", "").strip()
 
-    payment_reference = (
-        request.POST.get(
-            "payment_reference",
-            ""
-        ).strip()
-    )
-
+    payment_reference = request.POST.get("payment_reference", "").strip()
 
     if status not in {
         Bill.Status.UNPAID,
@@ -1205,13 +1078,8 @@ def admin_update_bill(request, bill_id):
     }:
 
         return JsonResponse(
-            {
-                "success": False,
-                "message": "Invalid bill status."
-            },
-            status=400
+            {"success": False, "message": "Invalid bill status."}, status=400
         )
-
 
     valid_methods = {
         Bill.TransactionMethod.CASH,
@@ -1220,21 +1088,14 @@ def admin_update_bill(request, bill_id):
         Bill.TransactionMethod.NETBANKING,
     }
 
-
     if status == Bill.Status.PAID:
 
         if transaction_method not in valid_methods:
 
             return JsonResponse(
-                {
-                    "success": False,
-                    "message": (
-                        "Please select a transaction method."
-                    )
-                },
-                status=400
+                {"success": False, "message": ("Please select a transaction method.")},
+                status=400,
             )
-
 
         if (
             transaction_method
@@ -1248,23 +1109,15 @@ def admin_update_bill(request, bill_id):
             return JsonResponse(
                 {
                     "success": False,
-                    "message": (
-                        "Payment reference is required "
-                        "for UPI or Card."
-                    )
+                    "message": ("Payment reference is required " "for UPI or Card."),
                 },
-                status=400
+                status=400,
             )
 
-    existing_successful_payment = (
-        Payment.objects
-        .filter(
-            bill=bill,
-            status=Payment.Status.SUCCESSFUL,
-        )
-        .first()
-    )
-
+    existing_successful_payment = Payment.objects.filter(
+        bill=bill,
+        status=Payment.Status.SUCCESSFUL,
+    ).first()
 
     if (
         bill.status == Bill.Status.PAID
@@ -1279,14 +1132,12 @@ def admin_update_bill(request, bill_id):
                     "This bill already has a successful "
                     "payment. Use the refund workflow instead "
                     "of changing it back to unpaid."
-                )
+                ),
             },
-            status=400
+            status=400,
         )
 
-
     bill.status = status
-
 
     if status == Bill.Status.UNPAID:
 
@@ -1302,9 +1153,7 @@ def admin_update_bill(request, bill_id):
 
     else:
 
-        bill.transaction_method = (
-            transaction_method
-        )
+        bill.transaction_method = transaction_method
 
         bill.save(
             update_fields=[
@@ -1314,10 +1163,8 @@ def admin_update_bill(request, bill_id):
             ]
         )
 
-
         payment = (
-            Payment.objects
-            .filter(
+            Payment.objects.filter(
                 bill=bill,
                 status=Payment.Status.SUCCESSFUL,
             )
@@ -1325,16 +1172,11 @@ def admin_update_bill(request, bill_id):
             .first()
         )
 
-
         if payment:
 
-            payment.transaction_method = (
-                transaction_method
-            )
+            payment.transaction_method = transaction_method
 
-            payment.payment_reference = (
-                payment_reference or None
-            )
+            payment.payment_reference = payment_reference or None
 
             payment.amount = bill.total_amount
 
@@ -1350,41 +1192,32 @@ def admin_update_bill(request, bill_id):
 
             Payment.objects.create(
                 bill=bill,
-                payment_reference=(
-                    payment_reference or None
-                ),
+                payment_reference=(payment_reference or None),
                 amount=bill.total_amount,
-                transaction_method=(
-                    transaction_method
-                ),
+                transaction_method=(transaction_method),
                 status=Payment.Status.SUCCESSFUL,
                 gateway=None,
                 gateway_payment_id=None,
                 paid_at=timezone.now(),
             )
 
-
-    return JsonResponse({
-        "success": True,
-
-        "message": "Bill updated successfully.",
-
-        "bill": {
-            "id": bill.id,
-            "bill_no": bill.bill_no,
-            "status": bill.status,
-            "transaction_method": (
-                bill.transaction_method
-                or None
-            ),
+    return JsonResponse(
+        {
+            "success": True,
+            "message": "Bill updated successfully.",
+            "bill": {
+                "id": bill.id,
+                "bill_no": bill.bill_no,
+                "status": bill.status,
+                "transaction_method": (bill.transaction_method or None),
+            },
         }
-    })
+    )
+
 
 def _razorpay_client():
     if not settings.RAZORPAY_KEY_ID or not settings.RAZORPAY_KEY_SECRET:
-        raise ValueError(
-            "Razorpay API credentials are not configured."
-        )
+        raise ValueError("Razorpay API credentials are not configured.")
 
     return razorpay.Client(
         auth=(
@@ -1423,16 +1256,10 @@ def _get_online_checkout(request):
         if not address_id:
             raise ValueError("Please select a delivery address.")
 
-        address = (
-            request.user.addresses
-            .filter(id=address_id)
-            .first()
-        )
+        address = request.user.addresses.filter(id=address_id).first()
 
         if address is None:
-            raise ValueError(
-                "The selected delivery address is unavailable."
-            )
+            raise ValueError("The selected delivery address is unavailable.")
 
         address_data = {
             "name": address.name,
@@ -1466,30 +1293,26 @@ def _get_online_checkout(request):
     tax_amount = checkout["gst"]
     tax_percentage = checkout["tax_percentage"]
 
-    total = (
-        subtotal
-        + tax_amount
-        - discount
-    ).quantize(
+    total = (subtotal + tax_amount - discount).quantize(
         Decimal("0.01"),
         rounding=ROUND_HALF_UP,
     )
 
     if total <= Decimal("0.00"):
-        raise ValueError(
-            "The checkout total must be greater than zero."
-        )
+        raise ValueError("The checkout total must be greater than zero.")
 
     cart_items = []
 
     for item in checkout["cart_items"]:
-        cart_items.append({
-            "product_id": item["product"].id,
-            "quantity": item["quantity"],
-            "instructions": item["instructions"],
-            "unit_price": str(item["product"].price),
-            "item_total": str(item["item_total"]),
-        })
+        cart_items.append(
+            {
+                "product_id": item["product"].id,
+                "quantity": item["quantity"],
+                "instructions": item["instructions"],
+                "unit_price": str(item["product"].price),
+                "item_total": str(item["item_total"]),
+            }
+        )
 
     coupon_data = None
 
@@ -1553,28 +1376,24 @@ def initiate_online_payment(request):
         snapshot = _get_online_checkout(request)
 
         amount_paise = int(
-            (
-                Decimal(snapshot["total"])
-                * Decimal("100")
-            ).quantize(
+            (Decimal(snapshot["total"]) * Decimal("100")).quantize(
                 Decimal("1"),
                 rounding=ROUND_HALF_UP,
             )
         )
 
-        gateway_order = client.order.create({
-            "amount": amount_paise,
-            "currency": "INR",
-            "receipt": (
-                f"sc_{request.user.id}_"
-                f"{uuid.uuid4().hex[:20]}"
-            ),
-            # "config_id": settings.RAZORPAY_CONFIG_ID,
-            "notes": {
-                "customer_id": str(request.user.id),
-                "order_type": snapshot["order_type"],
-            },
-        })
+        gateway_order = client.order.create(
+            {
+                "amount": amount_paise,
+                "currency": "INR",
+                "receipt": (f"sc_{request.user.id}_" f"{uuid.uuid4().hex[:20]}"),
+                # "config_id": settings.RAZORPAY_CONFIG_ID,
+                "notes": {
+                    "customer_id": str(request.user.id),
+                    "order_type": snapshot["order_type"],
+                },
+            }
+        )
 
         snapshot["gateway_order_id"] = gateway_order["id"]
         snapshot["amount_paise"] = amount_paise
@@ -1612,9 +1431,7 @@ def initiate_online_payment(request):
         return redirect("final_checkout")
 
     except Exception:
-        logger.exception(
-            "Failed to initiate Razorpay payment."
-        )
+        logger.exception("Failed to initiate Razorpay payment.")
 
         messages.error(
             request,
@@ -1660,16 +1477,14 @@ def verify_online_payment(request):
 
     # An already-recorded successful callback must not create another order.
     existing_payment = (
-        Payment.objects
-        .filter(gateway_payment_id=payment_id)
+        Payment.objects.filter(gateway_payment_id=payment_id)
         .select_related("bill")
         .first()
     )
 
     if existing_payment:
         existing_bill_order = (
-            BillOrder.objects
-            .filter(bill=existing_payment.bill)
+            BillOrder.objects.filter(bill=existing_payment.bill)
             .select_related("order")
             .first()
         )
@@ -1679,15 +1494,17 @@ def verify_online_payment(request):
             and existing_bill_order
             and existing_bill_order.order.user_id == request.user.id
         ):
-            return JsonResponse({
-                "success": True,
-                "redirect_url": (
-                    reverse(
-                        "order_detail",
-                        args=[existing_bill_order.order.id],
-                    )
-                ),
-            })
+            return JsonResponse(
+                {
+                    "success": True,
+                    "redirect_url": (
+                        reverse(
+                            "order_detail",
+                            args=[existing_bill_order.order.id],
+                        )
+                    ),
+                }
+            )
 
         return JsonResponse(
             {
@@ -1697,17 +1514,14 @@ def verify_online_payment(request):
             status=409,
         )
 
-    snapshot = request.session.get(
-        "razorpay_pending_checkout"
-    )
+    snapshot = request.session.get("razorpay_pending_checkout")
 
     if not snapshot:
         return JsonResponse(
             {
                 "success": False,
                 "message": (
-                    "The pending checkout has expired. "
-                    "Please return to checkout."
+                    "The pending checkout has expired. " "Please return to checkout."
                 ),
             },
             status=400,
@@ -1737,11 +1551,13 @@ def verify_online_payment(request):
         client = _razorpay_client()
 
         # Verify using the server-held gateway order ID.
-        client.utility.verify_payment_signature({
-            "razorpay_order_id": trusted_order_id,
-            "razorpay_payment_id": payment_id,
-            "razorpay_signature": signature,
-        })
+        client.utility.verify_payment_signature(
+            {
+                "razorpay_order_id": trusted_order_id,
+                "razorpay_payment_id": payment_id,
+                "razorpay_signature": signature,
+            }
+        )
 
         # Fetch authoritative payment information from Razorpay.
         gateway_payment = client.payment.fetch(payment_id)
@@ -1752,21 +1568,13 @@ def verify_online_payment(request):
             )
 
         if gateway_payment["status"] != "captured":
-            raise ValueError(
-                "The payment has not been captured yet."
-            )
+            raise ValueError("The payment has not been captured yet.")
 
-        if int(gateway_payment["amount"]) != int(
-            snapshot["amount_paise"]
-        ):
-            raise ValueError(
-                "The captured amount does not match the checkout total."
-            )
+        if int(gateway_payment["amount"]) != int(snapshot["amount_paise"]):
+            raise ValueError("The captured amount does not match the checkout total.")
 
         if gateway_payment["currency"] != "INR":
-            raise ValueError(
-                "The payment currency is not supported."
-            )
+            raise ValueError("The payment currency is not supported.")
 
         gateway_method = gateway_payment.get("method", "")
 
@@ -1779,9 +1587,7 @@ def verify_online_payment(request):
         transaction_method = method_map.get(gateway_method)
 
         if transaction_method is None:
-            raise ValueError(
-                "This payment method is not supported by SmartCafe."
-            )
+            raise ValueError("This payment method is not supported by SmartCafe.")
 
         address_data = snapshot.get("address") or {}
 
@@ -1794,12 +1600,14 @@ def verify_online_payment(request):
         with transaction.atomic():
             # Lock against simultaneous processing of the same
             # gateway payment.
-            if Payment.objects.select_for_update().filter(
-                gateway_payment_id=payment_id,
-            ).exists():
-                raise ValueError(
-                    "This payment has already been processed."
+            if (
+                Payment.objects.select_for_update()
+                .filter(
+                    gateway_payment_id=payment_id,
                 )
+                .exists()
+            ):
+                raise ValueError("This payment has already been processed.")
 
             coupon_data = snapshot.get("coupon") or {}
 
@@ -1809,19 +1617,14 @@ def verify_online_payment(request):
                 tracking_no=None,
                 order_type=snapshot["order_type"],
                 table=None,
-
                 address_name=address_data.get("name"),
-                address_contact_number=address_data.get(
-                    "contact_number"
-                ),
+                address_contact_number=address_data.get("contact_number"),
                 address_flat_house=address_data.get("flat_house"),
                 address_area_street=address_data.get("area_street"),
                 address_city=address_data.get("city"),
                 address_state=address_data.get("state"),
                 address_pincode=address_data.get("pincode"),
-
                 coupon_code=coupon_data.get("code", ""),
-
                 coupon_discount_type=(coupon_data.get("discount_type") or ""),
                 coupon_discount_value=(
                     Decimal(coupon_data["discount_value"])
@@ -1838,7 +1641,6 @@ def verify_online_payment(request):
                     if coupon_data.get("maximum_discount_amount") is not None
                     else None
                 ),
-
                 status=Order.Status.CONFIRMED,
                 subtotal=subtotal,
                 tax_percentage=tax_percentage,
@@ -1893,8 +1695,7 @@ def verify_online_payment(request):
             coupon_data = snapshot.get("coupon")
             if coupon_data:
                 coupon = (
-                    Coupon.objects
-                    .select_for_update()
+                    Coupon.objects.select_for_update()
                     .filter(id=coupon_data["id"])
                     .first()
                 )
@@ -1922,13 +1723,15 @@ def verify_online_payment(request):
 
             request.session.modified = True
 
-        return JsonResponse({
-            "success": True,
-            "redirect_url": reverse(
-                "order_detail",
-                args=[order.id],
-            ),
-        })
+        return JsonResponse(
+            {
+                "success": True,
+                "redirect_url": reverse(
+                    "order_detail",
+                    args=[order.id],
+                ),
+            }
+        )
 
     except razorpay.errors.SignatureVerificationError:
         return JsonResponse(
@@ -1940,9 +1743,7 @@ def verify_online_payment(request):
         )
 
     except Exception:
-        logger.exception(
-            "Unexpected error during Razorpay payment processing."
-        )
+        logger.exception("Unexpected error during Razorpay payment processing.")
 
         return JsonResponse(
             {
@@ -1955,12 +1756,11 @@ def verify_online_payment(request):
             status=500,
         )
 
+
 @login_required(login_url="login")
 def download_invoice(request, order_id):
     order = get_object_or_404(
-        Order.objects
-        .select_related("user")
-        .prefetch_related(
+        Order.objects.select_related("user").prefetch_related(
             "items__product",
         ),
         id=order_id,
@@ -1979,8 +1779,7 @@ def download_invoice(request, order_id):
 
     if bill:
         payment = (
-            bill.payments
-            .filter(
+            bill.payments.filter(
                 status="successful",
             )
             .order_by("-created_at")
@@ -1998,14 +1797,11 @@ def download_invoice(request, order_id):
             "payment_method": (
                 bill.get_transaction_method_display()
                 if bill and bill.transaction_method
-                else (
-                    bill_order.get_payment_method_display()
-                    if bill_order
-                    else "—"
-                )
+                else (bill_order.get_payment_method_display() if bill_order else "—")
             ),
         },
     )
+
 
 REPORT_PERIODS = {
     "today",
@@ -2085,6 +1881,7 @@ def get_report_dates(period, start_value=None, end_value=None):
 
     return start_date, end_date, period
 
+
 @login_required(login_url="login")
 @require_GET
 def admin_reports(request):
@@ -2113,14 +1910,10 @@ def admin_reports(request):
     selected_order_type = request.GET.get("order_type", "all")
 
     valid_order_types = {
-        choice[0]
-        for choice in Order._meta.get_field("order_type").choices
+        choice[0] for choice in Order._meta.get_field("order_type").choices
     }
 
-    if (
-        selected_order_type != "all"
-        and selected_order_type not in valid_order_types
-    ):
+    if selected_order_type != "all" and selected_order_type not in valid_order_types:
         selected_order_type = "all"
 
     search_query = request.GET.get("search", "").strip()
@@ -2129,9 +1922,7 @@ def admin_reports(request):
     # BASE ORDER QUERYSET
     # ---------------------------------------------------------
 
-    orders = Order.objects.filter(
-        created_at__date__range=(start_date, end_date)
-    )
+    orders = Order.objects.filter(created_at__date__range=(start_date, end_date))
 
     if selected_order_type != "all":
         orders = orders.filter(order_type=selected_order_type)
@@ -2144,15 +1935,11 @@ def admin_reports(request):
     # All matching orders are included in the detailed report.
     total_orders = orders.count()
 
-    completed_orders = orders.filter(
-        status=Order.Status.DELIVERED
-    ).count()
+    completed_orders = orders.filter(status=Order.Status.DELIVERED).count()
 
     # Cancelled orders remain visible in the detailed table,
     # but are excluded from the primary sales calculations.
-    sales_orders = orders.exclude(
-        status=Order.Status.CANCELLED
-    )
+    sales_orders = orders.exclude(status=Order.Status.CANCELLED)
 
     # ---------------------------------------------------------
     # FINANCIAL SUMMARY
@@ -2165,25 +1952,17 @@ def admin_reports(request):
         order_total=Sum("total_amount"),
     )
 
-    order_subtotal = report_money(
-        sales_totals["order_subtotal"]
-    )
+    order_subtotal = report_money(sales_totals["order_subtotal"])
 
-    coupon_discounts = report_money(
-        sales_totals["coupon_discounts"]
-    )
+    coupon_discounts = report_money(sales_totals["coupon_discounts"])
 
-    total_tax = report_money(
-        sales_totals["total_tax"]
-    )
+    total_tax = report_money(sales_totals["total_tax"])
 
-    order_total = report_money(
-        sales_totals["order_total"]
-    )
+    order_total = report_money(sales_totals["order_total"])
 
-    subtotal_after_coupon = (
-        order_subtotal - coupon_discounts
-    ).quantize(Decimal("0.01"))
+    subtotal_after_coupon = (order_subtotal - coupon_discounts).quantize(
+        Decimal("0.01")
+    )
 
     total_discounts = coupon_discounts
 
@@ -2203,9 +1982,7 @@ def admin_reports(request):
         "completed_at__date__range": (start_date, end_date),
     }
 
-    completed_refunds = RefundRequest.objects.filter(
-        **refund_date_filter
-    )
+    completed_refunds = RefundRequest.objects.filter(**refund_date_filter)
 
     if selected_order_type != "all":
         completed_refunds = completed_refunds.filter(
@@ -2213,9 +1990,7 @@ def admin_reports(request):
         )
 
     total_refunds = report_money(
-        completed_refunds.aggregate(
-            total=Sum("amount")
-        )["total"]
+        completed_refunds.aggregate(total=Sum("amount"))["total"]
     )
 
     completed_refund_count = completed_refunds.count()
@@ -2226,15 +2001,11 @@ def admin_reports(request):
     )
 
     if selected_order_type != "all":
-        pending_refunds = pending_refunds.filter(
-            order__order_type=selected_order_type
-        )
+        pending_refunds = pending_refunds.filter(order__order_type=selected_order_type)
 
     pending_refund_count = pending_refunds.count()
 
-    net_after_refunds = (
-        order_total - total_refunds
-    ).quantize(Decimal("0.01"))
+    net_after_refunds = (order_total - total_refunds).quantize(Decimal("0.01"))
 
     # ---------------------------------------------------------
     # DISCOUNT ANALYSIS
@@ -2246,9 +2017,9 @@ def admin_reports(request):
     discount_rate = Decimal("0.00")
 
     if order_subtotal > 0:
-        discount_rate = (
-            total_discounts / order_subtotal * Decimal("100")
-        ).quantize(Decimal("0.01"))
+        discount_rate = (total_discounts / order_subtotal * Decimal("100")).quantize(
+            Decimal("0.01")
+        )
 
     # ---------------------------------------------------------
     # PAYMENT COLLECTIONS
@@ -2269,8 +2040,7 @@ def admin_reports(request):
     payment_queryset = payment_queryset.distinct()
 
     payment_aggregates = (
-        payment_queryset
-        .values("transaction_method")
+        payment_queryset.values("transaction_method")
         .annotate(
             transaction_count=Count("id"),
             amount=Sum("amount"),
@@ -2283,19 +2053,19 @@ def admin_reports(request):
     for item in payment_aggregates:
         method = item["transaction_method"]
 
-        payment_method_rows.append({
-            "method": method,
-            "label": dict(
-                Payment.TransactionMethod.choices
-            ).get(method, method.title()),
-            "transaction_count": item["transaction_count"],
-            "amount": report_money(item["amount"]),
-        })
+        payment_method_rows.append(
+            {
+                "method": method,
+                "label": dict(Payment.TransactionMethod.choices).get(
+                    method, method.title()
+                ),
+                "transaction_count": item["transaction_count"],
+                "amount": report_money(item["amount"]),
+            }
+        )
 
     amount_collected = report_money(
-        payment_queryset.aggregate(
-            total=Sum("amount")
-        )["total"]
+        payment_queryset.aggregate(total=Sum("amount"))["total"]
     )
 
     outstanding_amount = max(
@@ -2306,9 +2076,9 @@ def admin_reports(request):
     collection_rate = Decimal("0.00")
 
     if order_total > 0:
-        collection_rate = (
-            amount_collected / order_total * Decimal("100")
-        ).quantize(Decimal("0.01"))
+        collection_rate = (amount_collected / order_total * Decimal("100")).quantize(
+            Decimal("0.01")
+        )
 
     # ---------------------------------------------------------
     # DETAILED REPORT ROWS
@@ -2333,26 +2103,24 @@ def admin_reports(request):
         )
 
         for refund in order_refund_totals:
-            refunds_by_order[refund["order_id"]] = report_money(
-                refund["total"]
-            )
+            refunds_by_order[refund["order_id"]] = report_money(refund["total"])
 
     for order in orders:
-        report_orders.append({
-            "id": order.id,
-            "order_no": order.order_no,
-            "order_date": order.created_at,
-            "order_type": order.get_order_type_display(),
-            "status": order.status,
-            "status_label": order.get_status_display(),
-            "gross_amount": report_money(order.subtotal),
-            "discount_amount": report_money(
-                order.discount_amount
-            ),
-            "tax_amount": report_money(order.tax_amount),
-            "order_total": report_money(order.total_amount),
-            "refund_amount": refunds_by_order[order.id],
-        })
+        report_orders.append(
+            {
+                "id": order.id,
+                "order_no": order.order_no,
+                "order_date": order.created_at,
+                "order_type": order.get_order_type_display(),
+                "status": order.status,
+                "status_label": order.get_status_display(),
+                "gross_amount": report_money(order.subtotal),
+                "discount_amount": report_money(order.discount_amount),
+                "tax_amount": report_money(order.tax_amount),
+                "order_total": report_money(order.total_amount),
+                "refund_amount": refunds_by_order[order.id],
+            }
+        )
 
     # ---------------------------------------------------------
     # EXPORTS
@@ -2387,38 +2155,29 @@ def admin_reports(request):
         "start_date_value": start_date_value,
         "end_date_value": end_date_value,
         "search_query": search_query,
-
         "total_orders": total_orders,
         "completed_orders": completed_orders,
-
         "order_subtotal": order_subtotal,
         "gross_sales": order_subtotal,
-
         "total_discounts": total_discounts,
         "coupon_discounts": coupon_discounts,
         "product_discounts": Decimal("0.00"),
         "other_discounts": Decimal("0.00"),
-
         "subtotal_after_coupon": subtotal_after_coupon,
         "net_sales": net_sales,
         "total_tax": total_tax,
         "order_total": order_total,
-
         "total_refunds": total_refunds,
         "completed_refund_count": completed_refund_count,
         "pending_refund_count": pending_refund_count,
         "net_after_refunds": net_after_refunds,
-
         "discount_rate": discount_rate,
-
         "amount_collected": amount_collected,
         "outstanding_amount": outstanding_amount,
         "collection_rate": collection_rate,
         "payment_method_rows": payment_method_rows,
-
         "report_orders": page_obj.object_list,
         "page_obj": page_obj,
-
         "active_page": "reports",
     }
 
@@ -2427,6 +2186,7 @@ def admin_reports(request):
         "admin_panel/reports.html",
         context,
     )
+
 
 def export_admin_report(
     export_format,
@@ -2455,21 +2215,21 @@ def export_admin_report(
         if timezone.is_aware(order_date):
             order_date = timezone.localtime(order_date)
 
-        rows.append([
-            row["order_no"],
-            order_date.strftime("%Y-%m-%d %H:%M:%S"),
-            row["order_type"],
-            row["status_label"],
-            str(row["gross_amount"]),
-            str(row["discount_amount"]),
-            str(row["tax_amount"]),
-            str(row["order_total"]),
-            str(row["refund_amount"]),
-        ])
+        rows.append(
+            [
+                row["order_no"],
+                order_date.strftime("%Y-%m-%d %H:%M:%S"),
+                row["order_type"],
+                row["status_label"],
+                str(row["gross_amount"]),
+                str(row["discount_amount"]),
+                str(row["tax_amount"]),
+                str(row["order_total"]),
+                str(row["refund_amount"]),
+            ]
+        )
 
-    filename_base = (
-        f"smartcafe_report_{start_date}_{end_date}"
-    )
+    filename_base = f"smartcafe_report_{start_date}_{end_date}"
 
     # ---------------------------------------------------------
     # CSV
@@ -2480,9 +2240,7 @@ def export_admin_report(
             content_type="text/csv; charset=utf-8",
         )
 
-        response["Content-Disposition"] = (
-            f'attachment; filename="{filename_base}.csv"'
-        )
+        response["Content-Disposition"] = f'attachment; filename="{filename_base}.csv"'
 
         response.write("\ufeff")
 
@@ -2528,10 +2286,7 @@ def export_admin_report(
         worksheet.auto_filter.ref = worksheet.dimensions
 
         for column_cells in worksheet.columns:
-            max_length = max(
-                len(str(cell.value or ""))
-                for cell in column_cells
-            )
+            max_length = max(len(str(cell.value or "")) for cell in column_cells)
 
             worksheet.column_dimensions[
                 get_column_letter(column_cells[0].column)
@@ -2544,14 +2299,11 @@ def export_admin_report(
         response = HttpResponse(
             output.getvalue(),
             content_type=(
-                "application/vnd.openxmlformats-officedocument."
-                "spreadsheetml.sheet"
+                "application/vnd.openxmlformats-officedocument." "spreadsheetml.sheet"
             ),
         )
 
-        response["Content-Disposition"] = (
-            f'attachment; filename="{filename_base}.xlsx"'
-        )
+        response["Content-Disposition"] = f'attachment; filename="{filename_base}.xlsx"'
 
         return response
 
@@ -2608,76 +2360,79 @@ def export_admin_report(
 
         for row in rows:
             # Paragraphs allow long order IDs or statuses to wrap.
-            table_data.append([
-                Paragraph(str(value), styles["BodyText"])
-                for value in row
-            ])
+            table_data.append(
+                [Paragraph(str(value), styles["BodyText"]) for value in row]
+            )
 
         table = Table(
             table_data,
             repeatRows=1,
         )
 
-        table.setStyle(TableStyle([
-            (
-                "BACKGROUND",
-                (0, 0),
-                (-1, 0),
-                colors.HexColor("#8B3F16"),
-            ),
-            (
-                "TEXTCOLOR",
-                (0, 0),
-                (-1, 0),
-                colors.white,
-            ),
-            (
-                "FONTNAME",
-                (0, 0),
-                (-1, 0),
-                "Helvetica-Bold",
-            ),
-            (
-                "FONTSIZE",
-                (0, 0),
-                (-1, -1),
-                7,
-            ),
-            (
-                "GRID",
-                (0, 0),
-                (-1, -1),
-                0.4,
-                colors.HexColor("#E2D8CA"),
-            ),
-            (
-                "VALIGN",
-                (0, 0),
-                (-1, -1),
-                "TOP",
-            ),
-            (
-                "ROWBACKGROUNDS",
-                (0, 1),
-                (-1, -1),
+        table.setStyle(
+            TableStyle(
                 [
-                    colors.white,
-                    colors.HexColor("#FFF9F3"),
-                ],
-            ),
-            (
-                "LEFTPADDING",
-                (0, 0),
-                (-1, -1),
-                5,
-            ),
-            (
-                "RIGHTPADDING",
-                (0, 0),
-                (-1, -1),
-                5,
-            ),
-        ]))
+                    (
+                        "BACKGROUND",
+                        (0, 0),
+                        (-1, 0),
+                        colors.HexColor("#8B3F16"),
+                    ),
+                    (
+                        "TEXTCOLOR",
+                        (0, 0),
+                        (-1, 0),
+                        colors.white,
+                    ),
+                    (
+                        "FONTNAME",
+                        (0, 0),
+                        (-1, 0),
+                        "Helvetica-Bold",
+                    ),
+                    (
+                        "FONTSIZE",
+                        (0, 0),
+                        (-1, -1),
+                        7,
+                    ),
+                    (
+                        "GRID",
+                        (0, 0),
+                        (-1, -1),
+                        0.4,
+                        colors.HexColor("#E2D8CA"),
+                    ),
+                    (
+                        "VALIGN",
+                        (0, 0),
+                        (-1, -1),
+                        "TOP",
+                    ),
+                    (
+                        "ROWBACKGROUNDS",
+                        (0, 1),
+                        (-1, -1),
+                        [
+                            colors.white,
+                            colors.HexColor("#FFF9F3"),
+                        ],
+                    ),
+                    (
+                        "LEFTPADDING",
+                        (0, 0),
+                        (-1, -1),
+                        5,
+                    ),
+                    (
+                        "RIGHTPADDING",
+                        (0, 0),
+                        (-1, -1),
+                        5,
+                    ),
+                ]
+            )
+        )
 
         elements.append(table)
         document.build(elements)
@@ -2687,12 +2442,8 @@ def export_admin_report(
             content_type="application/pdf",
         )
 
-        response["Content-Disposition"] = (
-            f'attachment; filename="{filename_base}.pdf"'
-        )
+        response["Content-Disposition"] = f'attachment; filename="{filename_base}.pdf"'
 
         return response
 
-    return HttpResponseBadRequest(
-        "Unsupported export format."
-    )
+    return HttpResponseBadRequest("Unsupported export format.")

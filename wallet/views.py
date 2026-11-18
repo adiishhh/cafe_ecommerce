@@ -19,19 +19,13 @@ def get_customer_wallet(user):
 
     if not user.is_authenticated:
 
-        raise PermissionDenied(
-            "Authentication is required."
-        )
+        raise PermissionDenied("Authentication is required.")
 
     if user.is_staff or user.is_superuser:
 
-        raise PermissionDenied(
-            "Administrative users do not have a wallet."
-        )
+        raise PermissionDenied("Administrative users do not have a wallet.")
 
-    wallet, created = Wallet.objects.get_or_create(
-        user=user
-    )
+    wallet, created = Wallet.objects.get_or_create(user=user)
 
     return wallet
 
@@ -47,25 +41,15 @@ def credit_wallet(
     description="",
 ):
 
-    amount = Decimal(
-        str(amount)
-    )
+    amount = Decimal(str(amount))
 
     if amount <= Decimal("0.00"):
 
-        raise ValidationError(
-            "Wallet credit amount must be greater than zero."
-        )
+        raise ValidationError("Wallet credit amount must be greater than zero.")
 
     wallet = get_customer_wallet(user)
 
-    wallet = (
-        Wallet.objects
-        .select_for_update()
-        .get(
-            pk=wallet.pk
-        )
-    )
+    wallet = Wallet.objects.select_for_update().get(pk=wallet.pk)
 
     wallet.balance += amount
 
@@ -76,18 +60,16 @@ def credit_wallet(
         ]
     )
 
-    wallet_transaction = (
-        WalletTransaction.objects.create(
-            wallet=wallet,
-            transaction_type=transaction_type,
-            direction=WalletTransaction.Direction.CREDIT,
-            amount=amount,
-            balance_after=wallet.balance,
-            order=order,
-            payment=payment,
-            refund_request=refund_request,
-            description=description,
-        )
+    wallet_transaction = WalletTransaction.objects.create(
+        wallet=wallet,
+        transaction_type=transaction_type,
+        direction=WalletTransaction.Direction.CREDIT,
+        amount=amount,
+        balance_after=wallet.balance,
+        order=order,
+        payment=payment,
+        refund_request=refund_request,
+        description=description,
     )
 
     return (
@@ -107,31 +89,19 @@ def debit_wallet(
     description="",
 ):
 
-    amount = Decimal(
-        str(amount)
-    )
+    amount = Decimal(str(amount))
 
     if amount <= Decimal("0.00"):
 
-        raise ValidationError(
-            "Wallet debit amount must be greater than zero."
-        )
+        raise ValidationError("Wallet debit amount must be greater than zero.")
 
     wallet = get_customer_wallet(user)
 
-    wallet = (
-        Wallet.objects
-        .select_for_update()
-        .get(
-            pk=wallet.pk
-        )
-    )
+    wallet = Wallet.objects.select_for_update().get(pk=wallet.pk)
 
     if wallet.balance < amount:
 
-        raise ValidationError(
-            "Insufficient wallet balance."
-        )
+        raise ValidationError("Insufficient wallet balance.")
 
     wallet.balance -= amount
 
@@ -142,18 +112,16 @@ def debit_wallet(
         ]
     )
 
-    wallet_transaction = (
-        WalletTransaction.objects.create(
-            wallet=wallet,
-            transaction_type=transaction_type,
-            direction=WalletTransaction.Direction.DEBIT,
-            amount=amount,
-            balance_after=wallet.balance,
-            order=order,
-            payment=payment,
-            refund_request=refund_request,
-            description=description,
-        )
+    wallet_transaction = WalletTransaction.objects.create(
+        wallet=wallet,
+        transaction_type=transaction_type,
+        direction=WalletTransaction.Direction.DEBIT,
+        amount=amount,
+        balance_after=wallet.balance,
+        order=order,
+        payment=payment,
+        refund_request=refund_request,
+        description=description,
     )
 
     return (
@@ -167,30 +135,21 @@ def wallet_page(request):
 
     if request.user.is_staff or request.user.is_superuser:
 
-        raise PermissionDenied(
-            "Administrative users do not have a wallet."
-        )
+        raise PermissionDenied("Administrative users do not have a wallet.")
 
-    wallet = get_customer_wallet(
-        request.user
-    )
+    wallet = get_customer_wallet(request.user)
 
-    transactions = (
-        wallet.transactions
-        .select_related(
-            "order",
-            "payment",
-            "refund_request",
-        )
-        .order_by(
-            "-created_at",
-            "-id",
-        )
+    transactions = wallet.transactions.select_related(
+        "order",
+        "payment",
+        "refund_request",
+    ).order_by(
+        "-created_at",
+        "-id",
     )
 
     refund_requests = (
-        RefundRequest.objects
-        .filter(
+        RefundRequest.objects.filter(
             user=request.user,
         )
         .select_related(
@@ -210,17 +169,12 @@ def wallet_page(request):
     # REFERRAL DATA
     # ---------------------------------------------------------
 
-    referral_code = (
-        ReferralCode.objects
-        .filter(
-            user=request.user,
-        )
-        .first()
-    )
+    referral_code = ReferralCode.objects.filter(
+        user=request.user,
+    ).first()
 
     pending_referral = (
-        ReferralUsage.objects
-        .filter(
+        ReferralUsage.objects.filter(
             user=request.user,
             status=ReferralUsage.Status.PENDING,
         )
@@ -232,8 +186,7 @@ def wallet_page(request):
     )
 
     referral_usages = (
-        ReferralUsage.objects
-        .filter(
+        ReferralUsage.objects.filter(
             user=request.user,
         )
         .select_related(
@@ -253,12 +206,12 @@ def wallet_page(request):
             "wallet": wallet,
             "transactions": transactions,
             "refund_requests": refund_requests,
-
             "referral_code": referral_code,
             "pending_referral": pending_referral,
             "referral_usages": referral_usages,
         },
     )
+
 
 @login_required(login_url="login")
 def generate_referral_code(request):
@@ -278,10 +231,7 @@ def generate_referral_code(request):
         return JsonResponse(
             {
                 "success": False,
-                "message": (
-                    "You are not allowed to use "
-                    "the referral program."
-                ),
+                "message": ("You are not allowed to use " "the referral program."),
             },
             status=403,
         )
@@ -290,10 +240,8 @@ def generate_referral_code(request):
 
         with transaction.atomic():
 
-            referral_code, created = (
-                ReferralCode.objects.get_or_create(
-                    user=request.user,
-                )
+            referral_code, created = ReferralCode.objects.get_or_create(
+                user=request.user,
             )
 
     except IntegrityError:
@@ -302,8 +250,7 @@ def generate_referral_code(request):
             {
                 "success": False,
                 "message": (
-                    "Unable to generate your referral code. "
-                    "Please try again."
+                    "Unable to generate your referral code. " "Please try again."
                 ),
             },
             status=409,
@@ -317,11 +264,11 @@ def generate_referral_code(request):
             "message": (
                 "Your referral code has been generated successfully."
                 if created
-                else
-                "You already have a referral code."
+                else "You already have a referral code."
             ),
         }
     )
+
 
 @login_required(login_url="login")
 @transaction.atomic
@@ -337,12 +284,7 @@ def apply_referral_code(request):
 
         return redirect("wallet")
 
-    code_value = (
-        request.POST
-        .get("referral_code", "")
-        .strip()
-        .upper()
-    )
+    code_value = request.POST.get("referral_code", "").strip().upper()
 
     if not code_value:
 
@@ -355,11 +297,7 @@ def apply_referral_code(request):
 
     try:
 
-        referral_code = (
-            ReferralCode.objects
-            .select_related("user")
-            .get(code=code_value)
-        )
+        referral_code = ReferralCode.objects.select_related("user").get(code=code_value)
 
     except ReferralCode.DoesNotExist:
 
@@ -434,6 +372,7 @@ def apply_referral_code(request):
 
     return redirect("wallet")
 
+
 def reward_referral_for_order(order):
     """
     Reward the pending referral associated with this customer's
@@ -453,8 +392,7 @@ def reward_referral_for_order(order):
         return None
 
     referral_usage = (
-        ReferralUsage.objects
-        .select_for_update()
+        ReferralUsage.objects.select_for_update()
         .select_related(
             "code",
             "code__user",
@@ -486,10 +424,7 @@ def reward_referral_for_order(order):
     # FINAL ELIGIBLE ORDER AMOUNT
     # ---------------------------------------------------------
 
-    eligible_amount = (
-        Decimal(str(order.total_amount))
-        .quantize(Decimal("0.01"))
-    )
+    eligible_amount = Decimal(str(order.total_amount)).quantize(Decimal("0.01"))
 
     if eligible_amount <= Decimal("0.00"):
         return None
@@ -501,17 +436,9 @@ def reward_referral_for_order(order):
     customer_rate = Decimal("0.05")
     owner_rate = Decimal("0.10")
 
-    customer_cashback = (
-        eligible_amount * customer_rate
-    ).quantize(
-        Decimal("0.01")
-    )
+    customer_cashback = (eligible_amount * customer_rate).quantize(Decimal("0.01"))
 
-    owner_cashback = (
-        eligible_amount * owner_rate
-    ).quantize(
-        Decimal("0.01")
-    )
+    owner_cashback = (eligible_amount * owner_rate).quantize(Decimal("0.01"))
 
     if customer_cashback <= Decimal("0.00"):
         return None
@@ -528,10 +455,7 @@ def reward_referral_for_order(order):
         amount=customer_cashback,
         transaction_type=WalletTransaction.TransactionType.REFERRAL,
         order=order,
-        description=(
-            f"5% referral cashback for order "
-            f"{order.order_no}."
-        ),
+        description=(f"5% referral cashback for order " f"{order.order_no}."),
     )
 
     # ---------------------------------------------------------
@@ -554,23 +478,15 @@ def reward_referral_for_order(order):
     # FINALIZE REFERRAL USAGE
     # ---------------------------------------------------------
 
-    referral_usage.status = (
-        ReferralUsage.Status.REWARDED
-    )
+    referral_usage.status = ReferralUsage.Status.REWARDED
 
     referral_usage.qualifying_order = order
 
-    referral_usage.eligible_amount = (
-        eligible_amount
-    )
+    referral_usage.eligible_amount = eligible_amount
 
-    referral_usage.customer_cashback = (
-        customer_cashback
-    )
+    referral_usage.customer_cashback = customer_cashback
 
-    referral_usage.owner_cashback = (
-        owner_cashback
-    )
+    referral_usage.owner_cashback = owner_cashback
 
     referral_usage.rewarded_at = timezone.now()
 

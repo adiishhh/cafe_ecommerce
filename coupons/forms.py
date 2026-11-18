@@ -28,9 +28,7 @@ class CouponForm(forms.ModelForm):
                     "autocomplete": "off",
                 }
             ),
-
             "discount_type": forms.Select(),
-
             "discount_value": forms.NumberInput(
                 attrs={
                     "placeholder": "Enter discount value",
@@ -38,7 +36,6 @@ class CouponForm(forms.ModelForm):
                     "min": "0",
                 }
             ),
-
             "minimum_order_amount": forms.NumberInput(
                 attrs={
                     "placeholder": "Enter minimum order amount",
@@ -46,7 +43,6 @@ class CouponForm(forms.ModelForm):
                     "min": "0",
                 }
             ),
-
             "maximum_discount_amount": forms.NumberInput(
                 attrs={
                     "placeholder": "Enter maximum discount",
@@ -54,28 +50,24 @@ class CouponForm(forms.ModelForm):
                     "min": "0",
                 }
             ),
-
             "usage_limit": forms.NumberInput(
                 attrs={
                     "placeholder": "Enter maximum limit",
                     "min": "1",
                 }
             ),
-
             "valid_from": forms.DateTimeInput(
                 attrs={
                     "type": "datetime-local",
                 },
                 format="%Y-%m-%dT%H:%M",
             ),
-
             "valid_until": forms.DateTimeInput(
                 attrs={
                     "type": "datetime-local",
                 },
                 format="%Y-%m-%dT%H:%M",
             ),
-
             "is_active": forms.CheckboxInput(),
         }
 
@@ -83,40 +75,30 @@ class CouponForm(forms.ModelForm):
 
         super().__init__(*args, **kwargs)
 
-        self.fields["valid_from"].input_formats = [
-            "%Y-%m-%dT%H:%M"
-        ]
+        self.fields["valid_from"].input_formats = ["%Y-%m-%dT%H:%M"]
 
-        self.fields["valid_until"].input_formats = [
-            "%Y-%m-%dT%H:%M"
-        ]
+        self.fields["valid_until"].input_formats = ["%Y-%m-%dT%H:%M"]
 
         if self.instance and self.instance.pk:
 
             if self.instance.valid_from:
 
-                self.initial["valid_from"] = (
-                    timezone.localtime(
-                        self.instance.valid_from
-                    ).strftime("%Y-%m-%dT%H:%M")
-                )
+                self.initial["valid_from"] = timezone.localtime(
+                    self.instance.valid_from
+                ).strftime("%Y-%m-%dT%H:%M")
 
             if self.instance.valid_until:
 
-                self.initial["valid_until"] = (
-                    timezone.localtime(
-                        self.instance.valid_until
-                    ).strftime("%Y-%m-%dT%H:%M")
-                )
+                self.initial["valid_until"] = timezone.localtime(
+                    self.instance.valid_until
+                ).strftime("%Y-%m-%dT%H:%M")
 
     def clean_code(self):
 
         code = self.cleaned_data["code"].strip().upper()
 
         if not code:
-            raise forms.ValidationError(
-                "Coupon code cannot be empty."
-            )
+            raise forms.ValidationError("Coupon code cannot be empty.")
 
         return code
 
@@ -125,9 +107,7 @@ class CouponForm(forms.ModelForm):
         value = self.cleaned_data["discount_value"]
 
         if value <= 0:
-            raise forms.ValidationError(
-                "Discount value must be greater than zero."
-            )
+            raise forms.ValidationError("Discount value must be greater than zero.")
 
         return value
 
@@ -136,9 +116,7 @@ class CouponForm(forms.ModelForm):
         value = self.cleaned_data["minimum_order_amount"]
 
         if value < 0:
-            raise forms.ValidationError(
-                "Minimum order amount cannot be negative."
-            )
+            raise forms.ValidationError("Minimum order amount cannot be negative.")
 
         return value
 
@@ -147,9 +125,7 @@ class CouponForm(forms.ModelForm):
         value = self.cleaned_data["maximum_discount_amount"]
 
         if value is not None and value <= 0:
-            raise forms.ValidationError(
-                "Maximum discount must be greater than zero."
-            )
+            raise forms.ValidationError("Maximum discount must be greater than zero.")
 
         return value
 
@@ -158,9 +134,7 @@ class CouponForm(forms.ModelForm):
         value = self.cleaned_data["usage_limit"]
 
         if value is not None and value <= 0:
-            raise forms.ValidationError(
-                "Usage limit must be greater than zero."
-            )
+            raise forms.ValidationError("Usage limit must be greater than zero.")
 
         return value
 
@@ -170,9 +144,7 @@ class CouponForm(forms.ModelForm):
 
         discount_type = cleaned_data.get("discount_type")
         discount_value = cleaned_data.get("discount_value")
-        maximum_discount = cleaned_data.get(
-            "maximum_discount_amount"
-        )
+        maximum_discount = cleaned_data.get("maximum_discount_amount")
 
         valid_from = cleaned_data.get("valid_from")
         valid_until = cleaned_data.get("valid_until")
@@ -187,20 +159,13 @@ class CouponForm(forms.ModelForm):
                 "Percentage discount cannot exceed 100%.",
             )
 
-        if (
-            discount_type == Coupon.DiscountType.FIXED
-            and maximum_discount is not None
-        ):
+        if discount_type == Coupon.DiscountType.FIXED and maximum_discount is not None:
             self.add_error(
                 "maximum_discount_amount",
                 "Maximum discount is only applicable to percentage coupons.",
             )
 
-        if (
-            valid_from
-            and valid_until
-            and valid_from >= valid_until
-        ):
+        if valid_from and valid_until and valid_from >= valid_until:
             self.add_error(
                 "valid_until",
                 "Valid until must be later than valid from.",

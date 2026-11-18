@@ -4,6 +4,7 @@ from users.managers import CustomUserManager
 
 # Create your models here.
 
+
 class User(AbstractUser):
     username = None
     first_name = None
@@ -12,17 +13,20 @@ class User(AbstractUser):
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=15)
-    profile_image = models.ImageField(upload_to="profile_images/", null=True, blank=True)
+    profile_image = models.ImageField(
+        upload_to="profile_images/", null=True, blank=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    USERNAME_FIELD = 'email'
+    USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
     object = CustomUserManager()
 
+
 class Address(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='addresses')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="addresses")
     name = models.CharField(max_length=100)
     contact_number = models.CharField(max_length=15)
     flat_house = models.CharField(max_length=250)

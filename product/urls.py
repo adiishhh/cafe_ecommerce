@@ -1,93 +1,66 @@
 from django.urls import path
 from . import views
 
-
 urlpatterns = [
-    path('', views.customer_home, name='home'),
-    path('products/', views.product_list, name='product_list'),
-    path('products/add/', views.add_product, name='add_product'),
+    path("", views.customer_home, name="home"),
+    path("products/", views.product_list, name="product_list"),
+    path("products/add/", views.add_product, name="add_product"),
     path(
         "products/temporary-image-preview/",
         views.temporary_product_image_preview,
         name="temporary_product_image_preview",
     ),
     path(
-        'products/<int:product_id>/toggle-status/',
+        "products/<int:product_id>/toggle-status/",
         views.toggle_product_status,
-        name='toggle_product_status'
+        name="toggle_product_status",
     ),
+    path("products/<int:product_id>/edit/", views.edit_product, name="edit_product"),
+    path("products/<int:product_id>/", views.product_detail, name="product_detail"),
     path(
-        'products/<int:product_id>/edit/',
-        views.edit_product,
-        name='edit_product'
-    ),
-    path(
-        'products/<int:product_id>/',
-        views.product_detail,
-        name='product_detail'
-    ),
-    path(
-        'menu/product/<int:product_id>/',
+        "menu/product/<int:product_id>/",
         views.customer_product_detail,
-        name='customer_product_detail'
+        name="customer_product_detail",
     ),
-    
-    path('cart/', views.cart, name='cart'),
-
+    path("cart/", views.cart, name="cart"),
+    path("cart/add/<int:product_id>/", views.add_to_cart, name="add_to_cart"),
     path(
-        'cart/add/<int:product_id>/',
-        views.add_to_cart,
-        name='add_to_cart'
-    ),
-
-    path(
-        'cart/increase/<int:product_id>/',
+        "cart/increase/<int:product_id>/",
         views.increase_cart_quantity,
-        name='increase_cart_quantity'
+        name="increase_cart_quantity",
     ),
-
     path(
-        'cart/decrease/<int:product_id>/',
+        "cart/decrease/<int:product_id>/",
         views.decrease_cart_quantity,
-        name='decrease_cart_quantity'
+        name="decrease_cart_quantity",
     ),
-
     path(
-        'cart/remove/<int:product_id>/',
-        views.remove_from_cart,
-        name='remove_from_cart'
+        "cart/remove/<int:product_id>/", views.remove_from_cart, name="remove_from_cart"
     ),
-
-    path('cart/cancel/', views.cancel_cart, name='cancel_cart'),
-
+    path("cart/cancel/", views.cancel_cart, name="cancel_cart"),
     path(
         "menu/product/<int:product_id>/review/",
         views.submit_product_review,
         name="submit_product_review",
     ),
-    
     path(
         "menu/product/<int:product_id>/review/delete/",
         views.delete_product_review,
         name="delete_product_review",
     ),
-    
     path(
         "reviews/<int:review_id>/reply/",
         views.admin_review_reply,
         name="admin_review_reply",
     ),
-    
     path(
         "reviews/<int:review_id>/reply/delete/",
         views.admin_delete_review_reply,
         name="admin_delete_review_reply",
     ),
-    
     path(
         "reviews/<int:review_id>/delete/",
         views.admin_delete_product_review,
         name="admin_delete_product_review",
     ),
-
 ]

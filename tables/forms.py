@@ -14,7 +14,6 @@ class TableForm(forms.ModelForm):
         ]
 
         widgets = {
-
             "table_number": forms.NumberInput(
                 attrs={
                     "class": "form-input",
@@ -22,7 +21,6 @@ class TableForm(forms.ModelForm):
                     "min": 1,
                 }
             ),
-
             "capacity": forms.NumberInput(
                 attrs={
                     "class": "form-input",
@@ -30,7 +28,6 @@ class TableForm(forms.ModelForm):
                     "min": 1,
                 }
             ),
-
         }
 
     def __init__(self, *args, **kwargs):
@@ -43,18 +40,12 @@ class TableForm(forms.ModelForm):
 
         table_number = self.cleaned_data["table_number"]
 
-        existing_table = Table.objects.filter(
-            table_number=table_number
-        )
+        existing_table = Table.objects.filter(table_number=table_number)
 
         if self.instance.pk:
-            existing_table = existing_table.exclude(
-                pk=self.instance.pk
-            )
+            existing_table = existing_table.exclude(pk=self.instance.pk)
 
         if existing_table.exists():
-            raise forms.ValidationError(
-                "A table with this number already exists."
-            )
+            raise forms.ValidationError("A table with this number already exists.")
 
         return table_number

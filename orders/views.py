@@ -27,15 +27,15 @@ from wallet.views import reward_referral_for_order, debit_wallet, get_customer_w
 MAX_CART_QUANTITY = 10
 ADMIN_ORDER_PAGE_SIZE = 10
 
+
 def _get_current_tax():
     tax = Tax.objects.first()
 
     if tax is None:
-        tax = Tax.objects.create(
-            percentage=Decimal("5.00")
-        )
+        tax = Tax.objects.create(percentage=Decimal("5.00"))
 
     return tax
+
 
 def _get_cart_item(cart, product_id):
     item = cart.get(str(product_id))
@@ -51,28 +51,20 @@ def _get_cart_item(cart, product_id):
 
     return {
         "quantity": int(item.get("quantity", 0)),
-        "instructions": item.get(
-            "instructions",
-            ""
-        ).strip(),
+        "instructions": item.get("instructions", "").strip(),
     }
 
 
 def _get_checkout_cart(request):
-    session_cart = request.session.get(
-        "cart",
-        {}
-    )
+    session_cart = request.session.get("cart", {})
 
     if not session_cart:
         return None
 
-    products = Product.objects.select_related(
-        "category"
-    ).prefetch_related(
-        "images"
-    ).filter(
-        id__in=session_cart.keys()
+    products = (
+        Product.objects.select_related("category")
+        .prefetch_related("images")
+        .filter(id__in=session_cart.keys())
     )
 
     cart_items = []
@@ -82,10 +74,7 @@ def _get_checkout_cart(request):
 
     for product in products:
 
-        item = _get_cart_item(
-            session_cart,
-            product.id
-        )
+        item = _get_cart_item(session_cart, product.id)
 
         if not item:
             continue
@@ -95,21 +84,14 @@ def _get_checkout_cart(request):
         if quantity < 1:
             continue
 
-        quantity = min(
-            quantity,
-            MAX_CART_QUANTITY
-        )
+        quantity = min(quantity, MAX_CART_QUANTITY)
 
-        is_available = (
-            product.is_active and product.category.is_active
-        )
+        is_available = product.is_active and product.category.is_active
 
         if not is_available:
             continue
 
-        item_total = (
-            product.price * quantity
-        )
+        item_total = product.price * quantity
 
         subtotal += item_total
         cart_count += quantity
@@ -131,11 +113,7 @@ def _get_checkout_cart(request):
 
     tax_rate = tax_percentage / Decimal("100")
 
-    gst = (
-        subtotal * tax_rate
-    ).quantize(
-        Decimal("0.01")
-    )
+    gst = (subtotal * tax_rate).quantize(Decimal("0.01"))
 
     total = subtotal + gst
 
@@ -155,39 +133,29 @@ def _generate_order_number():
 
     while True:
 
-        number = random.randint(
-            1000,
-            9999
-        )
+        number = random.randint(1000, 9999)
 
         order_no = f"ORD-{number}"
 
-        if not Order.objects.filter(
-            order_no=order_no
-        ).exists():
+        if not Order.objects.filter(order_no=order_no).exists():
 
             return order_no
+
 
 def _generate_tracking_number():
 
     while True:
 
-        tracking_no = (
-            f"TRK-{secrets.token_hex(5).upper()}"
-        )
+        tracking_no = f"TRK-{secrets.token_hex(5).upper()}"
 
-        if not Order.objects.filter(
-            tracking_no=tracking_no
-        ).exists():
+        if not Order.objects.filter(tracking_no=tracking_no).exists():
 
             return tracking_no
 
+
 def _get_guest_accessible_order(request, order_id):
 
-    guest_order_ids = request.session.get(
-        "guest_order_access",
-        []
-    )
+    guest_order_ids = request.session.get("guest_order_access", [])
 
     if str(order_id) not in guest_order_ids:
         return None
@@ -199,58 +167,46 @@ def _get_guest_accessible_order(request, order_id):
         order_type=Order.OrderType.TABLE,
     ).first()
 
+
 def continue_checkout(request):
 
     checkout = _get_checkout_cart(request)
 
     if checkout is None:
 
-        messages.info(
-            request,
-            "Your order is empty."
-        )
+        messages.info(request, "Your order is empty.")
 
         return redirect("cart")
 
-    table = get_qr_table(
-        request,
-        update_activity=False
-    )
+    table = get_qr_table(request, update_activity=False)
 
     if table:
 
         return redirect("dine_in_checkout")
 
     # Check whether a previous QR session expired.
-    if request.session.pop(
-        "qr_session_expired",
-        False
-    ):
+    if request.session.pop("qr_session_expired", False):
 
         messages.warning(
             request,
             "Your table session has expired. "
             "Please scan the table QR code again "
-            "to continue ordering."
+            "to continue ordering.",
         )
 
         return redirect("home")
 
     return redirect("order_type")
 
+
 def dine_in_checkout(request):
 
-    table = get_qr_table(
-        request,
-        update_activity=False
-    )
+    table = get_qr_table(request, update_activity=False)
 
     if table is None:
 
         messages.warning(
-            request,
-            "Your table session has expired. "
-            "Please scan the QR code again."
+            request, "Your table session has expired. " "Please scan the QR code again."
         )
 
         return redirect("home")
@@ -259,10 +215,7 @@ def dine_in_checkout(request):
 
     if checkout is None:
 
-        messages.info(
-            request,
-            "Your order is empty."
-        )
+        messages.info(request, "Your order is empty.")
 
         return redirect("cart")
 
@@ -272,52 +225,29 @@ def dine_in_checkout(request):
 
     if request.method == "POST":
 
-        coupon_code = request.POST.get(
-            "coupon_code",
-            ""
-        ).strip()
+        coupon_code = request.POST.get("coupon_code", "").strip()
 
         if coupon_code:
 
-            result = apply_coupon(
-                coupon_code,
-                checkout["subtotal"]
-            )
+            result = apply_coupon(coupon_code, checkout["subtotal"])
 
             if result["success"]:
 
-                request.session[
-                    "checkout_coupon_code"
-                ] = result["coupon"].code
+                request.session["checkout_coupon_code"] = result["coupon"].code
 
-                messages.success(
-                    request,
-                    result["message"]
-                )
+                messages.success(request, result["message"])
 
             else:
 
-                request.session.pop(
-                    "checkout_coupon_code",
-                    None
-                )
+                request.session.pop("checkout_coupon_code", None)
 
-                messages.error(
-                    request,
-                    result["message"]
-                )
+                messages.error(request, result["message"])
 
         else:
 
-            request.session.pop(
-                "checkout_coupon_code",
-                None
-            )
+            request.session.pop("checkout_coupon_code", None)
 
-            messages.info(
-                request,
-                "Coupon removed."
-            )
+            messages.info(request, "Coupon removed.")
 
         request.session.modified = True
 
@@ -327,19 +257,14 @@ def dine_in_checkout(request):
     # EXISTING COUPON VALIDATION
     # ------------------------------------------------------
 
-    coupon_code = request.session.get(
-        "checkout_coupon_code"
-    )
+    coupon_code = request.session.get("checkout_coupon_code")
 
     discount = Decimal("0.00")
     applied_coupon = None
 
     if coupon_code:
 
-        result = apply_coupon(
-            coupon_code,
-            checkout["subtotal"]
-        )
+        result = apply_coupon(coupon_code, checkout["subtotal"])
 
         if result["success"]:
 
@@ -348,17 +273,11 @@ def dine_in_checkout(request):
 
         else:
 
-            request.session.pop(
-                "checkout_coupon_code",
-                None
-            )
+            request.session.pop("checkout_coupon_code", None)
 
             request.session.modified = True
 
-            messages.warning(
-                request,
-                result["message"]
-            )
+            messages.warning(request, result["message"])
 
     # ------------------------------------------------------
     # FINAL TOTAL
@@ -367,13 +286,7 @@ def dine_in_checkout(request):
     subtotal = checkout["subtotal"]
     gst = checkout["gst"]
 
-    total = (
-        subtotal
-        + gst
-        - discount
-    ).quantize(
-        Decimal("0.01")
-    )
+    total = (subtotal + gst - discount).quantize(Decimal("0.01"))
 
     # ------------------------------------------------------
     # GUEST / AUTHENTICATED CUSTOMER
@@ -395,8 +308,9 @@ def dine_in_checkout(request):
             "applied_coupon": applied_coupon,
             "discount": discount,
             "total": total,
-        }
+        },
     )
+
 
 @require_POST
 @transaction.atomic
@@ -406,17 +320,12 @@ def place_dine_in_order(request):
     # VALIDATE QR SESSION
     # ------------------------------------------------------
 
-    table = get_qr_table(
-        request,
-        update_activity=False
-    )
+    table = get_qr_table(request, update_activity=False)
 
     if table is None:
 
         messages.error(
-            request,
-            "Your table session has expired. "
-            "Please scan the QR code again."
+            request, "Your table session has expired. " "Please scan the QR code again."
         )
 
         return redirect("home")
@@ -429,10 +338,7 @@ def place_dine_in_order(request):
 
     if checkout is None:
 
-        messages.error(
-            request,
-            "Your order is empty."
-        )
+        messages.error(request, "Your order is empty.")
 
         return redirect("cart")
 
@@ -446,26 +352,17 @@ def place_dine_in_order(request):
 
     if is_guest:
 
-        guest_name = request.POST.get(
-            "guest_name",
-            ""
-        ).strip()
+        guest_name = request.POST.get("guest_name", "").strip()
 
         if not guest_name:
 
-            messages.error(
-                request,
-                "Please enter your name."
-            )
+            messages.error(request, "Please enter your name.")
 
             return redirect("dine_in_checkout")
 
         if len(guest_name) > 100:
 
-            messages.error(
-                request,
-                "Your name cannot exceed 100 characters."
-            )
+            messages.error(request, "Your name cannot exceed 100 characters.")
 
             return redirect("dine_in_checkout")
 
@@ -479,10 +376,7 @@ def place_dine_in_order(request):
 
         if not product.is_active or not product.category.is_active:
 
-            messages.error(
-                request,
-                f"{product.name} is currently unavailable."
-            )
+            messages.error(request, f"{product.name} is currently unavailable.")
 
             return redirect("cart")
 
@@ -493,31 +387,19 @@ def place_dine_in_order(request):
     coupon = None
     discount = Decimal("0.00")
 
-    coupon_code = request.session.get(
-        "checkout_coupon_code",
-        ""
-    )
+    coupon_code = request.session.get("checkout_coupon_code", "")
 
     if coupon_code:
 
-        result = apply_coupon(
-            coupon_code,
-            checkout["subtotal"]
-        )
+        result = apply_coupon(coupon_code, checkout["subtotal"])
 
         if not result["success"]:
 
-            request.session.pop(
-                "checkout_coupon_code",
-                None
-            )
+            request.session.pop("checkout_coupon_code", None)
 
             request.session.modified = True
 
-            messages.error(
-                request,
-                result["message"]
-            )
+            messages.error(request, result["message"])
 
             return redirect("dine_in_checkout")
 
@@ -531,20 +413,11 @@ def place_dine_in_order(request):
     subtotal = checkout["subtotal"]
     tax_amount = checkout["gst"]
 
-    total = (
-        subtotal
-        + tax_amount
-        - discount
-    ).quantize(
-        Decimal("0.01")
-    )
+    total = (subtotal + tax_amount - discount).quantize(Decimal("0.01"))
 
     if total < Decimal("0.00"):
 
-        messages.error(
-            request,
-            "Invalid order total."
-        )
+        messages.error(request, "Invalid order total.")
 
         return redirect("dine_in_checkout")
 
@@ -553,67 +426,24 @@ def place_dine_in_order(request):
     # ------------------------------------------------------
 
     order = Order.objects.create(
-
-        user=(
-            request.user
-            if request.user.is_authenticated
-            else None
-        ),
-
+        user=(request.user if request.user.is_authenticated else None),
         guest_name=guest_name,
-
         order_no=_generate_order_number(),
-
-        tracking_no=(
-            _generate_tracking_number()
-            if is_guest
-            else None
-        ),
-
+        tracking_no=(_generate_tracking_number() if is_guest else None),
         order_type=Order.OrderType.TABLE,
-
         table=table,
-
         status=Order.Status.CONFIRMED,
-
         subtotal=subtotal,
-
         tax_percentage=checkout["tax_percentage"],
-
         tax_amount=tax_amount,
-
-        coupon_code=(
-            coupon.code
-            if coupon
-            else ""
-        ),
-
-        coupon_discount_type=(
-            coupon.discount_type
-            if coupon
-            else ""
-        ),
-
-        coupon_discount_value=(
-            coupon.discount_value
-            if coupon
-            else None
-        ),
-
-        coupon_minimum_order_amount=(
-            coupon.minimum_order_amount
-            if coupon
-            else None
-        ),
-
+        coupon_code=(coupon.code if coupon else ""),
+        coupon_discount_type=(coupon.discount_type if coupon else ""),
+        coupon_discount_value=(coupon.discount_value if coupon else None),
+        coupon_minimum_order_amount=(coupon.minimum_order_amount if coupon else None),
         coupon_maximum_discount_amount=(
-            coupon.maximum_discount_amount
-            if coupon
-            else None
+            coupon.maximum_discount_amount if coupon else None
         ),
-
         discount_amount=discount,
-
         total_amount=total,
     )
 
@@ -626,17 +456,11 @@ def place_dine_in_order(request):
         product = item["product"]
 
         OrderItem.objects.create(
-
             order=order,
-
             product=product,
-
             quantity=item["quantity"],
-
             unit_price=product.price,
-
             instructions=item["instructions"],
-
             subtotal=item["item_total"],
         )
 
@@ -660,57 +484,32 @@ def place_dine_in_order(request):
     # ------------------------------------------------------
 
     BillOrder.objects.create(
-
         order=order,
-
         total=order.total_amount,
-
-        payment_method=(
-            BillOrder.PaymentMethod.COD
-        ),
+        payment_method=(BillOrder.PaymentMethod.COD),
     )
 
     # ------------------------------------------------------
     # PAYMENT METHOD
     # ------------------------------------------------------
 
-    request.session[
-        "last_order_payment_method"
-    ] = "Cash at Counter"
+    request.session["last_order_payment_method"] = "Cash at Counter"
 
     # ------------------------------------------------------
     # CLEAR CART / CHECKOUT SESSION
     # ------------------------------------------------------
 
-    request.session.pop(
-        "cart",
-        None
-    )
+    request.session.pop("cart", None)
 
-    request.session.pop(
-        "checkout_order_type",
-        None
-    )
+    request.session.pop("checkout_order_type", None)
 
-    request.session.pop(
-        "checkout_address_id",
-        None
-    )
+    request.session.pop("checkout_address_id", None)
 
-    request.session.pop(
-        "checkout_address_modal",
-        None
-    )
+    request.session.pop("checkout_address_modal", None)
 
-    request.session.pop(
-        "checkout_coupon_code",
-        None
-    )
+    request.session.pop("checkout_coupon_code", None)
 
-    request.session.pop(
-        "razorpay_pending_checkout",
-        None
-    )
+    request.session.pop("razorpay_pending_checkout", None)
 
     request.session.modified = True
 
@@ -720,10 +519,7 @@ def place_dine_in_order(request):
 
     if is_guest:
 
-        guest_order_ids = request.session.get(
-            "guest_order_access",
-            []
-        )
+        guest_order_ids = request.session.get("guest_order_access", [])
 
         guest_order_ids.append(str(order.id))
 
@@ -731,36 +527,21 @@ def place_dine_in_order(request):
 
         request.session.modified = True
 
-        return redirect(
-            "guest_order_detail",
-            order_id=order.id
-        )
+        return redirect("guest_order_detail", order_id=order.id)
 
-    return redirect(
-        "order_detail",
-        order_id=order.id
-    )
+    return redirect("order_detail", order_id=order.id)
 
 
 @require_POST
 def track_guest_order(request):
 
-    tracking_no = request.POST.get(
-        "tracking_no",
-        ""
-    ).strip().upper()
+    tracking_no = request.POST.get("tracking_no", "").strip().upper()
 
-    guest_name = request.POST.get(
-        "guest_name",
-        ""
-    ).strip()
+    guest_name = request.POST.get("guest_name", "").strip()
 
     if not tracking_no or not guest_name:
 
-        messages.error(
-            request,
-            "Please enter both your tracking number and name."
-        )
+        messages.error(request, "Please enter both your tracking number and name.")
 
         return redirect("home")
 
@@ -774,16 +555,12 @@ def track_guest_order(request):
     if order is None:
 
         messages.error(
-            request,
-            "No matching order was found. Please check your details."
+            request, "No matching order was found. Please check your details."
         )
 
         return redirect("home")
 
-    guest_order_ids = request.session.get(
-        "guest_order_access",
-        []
-    )
+    guest_order_ids = request.session.get("guest_order_access", [])
 
     order_id = str(order.id)
 
@@ -793,26 +570,17 @@ def track_guest_order(request):
     request.session["guest_order_access"] = guest_order_ids
     request.session.modified = True
 
-    return redirect(
-        "guest_order_detail",
-        order_id=order.id
-    )
+    return redirect("guest_order_detail", order_id=order.id)
+
 
 @require_POST
 def check_guest_tracking(request):
 
-    tracking_no = request.POST.get(
-        "tracking_no",
-        ""
-    ).strip().upper()
+    tracking_no = request.POST.get("tracking_no", "").strip().upper()
 
     if not tracking_no:
         return JsonResponse(
-            {
-                "exists": False,
-                "message": "Please enter a tracking number."
-            },
-            status=400
+            {"exists": False, "message": "Please enter a tracking number."}, status=400
         )
 
     exists = Order.objects.filter(
@@ -825,54 +593,38 @@ def check_guest_tracking(request):
         return JsonResponse(
             {
                 "exists": False,
-                "message": "No guest order was found with that tracking number."
+                "message": "No guest order was found with that tracking number.",
             },
-            status=404
+            status=404,
         )
 
-    return JsonResponse({
-        "exists": True
-    })
+    return JsonResponse({"exists": True})
+
 
 def guest_order_detail(request, order_id):
 
-    order = _get_guest_accessible_order(
-        request,
-        order_id
-    )
+    order = _get_guest_accessible_order(request, order_id)
 
     if order is None:
 
         messages.error(
-            request,
-            "Please verify your tracking number and name to access this order."
+            request, "Please verify your tracking number and name to access this order."
         )
 
         return redirect("home")
 
     order = get_object_or_404(
-        Order.objects.prefetch_related(
-            "items__product__images"
-        ),
-        id=order.id
+        Order.objects.prefetch_related("items__product__images"), id=order.id
     )
 
-    bill_order = getattr(
-        order,
-        "bill_order",
-        None
-    )
+    bill_order = getattr(order, "bill_order", None)
 
     can_cancel = order.status in {
         Order.Status.CONFIRMED,
         Order.Status.PREPARING,
     }
 
-    active_items = [
-        item
-        for item in order.items.all()
-        if not item.is_cancelled
-    ]
+    active_items = [item for item in order.items.all() if not item.is_cancelled]
 
     return render(
         request,
@@ -880,17 +632,16 @@ def guest_order_detail(request, order_id):
         {
             "order": order,
             "bill_order": bill_order,
-            "payment_method": (
-                "Cash at Counter"
-            ),
+            "payment_method": ("Cash at Counter"),
             "can_cancel": can_cancel,
             "active_items": active_items,
             "can_save_as_usual": False,
             "is_guest_order": True,
             "is_paid_online": False,
             "can_request_order_refund": False,
-        }
+        },
     )
+
 
 @require_POST
 @transaction.atomic
@@ -904,57 +655,33 @@ def guest_cancel_order_item(request, item_id):
         order__order_type=Order.OrderType.TABLE,
     )
 
-    order = _get_guest_accessible_order(
-        request,
-        item.order_id
-    )
+    order = _get_guest_accessible_order(request, item.order_id)
 
     if order is None:
         return HttpResponse(
-            "You do not have permission to access this order.",
-            status=403
+            "You do not have permission to access this order.", status=403
         )
 
-    order = Order.objects.select_for_update().get(
-        id=order.id
-    )
+    order = Order.objects.select_for_update().get(id=order.id)
 
-    item = OrderItem.objects.select_for_update().get(
-        id=item_id,
-        order=order
-    )
+    item = OrderItem.objects.select_for_update().get(id=item_id, order=order)
 
     if order.status not in {
         Order.Status.CONFIRMED,
         Order.Status.PREPARING,
     }:
 
-        messages.error(
-            request,
-            "Items can no longer be removed from this order."
-        )
+        messages.error(request, "Items can no longer be removed from this order.")
 
-        return redirect(
-            "guest_order_detail",
-            order_id=order.id
-        )
+        return redirect("guest_order_detail", order_id=order.id)
 
     if item.is_cancelled:
 
-        messages.info(
-            request,
-            "This item has already been cancelled."
-        )
+        messages.info(request, "This item has already been cancelled.")
 
-        return redirect(
-            "guest_order_detail",
-            order_id=order.id
-        )
+        return redirect("guest_order_detail", order_id=order.id)
 
-    reason = request.POST.get(
-        "reason",
-        ""
-    ).strip()
+    reason = request.POST.get("reason", "").strip()
 
     item.is_cancelled = True
     item.cancellation_reason = reason
@@ -970,17 +697,13 @@ def guest_cancel_order_item(request, item_id):
 
     _recalculate_order_totals(order)
 
-    remaining_items = order.items.filter(
-        is_cancelled=False
-    ).exists()
+    remaining_items = order.items.filter(is_cancelled=False).exists()
 
     if not remaining_items:
 
         order.status = Order.Status.CANCELLED
         order.cancelled_at = timezone.now()
-        order.cancellation_reason = (
-            "All items in this order were cancelled."
-        )
+        order.cancellation_reason = "All items in this order were cancelled."
 
         order.save(
             update_fields=[
@@ -992,60 +715,39 @@ def guest_cancel_order_item(request, item_id):
         )
 
         messages.success(
-            request,
-            "Your order has been cancelled because all items were removed."
+            request, "Your order has been cancelled because all items were removed."
         )
 
     else:
 
-        messages.success(
-            request,
-            f"{item.product.name} was removed from your order."
-        )
+        messages.success(request, f"{item.product.name} was removed from your order.")
 
-    return redirect(
-        "guest_order_detail",
-        order_id=order.id
-    )
+    return redirect("guest_order_detail", order_id=order.id)
+
 
 @require_POST
 @transaction.atomic
 def guest_cancel_order(request, order_id):
 
-    order = _get_guest_accessible_order(
-        request,
-        order_id
-    )
+    order = _get_guest_accessible_order(request, order_id)
 
     if order is None:
         return HttpResponse(
-            "You do not have permission to access this order.",
-            status=403
+            "You do not have permission to access this order.", status=403
         )
 
-    order = Order.objects.select_for_update().get(
-        id=order.id
-    )
+    order = Order.objects.select_for_update().get(id=order.id)
 
     if order.status not in {
         Order.Status.CONFIRMED,
         Order.Status.PREPARING,
     }:
 
-        messages.error(
-            request,
-            "This order can no longer be cancelled."
-        )
+        messages.error(request, "This order can no longer be cancelled.")
 
-        return redirect(
-            "guest_order_detail",
-            order_id=order.id
-        )
+        return redirect("guest_order_detail", order_id=order.id)
 
-    reason = request.POST.get(
-        "reason",
-        ""
-    ).strip()
+    reason = request.POST.get("reason", "").strip()
 
     order.status = Order.Status.CANCELLED
     order.cancellation_reason = reason
@@ -1060,23 +762,14 @@ def guest_cancel_order(request, order_id):
         ]
     )
 
-    order.items.filter(
-        is_cancelled=False
-    ).update(
-        is_cancelled=True,
-        cancellation_reason=reason,
-        cancelled_at=timezone.now()
+    order.items.filter(is_cancelled=False).update(
+        is_cancelled=True, cancellation_reason=reason, cancelled_at=timezone.now()
     )
 
-    messages.success(
-        request,
-        f"Order {order.order_no} has been cancelled."
-    )
+    messages.success(request, f"Order {order.order_no} has been cancelled.")
 
-    return redirect(
-        "guest_order_detail",
-        order_id=order.id
-    )   
+    return redirect("guest_order_detail", order_id=order.id)
+
 
 @login_required(login_url="login")
 def order_type(request):
@@ -1085,102 +778,62 @@ def order_type(request):
 
     if checkout is None:
 
-        messages.info(
-            request,
-            "Your order is empty."
-        )
+        messages.info(request, "Your order is empty.")
 
         return redirect("cart")
 
     if request.method == "POST":
 
-        selected_type = request.POST.get(
-            "order_type"
-        )
+        selected_type = request.POST.get("order_type")
 
         if selected_type not in {
             Order.OrderType.PICKUP,
             Order.OrderType.DELIVERY,
         }:
 
-            messages.error(
-                request,
-                "Please choose a valid order type."
-            )
+            messages.error(request, "Please choose a valid order type.")
 
             return redirect("order_type")
 
-        request.session[
-            "checkout_order_type"
-        ] = selected_type
+        request.session["checkout_order_type"] = selected_type
 
         if selected_type == Order.OrderType.PICKUP:
 
-            request.session.pop(
-                "checkout_address_id",
-                None
-            )
+            request.session.pop("checkout_address_id", None)
 
-            request.session.pop(
-                "checkout_address_modal",
-                None
-            )
+            request.session.pop("checkout_address_modal", None)
 
             request.session.modified = True
 
             return redirect("final_checkout")
 
-        request.session.pop(
-            "checkout_address_modal",
-            None
-        )
+        request.session.pop("checkout_address_modal", None)
 
         request.session.modified = True
 
-    selected_type = request.session.get(
-        "checkout_order_type"
-    )
+    selected_type = request.session.get("checkout_order_type")
 
     selected_address = None
 
     if selected_type == Order.OrderType.DELIVERY:
 
-        address_id = request.session.get(
-            "checkout_address_id"
-        )
+        address_id = request.session.get("checkout_address_id")
 
         if address_id:
 
-            selected_address = (
-                request.user.addresses
-                .filter(id=address_id)
-                .first()
-            )
+            selected_address = request.user.addresses.filter(id=address_id).first()
 
         if selected_address is None:
 
-            selected_address = (
-                request.user.addresses
-                .filter(is_default=True)
-                .first()
-            )
+            selected_address = request.user.addresses.filter(is_default=True).first()
 
             if selected_address:
 
-                request.session[
-                    "checkout_address_id"
-                ] = selected_address.id
+                request.session["checkout_address_id"] = selected_address.id
 
                 request.session.modified = True
 
-    addresses = (
-        request.user.addresses
-        .all()
-        .order_by(
-            "-is_default",
-            "-id"
-        )
-    )
+    addresses = request.user.addresses.all().order_by("-is_default", "-id")
 
     address_modal = False
 
@@ -1193,7 +846,7 @@ def order_type(request):
             "selected_address": selected_address,
             "addresses": addresses,
             "address_modal": address_modal,
-        }
+        },
     )
 
 
@@ -1201,32 +854,19 @@ def order_type(request):
 @require_POST
 def select_checkout_address(request):
 
-    address_id = request.POST.get(
-        "address_id"
-    )
+    address_id = request.POST.get("address_id")
 
-    address = get_object_or_404(
-        request.user.addresses,
-        id=address_id
-    )
+    address = get_object_or_404(request.user.addresses, id=address_id)
 
-    request.session[
-        "checkout_order_type"
-    ] = Order.OrderType.DELIVERY
+    request.session["checkout_order_type"] = Order.OrderType.DELIVERY
 
-    request.session[
-        "checkout_address_id"
-    ] = address.id
+    request.session["checkout_address_id"] = address.id
 
-    request.session[
-        "checkout_address_modal"
-    ] = False
+    request.session["checkout_address_modal"] = False
 
     request.session.modified = True
 
-    return redirect(
-        "final_checkout"
-    )
+    return redirect("final_checkout")
 
 
 @login_required(login_url="login")
@@ -1236,87 +876,52 @@ def final_checkout(request):
 
     if checkout is None:
 
-        messages.info(
-            request,
-            "Your order is empty."
-        )
+        messages.info(request, "Your order is empty.")
 
         return redirect("cart")
 
-    order_type = request.session.get(
-        "checkout_order_type"
-    )
+    order_type = request.session.get("checkout_order_type")
 
     if order_type not in {
         Order.OrderType.PICKUP,
         Order.OrderType.DELIVERY,
     }:
 
-        return redirect(
-            "order_type"
-        )
+        return redirect("order_type")
 
     address = None
 
     if order_type == Order.OrderType.DELIVERY:
 
-        address_id = request.session.get(
-            "checkout_address_id"
-        )
+        address_id = request.session.get("checkout_address_id")
 
         if not address_id:
 
-            messages.info(
-                request,
-                "Please select a delivery address."
-            )
+            messages.info(request, "Please select a delivery address.")
 
-            request.session.pop(
-                "checkout_address_modal",
-                None
-            )
+            request.session.pop("checkout_address_modal", None)
 
             request.session.modified = True
 
-            return redirect(
-                "order_type"
-            )
+            return redirect("order_type")
 
-        address = (
-            request.user.addresses
-            .filter(id=address_id)
-            .first()
-        )
+        address = request.user.addresses.filter(id=address_id).first()
 
         if address is None:
 
-            request.session.pop(
-                "checkout_address_id",
-                None
-            )
+            request.session.pop("checkout_address_id", None)
 
-            request.session.pop(
-                "checkout_address_modal",
-                None
-            )
+            request.session.pop("checkout_address_modal", None)
 
             request.session.modified = True
 
-            messages.info(
-                request,
-                "Please select a delivery address."
-            )
+            messages.info(request, "Please select a delivery address.")
 
-            return redirect(
-                "order_type"
-            )
+            return redirect("order_type")
 
     if request.method == "POST":
 
-        coupon_code = request.POST.get(
-            "coupon_code",
-            ""
-        ).strip()
+        coupon_code = request.POST.get("coupon_code", "").strip()
 
         if coupon_code:
 
@@ -1327,48 +932,27 @@ def final_checkout(request):
 
             if result["success"]:
 
-                request.session[
-                    "checkout_coupon_code"
-                ] = result["coupon"].code
+                request.session["checkout_coupon_code"] = result["coupon"].code
 
-                messages.success(
-                    request,
-                    result["message"]
-                )
+                messages.success(request, result["message"])
 
             else:
 
-                request.session.pop(
-                    "checkout_coupon_code",
-                    None
-                )
+                request.session.pop("checkout_coupon_code", None)
 
-                messages.error(
-                    request,
-                    result["message"]
-                )
+                messages.error(request, result["message"])
 
         else:
 
-            request.session.pop(
-                "checkout_coupon_code",
-                None
-            )
+            request.session.pop("checkout_coupon_code", None)
 
-            messages.info(
-                request,
-                "Coupon removed."
-            )
+            messages.info(request, "Coupon removed.")
 
         request.session.modified = True
 
-        return redirect(
-            "final_checkout"
-        )
+        return redirect("final_checkout")
 
-    coupon_code = request.session.get(
-        "checkout_coupon_code"
-    )
+    coupon_code = request.session.get("checkout_coupon_code")
 
     discount = Decimal("0.00")
     applied_coupon = None
@@ -1387,20 +971,13 @@ def final_checkout(request):
 
         else:
 
-            request.session.pop(
-                "checkout_coupon_code",
-                None
-            )
+            request.session.pop("checkout_coupon_code", None)
 
             request.session.modified = True
 
     gst = checkout["gst"]
 
-    total = (
-        checkout["subtotal"]
-        + gst
-        - discount
-    )
+    total = checkout["subtotal"] + gst - discount
 
     checkout["discount"] = discount
     checkout["total"] = total
@@ -1417,8 +994,9 @@ def final_checkout(request):
             "payment_method": "cod",
             "wallet": wallet,
             "applied_coupon": applied_coupon,
-        }
+        },
     )
+
 
 @login_required(login_url="login")
 @require_POST
@@ -1428,30 +1006,26 @@ def place_order(request):
     checkout = _get_checkout_cart(request)
 
     if checkout is None:
-        messages.error(
-            request,
-            "Your order is empty."
-        )
+        messages.error(request, "Your order is empty.")
         return redirect("cart")
 
-    payment_method = request.POST.get(
-        "payment_method",
-        "cod",
-    ).strip().lower()
+    payment_method = (
+        request.POST.get(
+            "payment_method",
+            "cod",
+        )
+        .strip()
+        .lower()
+    )
 
     if payment_method not in {
         "cod",
         "wallet",
     }:
-        messages.error(
-            request,
-            "Please choose a valid payment method."
-        )
+        messages.error(request, "Please choose a valid payment method.")
         return redirect("final_checkout")
 
-    order_type = request.session.get(
-        "checkout_order_type"
-    )
+    order_type = request.session.get("checkout_order_type")
 
     if order_type not in {
         Order.OrderType.PICKUP,
@@ -1463,58 +1037,34 @@ def place_order(request):
 
     if order_type == Order.OrderType.DELIVERY:
 
-        address_id = request.session.get(
-            "checkout_address_id"
-        )
+        address_id = request.session.get("checkout_address_id")
 
         if not address_id:
-            messages.error(
-                request,
-                "Please select a delivery address."
-            )
+            messages.error(request, "Please select a delivery address.")
             return redirect("order_type")
 
-        address = (
-            request.user.addresses
-            .filter(id=address_id)
-            .first()
-        )
+        address = request.user.addresses.filter(id=address_id).first()
 
         if address is None:
-            messages.error(
-                request,
-                "The selected address is no longer available."
-            )
+            messages.error(request, "The selected address is no longer available.")
             return redirect("order_type")
 
     coupon = None
     discount = Decimal("0.00")
 
-    coupon_code = request.session.get(
-        "checkout_coupon_code",
-        ""
-    )
+    coupon_code = request.session.get("checkout_coupon_code", "")
 
     if coupon_code:
 
-        result = apply_coupon(
-            coupon_code,
-            checkout["subtotal"]
-        )
+        result = apply_coupon(coupon_code, checkout["subtotal"])
 
         if not result["success"]:
 
-            request.session.pop(
-                "checkout_coupon_code",
-                None
-            )
+            request.session.pop("checkout_coupon_code", None)
 
             request.session.modified = True
 
-            messages.error(
-                request,
-                result["message"]
-            )
+            messages.error(request, result["message"])
 
             return redirect("final_checkout")
 
@@ -1524,92 +1074,33 @@ def place_order(request):
     subtotal = checkout["subtotal"]
     tax_amount = checkout["gst"]
 
-    total = (
-        subtotal
-        + tax_amount
-        - discount
-    ).quantize(
-        Decimal("0.01")
-    )
+    total = (subtotal + tax_amount - discount).quantize(Decimal("0.01"))
 
     order = Order.objects.create(
-
         user=request.user,
-
         order_no=_generate_order_number(),
-
         tracking_no=None,
-
         order_type=order_type,
-
-        address_name=(
-            address.name if address else None
-        ),
-
-        address_contact_number=(
-            address.contact_number if address else None
-        ),
-
-        address_flat_house=(
-            address.flat_house if address else None
-        ),
-
-        address_area_street=(
-            address.area_street if address else None
-        ),
-
-        address_city=(
-            address.city if address else None
-        ),
-
-        address_state=(
-            address.state if address else None
-        ),
-
-        address_pincode=(
-            address.pincode if address else None
-        ),
-
+        address_name=(address.name if address else None),
+        address_contact_number=(address.contact_number if address else None),
+        address_flat_house=(address.flat_house if address else None),
+        address_area_street=(address.area_street if address else None),
+        address_city=(address.city if address else None),
+        address_state=(address.state if address else None),
+        address_pincode=(address.pincode if address else None),
         table=None,
-
         status=Order.Status.CONFIRMED,
-
         subtotal=subtotal,
-
         tax_percentage=checkout["tax_percentage"],
-
         tax_amount=tax_amount,
-
-        coupon_code=(
-            coupon.code if coupon else ""
-        ),
-
-        coupon_discount_type=(
-            coupon.discount_type
-            if coupon
-            else ""
-        ),
-
-        coupon_discount_value=(
-            coupon.discount_value
-            if coupon
-            else None
-        ),
-
-        coupon_minimum_order_amount=(
-            coupon.minimum_order_amount
-            if coupon
-            else None
-        ),
-
+        coupon_code=(coupon.code if coupon else ""),
+        coupon_discount_type=(coupon.discount_type if coupon else ""),
+        coupon_discount_value=(coupon.discount_value if coupon else None),
+        coupon_minimum_order_amount=(coupon.minimum_order_amount if coupon else None),
         coupon_maximum_discount_amount=(
-            coupon.maximum_discount_amount
-            if coupon
-            else None
+            coupon.maximum_discount_amount if coupon else None
         ),
-
         discount_amount=discount,
-
         total_amount=total,
     )
 
@@ -1644,26 +1135,16 @@ def place_order(request):
             debit_wallet(
                 user=request.user,
                 amount=total,
-                transaction_type=(
-                    WalletTransaction.TransactionType.PAYMENT
-                ),
+                transaction_type=(WalletTransaction.TransactionType.PAYMENT),
                 order=order,
-                description=(
-                    f"Wallet payment for order "
-                    f"{order.order_no}."
-                ),
+                description=(f"Wallet payment for order " f"{order.order_no}."),
             )
 
         except ValidationError as exc:
 
-            messages.error(
-                request,
-                str(exc)
-            )
+            messages.error(request, str(exc))
 
-            return redirect(
-                "final_checkout"
-            )
+            return redirect("final_checkout")
 
         # ------------------------------------------------------
         # PAID BILL
@@ -1674,9 +1155,7 @@ def place_order(request):
             tax_amount=tax_amount,
             total_amount=total,
             payment_method=Bill.PaymentMethod.ONLINE,
-            transaction_method=(
-                Bill.TransactionMethod.WALLET
-            ),
+            transaction_method=(Bill.TransactionMethod.WALLET),
             status=Bill.Status.PAID,
             issued_at=timezone.now(),
         )
@@ -1689,9 +1168,7 @@ def place_order(request):
             order=order,
             bill=bill,
             total=total,
-            payment_method=(
-                BillOrder.PaymentMethod.ONLINE
-            ),
+            payment_method=(BillOrder.PaymentMethod.ONLINE),
         )
 
         # ------------------------------------------------------
@@ -1700,9 +1177,7 @@ def place_order(request):
 
         Payment.objects.create(
             bill=bill,
-            transaction_method=(
-                Payment.TransactionMethod.WALLET
-            ),
+            transaction_method=(Payment.TransactionMethod.WALLET),
             amount=total,
             payment_reference=None,
             status=Payment.Status.SUCCESSFUL,
@@ -1713,9 +1188,7 @@ def place_order(request):
             paid_at=timezone.now(),
         )
 
-        request.session[
-            "last_order_payment_method"
-        ] = "Online - Wallet"
+        request.session["last_order_payment_method"] = "Online - Wallet"
 
     # ----------------------------------------------------------
     # CASH ON DELIVERY
@@ -1726,55 +1199,31 @@ def place_order(request):
         BillOrder.objects.create(
             order=order,
             total=order.total_amount,
-            payment_method=(
-                BillOrder.PaymentMethod.COD
-            ),
+            payment_method=(BillOrder.PaymentMethod.COD),
         )
 
-        request.session[
-            "last_order_payment_method"
-        ] = "Cash on Delivery"
+        request.session["last_order_payment_method"] = "Cash on Delivery"
 
     # ----------------------------------------------------------
     # CLEAR CHECKOUT SESSION
     # ----------------------------------------------------------
 
-    request.session.pop(
-        "cart",
-        None
-    )
+    request.session.pop("cart", None)
 
-    request.session.pop(
-        "checkout_order_type",
-        None
-    )
+    request.session.pop("checkout_order_type", None)
 
-    request.session.pop(
-        "checkout_address_id",
-        None
-    )
+    request.session.pop("checkout_address_id", None)
 
-    request.session.pop(
-        "checkout_address_modal",
-        None
-    )
+    request.session.pop("checkout_address_modal", None)
 
-    request.session.pop(
-        "checkout_coupon_code",
-        None
-    )
+    request.session.pop("checkout_coupon_code", None)
 
-    request.session.pop(
-        "razorpay_pending_checkout",
-        None
-    )
+    request.session.pop("razorpay_pending_checkout", None)
 
     request.session.modified = True
 
-    return redirect(
-        "order_detail",
-        order_id=order.id
-    )
+    return redirect("order_detail", order_id=order.id)
+
 
 def _is_paid_online_order(order):
     """
@@ -1835,12 +1284,11 @@ def _has_active_order_refund_request(order):
         ],
     ).exists()
 
+
 @login_required(login_url="login")
 def order_detail(request, order_id):
     order = get_object_or_404(
-        Order.objects.prefetch_related(
-            "items__product__images"
-        ),
+        Order.objects.prefetch_related("items__product__images"),
         id=order_id,
         user=request.user,
     )
@@ -1854,19 +1302,15 @@ def order_detail(request, order_id):
 
     is_paid_online = _is_paid_online_order(order)
 
-    active_items = [
-        item
-        for item in order.items.all()
-        if not item.is_cancelled
-    ]
+    active_items = [item for item in order.items.all() if not item.is_cancelled]
 
     refund_requests = list(
-        RefundRequest.objects.filter(
-            order=order
-        ).select_related(
+        RefundRequest.objects.filter(order=order)
+        .select_related(
             "order_item",
             "reviewed_by",
-        ).order_by("-created_at")
+        )
+        .order_by("-created_at")
     )
 
     active_refund_statuses = {
@@ -1904,17 +1348,11 @@ def order_detail(request, order_id):
     # can show its status without complicated dictionary lookups.
     for item in order.items.all():
         item.refund_request = next(
-            (
-                refund
-                for refund in refund_requests
-                if refund.order_item_id == item.id
-            ),
+            (refund for refund in refund_requests if refund.order_item_id == item.id),
             None,
         )
 
-        item.active_refund_request = active_item_refunds.get(
-            item.id
-        )
+        item.active_refund_request = active_item_refunds.get(item.id)
 
         item.can_request_refund = (
             is_paid_online
@@ -1938,23 +1376,19 @@ def order_detail(request, order_id):
             "order": order,
             "bill_order": bill_order,
             "payment_method": (
-                bill_order.get_payment_method_display()
-                if bill_order
-                else "—"
+                bill_order.get_payment_method_display() if bill_order else "—"
             ),
             "can_cancel": can_cancel,
             "active_items": active_items,
             "can_save_as_usual": bool(active_items),
-
             # Refund workflow context
             "is_paid_online": is_paid_online,
             "refund_requests": refund_requests,
             "active_order_refund": active_order_refund,
-            "can_request_order_refund": (
-                can_request_order_refund
-            ),
+            "can_request_order_refund": (can_request_order_refund),
         },
     )
+
 
 @login_required(login_url="login")
 @require_POST
@@ -1967,41 +1401,22 @@ def cancel_order_item(request, item_id):
         order__user=request.user,
     )
 
-    order = (
-        Order.objects
-        .select_for_update()
-        .get(id=item.order_id)
-    )
+    order = Order.objects.select_for_update().get(id=item.order_id)
 
     if order.status not in {
         Order.Status.CONFIRMED,
         Order.Status.PREPARING,
     }:
-        messages.error(
-            request,
-            "Items can no longer be removed from this order."
-        )
+        messages.error(request, "Items can no longer be removed from this order.")
 
-        return redirect(
-            "order_detail",
-            order_id=order.id
-        )
+        return redirect("order_detail", order_id=order.id)
 
     if item.is_cancelled:
-        messages.info(
-            request,
-            "This item has already been cancelled."
-        )
+        messages.info(request, "This item has already been cancelled.")
 
-        return redirect(
-            "order_detail",
-            order_id=order.id
-        )
+        return redirect("order_detail", order_id=order.id)
 
-    reason = request.POST.get(
-        "reason",
-        ""
-    ).strip()
+    reason = request.POST.get("reason", "").strip()
 
     if _is_paid_online_order(order):
         messages.error(
@@ -2025,17 +1440,13 @@ def cancel_order_item(request, item_id):
 
     _recalculate_order_totals(order)
 
-    remaining_items = order.items.filter(
-        is_cancelled=False
-    ).exists()
+    remaining_items = order.items.filter(is_cancelled=False).exists()
 
     if not remaining_items:
 
         order.status = Order.Status.CANCELLED
         order.cancelled_at = timezone.now()
-        order.cancellation_reason = (
-            "All items in this order were cancelled."
-        )
+        order.cancellation_reason = "All items in this order were cancelled."
 
         order.save(
             update_fields=[
@@ -2048,20 +1459,15 @@ def cancel_order_item(request, item_id):
 
         messages.success(
             request,
-            f"Order {order.order_no} has been cancelled because all items were removed."
+            f"Order {order.order_no} has been cancelled because all items were removed.",
         )
 
     else:
 
-        messages.success(
-            request,
-            f"{item.product.name} was removed from your order."
-        )
+        messages.success(request, f"{item.product.name} was removed from your order.")
 
-    return redirect(
-        "order_detail",
-        order_id=order.id
-    )
+    return redirect("order_detail", order_id=order.id)
+
 
 @login_required(login_url="login")
 @require_POST
@@ -2077,9 +1483,7 @@ def admin_remove_order_item(request, order_id, item_id):
     )
 
     item = get_object_or_404(
-        OrderItem.objects
-        .select_for_update()
-        .select_related("product"),
+        OrderItem.objects.select_for_update().select_related("product"),
         id=item_id,
         order_id=order.id,
     )
@@ -2095,8 +1499,7 @@ def admin_remove_order_item(request, order_id, item_id):
 
     item.is_cancelled = True
     item.cancellation_reason = (
-        request.POST.get("reason", "").strip()
-        or "Removed by admin."
+        request.POST.get("reason", "").strip() or "Removed by admin."
     )
     item.cancelled_at = timezone.now()
 
@@ -2110,18 +1513,14 @@ def admin_remove_order_item(request, order_id, item_id):
 
     subtotal, tax_amount, discount, total_amount = _recalculate_order_totals(order)
 
-    remaining_items = order.items.filter(
-        is_cancelled=False
-    ).exists()
+    remaining_items = order.items.filter(is_cancelled=False).exists()
 
     order_cancelled = False
 
     if not remaining_items:
         order.status = Order.Status.CANCELLED
         order.cancelled_at = timezone.now()
-        order.cancellation_reason = (
-            "All items in this order were removed by admin."
-        )
+        order.cancellation_reason = "All items in this order were removed by admin."
 
         order.save(
             update_fields=[
@@ -2137,9 +1536,7 @@ def admin_remove_order_item(request, order_id, item_id):
     return JsonResponse(
         {
             "success": True,
-            "message": (
-                f"{item.product.name} was removed from the order."
-            ),
+            "message": (f"{item.product.name} was removed from the order."),
             "item_id": item.id,
             "item_name": item.product.name,
             "subtotal": f"{subtotal:.2f}",
@@ -2149,68 +1546,40 @@ def admin_remove_order_item(request, order_id, item_id):
             "order_cancelled": order_cancelled,
             "status": order.status,
             "status_display": order.get_status_display(),
-            "updated_at": timezone.localtime(
-                order.updated_at
-            ).strftime("%d %b %Y, %H:%M"),
+            "updated_at": timezone.localtime(order.updated_at).strftime(
+                "%d %b %Y, %H:%M"
+            ),
         }
     )
 
+
 def _recalculate_order_totals(order):
-    active_items = order.items.filter(
-        is_cancelled=False
-    )
+    active_items = order.items.filter(is_cancelled=False)
 
-    subtotal = sum(
-        (
-            item.subtotal
-            for item in active_items
-        ),
-        Decimal("0.00")
-    )
+    subtotal = sum((item.subtotal for item in active_items), Decimal("0.00"))
 
-    tax_rate = (
-        order.tax_percentage / Decimal("100")
-    )
+    tax_rate = order.tax_percentage / Decimal("100")
 
-    tax_amount = (
-        subtotal * tax_rate
-    ).quantize(
-        Decimal("0.01")
-    )
+    tax_amount = (subtotal * tax_rate).quantize(Decimal("0.01"))
 
     discount = Decimal("0.00")
 
     if order.coupon_code:
-        minimum_order_amount = (
-            order.coupon_minimum_order_amount
-            or Decimal("0.00")
-        )
+        minimum_order_amount = order.coupon_minimum_order_amount or Decimal("0.00")
 
         if subtotal >= minimum_order_amount:
             discount_type = order.coupon_discount_type
-            discount_value = (
-                order.coupon_discount_value
-                or Decimal("0.00")
-            )
+            discount_value = order.coupon_discount_value or Decimal("0.00")
 
             if discount_type == "percentage":
-                discount = (
-                    subtotal
-                    * discount_value
-                    / Decimal("100")
-                )
+                discount = subtotal * discount_value / Decimal("100")
 
             elif discount_type == "fixed":
                 discount = discount_value
 
-            maximum_discount = (
-                order.coupon_maximum_discount_amount
-            )
+            maximum_discount = order.coupon_maximum_discount_amount
 
-            if (
-                maximum_discount is not None
-                and discount > maximum_discount
-            ):
+            if maximum_discount is not None and discount > maximum_discount:
                 discount = maximum_discount
 
             discount = min(
@@ -2218,15 +1587,9 @@ def _recalculate_order_totals(order):
                 subtotal,
             )
 
-            discount = discount.quantize(
-                Decimal("0.01")
-            )
+            discount = discount.quantize(Decimal("0.01"))
 
-    total_amount = (
-        subtotal
-        + tax_amount
-        - discount
-    )
+    total_amount = subtotal + tax_amount - discount
 
     order.subtotal = subtotal
     order.tax_amount = tax_amount
@@ -2250,6 +1613,7 @@ def _recalculate_order_totals(order):
         total_amount,
     )
 
+
 @login_required(login_url="login")
 @require_POST
 @transaction.atomic
@@ -2265,20 +1629,11 @@ def cancel_order(request, order_id):
         Order.Status.CONFIRMED,
         Order.Status.PREPARING,
     }:
-        messages.error(
-            request,
-            "This order can no longer be cancelled."
-        )
+        messages.error(request, "This order can no longer be cancelled.")
 
-        return redirect(
-            "order_detail",
-            order_id=order.id
-        )
+        return redirect("order_detail", order_id=order.id)
 
-    reason = request.POST.get(
-        "reason",
-        ""
-    ).strip()
+    reason = request.POST.get("reason", "").strip()
 
     if _is_paid_online_order(order):
         messages.error(
@@ -2301,23 +1656,16 @@ def cancel_order(request, order_id):
         ]
     )
 
-    order.items.filter(
-        is_cancelled=False
-    ).update(
+    order.items.filter(is_cancelled=False).update(
         is_cancelled=True,
         cancellation_reason=reason,
         cancelled_at=timezone.now(),
     )
 
-    messages.success(
-        request,
-        f"Order {order.order_no} has been cancelled."
-    )
+    messages.success(request, f"Order {order.order_no} has been cancelled.")
 
-    return redirect(
-        "order_detail",
-        order_id=order.id
-    )
+    return redirect("order_detail", order_id=order.id)
+
 
 @login_required(login_url="login")
 @require_POST
@@ -2411,9 +1759,9 @@ def request_item_refund(request, item_id):
         )
         return redirect("order_detail", order_id=order.id)
 
-    amount = (
-        order.total_amount * item.subtotal / order.subtotal
-    ).quantize(Decimal("0.01"))
+    amount = (order.total_amount * item.subtotal / order.subtotal).quantize(
+        Decimal("0.01")
+    )
 
     if amount <= Decimal("0.00"):
         messages.error(
@@ -2441,6 +1789,7 @@ def request_item_refund(request, item_id):
     )
 
     return redirect("order_detail", order_id=order.id)
+
 
 @login_required(login_url="login")
 @require_POST
@@ -2520,69 +1869,43 @@ def request_order_refund(request, order_id):
 
     return redirect("order_detail", order_id=order.id)
 
+
 @login_required(login_url="login")
 def placed_orders(request):
 
     orders = (
-        Order.objects
-        .filter(user=request.user)
-        .prefetch_related(
-            "items"
-        )
+        Order.objects.filter(user=request.user)
+        .prefetch_related("items")
         .order_by("-created_at")
     )
 
-    search = request.GET.get(
-        "q",
-        ""
-    ).strip()
+    search = request.GET.get("q", "").strip()
 
-    status_filter = request.GET.get(
-        "status",
-        ""
-    ).strip()
+    status_filter = request.GET.get("status", "").strip()
 
-    date_filter = request.GET.get(
-        "date",
-        ""
-    ).strip()
+    date_filter = request.GET.get("date", "").strip()
 
     if search:
-        orders = orders.filter(
-            order_no__icontains=search
-        )
+        orders = orders.filter(order_no__icontains=search)
 
-    valid_statuses = {
-        choice[0]
-        for choice in Order.Status.choices
-    }
+    valid_statuses = {choice[0] for choice in Order.Status.choices}
 
     if status_filter in valid_statuses:
-        orders = orders.filter(
-            status=status_filter
-        )
+        orders = orders.filter(status=status_filter)
 
-    now = timezone.localtime(
-        timezone.now()
-    )
+    now = timezone.localtime(timezone.now())
 
     today = now.date()
 
     if date_filter == "today":
 
-        orders = orders.filter(
-            created_at__date=today
-        )
+        orders = orders.filter(created_at__date=today)
 
     elif date_filter == "this_week":
 
-        start_of_week = today - timedelta(
-            days=today.weekday()
-        )
+        start_of_week = today - timedelta(days=today.weekday())
 
-        orders = orders.filter(
-            created_at__date__gte=start_of_week
-        )
+        orders = orders.filter(created_at__date__gte=start_of_week)
 
     elif date_filter == "this_month":
 
@@ -2593,18 +1916,11 @@ def placed_orders(request):
 
     elif date_filter == "last_month":
 
-        first_of_this_month = today.replace(
-            day=1
-        )
+        first_of_this_month = today.replace(day=1)
 
-        last_month_end = (
-            first_of_this_month
-            - timedelta(days=1)
-        )
+        last_month_end = first_of_this_month - timedelta(days=1)
 
-        last_month_start = (
-            last_month_end.replace(day=1)
-        )
+        last_month_start = last_month_end.replace(day=1)
 
         orders = orders.filter(
             created_at__date__gte=last_month_start,
@@ -2617,16 +1933,13 @@ def placed_orders(request):
         Order.Status.READY,
     }
 
-    current_orders = [
-        order
-        for order in orders
-        if order.status in current_statuses
-    ]
+    current_orders = [order for order in orders if order.status in current_statuses]
 
     past_orders = [
         order
         for order in orders
-        if order.status in {
+        if order.status
+        in {
             Order.Status.DELIVERED,
             Order.Status.CANCELLED,
         }
@@ -2642,8 +1955,9 @@ def placed_orders(request):
             "search": search,
             "status_filter": status_filter,
             "date_filter": date_filter,
-        }
+        },
     )
+
 
 def _admin_staff_check(request):
     if not request.user.is_staff:
@@ -2652,6 +1966,7 @@ def _admin_staff_check(request):
             status=403,
         )
     return None
+
 
 @login_required(login_url="login")
 def admin_dashboard(request):
@@ -2712,69 +2027,41 @@ def admin_dashboard(request):
         start_date = today
         end_date = today
 
-    period_orders = (
-        Order.objects
-        .filter(
-            created_at__date__gte=start_date,
-            created_at__date__lte=end_date,
-        )
-        .select_related(
-            "user",
-            "table",
-        )
+    period_orders = Order.objects.filter(
+        created_at__date__gte=start_date,
+        created_at__date__lte=end_date,
+    ).select_related(
+        "user",
+        "table",
     )
 
     total_orders = period_orders.count()
 
-    pending_orders = (
-        period_orders
-        .exclude(
-            status__in=[
-                Order.Status.CANCELLED,
-                Order.Status.DELIVERED,
-            ]
-        )
-        .count()
-    )
+    pending_orders = period_orders.exclude(
+        status__in=[
+            Order.Status.CANCELLED,
+            Order.Status.DELIVERED,
+        ]
+    ).count()
 
-    total_sales = (
-        period_orders
-        .exclude(
-            status=Order.Status.CANCELLED
-        )
-        .aggregate(
-            total=Sum(
-                "total_amount"
-            )
-        )["total"]
-        or Decimal("0.00")
-    )
+    total_sales = period_orders.exclude(status=Order.Status.CANCELLED).aggregate(
+        total=Sum("total_amount")
+    )["total"] or Decimal("0.00")
 
-    recent_orders = (
-        period_orders
-        .annotate(
-            item_count=Count(
-                "items",
-                filter=Q(
-                    items__is_cancelled=False
-                ),
-            )
+    recent_orders = period_orders.annotate(
+        item_count=Count(
+            "items",
+            filter=Q(items__is_cancelled=False),
         )
-        .order_by(
-            "-created_at"
-        )[:5]
-    )
+    ).order_by("-created_at")[:5]
 
     best_selling_products = (
-        OrderItem.objects
-        .filter(
+        OrderItem.objects.filter(
             is_cancelled=False,
             order__created_at__date__gte=start_date,
             order__created_at__date__lte=end_date,
         )
-        .exclude(
-            order__status=Order.Status.CANCELLED
-        )
+        .exclude(order__status=Order.Status.CANCELLED)
         .values(
             "product_id",
             "product__name",
@@ -2784,12 +2071,8 @@ def admin_dashboard(request):
                 "order_id",
                 distinct=True,
             ),
-            quantity=Sum(
-                "quantity"
-            ),
-            revenue=Sum(
-                "subtotal"
-            ),
+            quantity=Sum("quantity"),
+            revenue=Sum("subtotal"),
         )
         .order_by(
             "-quantity",
@@ -2798,15 +2081,12 @@ def admin_dashboard(request):
     )
 
     best_selling_categories = (
-        OrderItem.objects
-        .filter(
+        OrderItem.objects.filter(
             is_cancelled=False,
             order__created_at__date__gte=start_date,
             order__created_at__date__lte=end_date,
         )
-        .exclude(
-            order__status=Order.Status.CANCELLED
-        )
+        .exclude(order__status=Order.Status.CANCELLED)
         .values(
             "product__category_id",
             "product__category__name",
@@ -2816,12 +2096,8 @@ def admin_dashboard(request):
                 "order_id",
                 distinct=True,
             ),
-            quantity=Sum(
-                "quantity"
-            ),
-            revenue=Sum(
-                "subtotal"
-            ),
+            quantity=Sum("quantity"),
+            revenue=Sum("subtotal"),
         )
         .order_by(
             "-quantity",
@@ -2829,17 +2105,11 @@ def admin_dashboard(request):
         )[:10]
     )
 
-    pickup_count = period_orders.filter(
-        order_type=Order.OrderType.PICKUP
-    ).count()
+    pickup_count = period_orders.filter(order_type=Order.OrderType.PICKUP).count()
 
-    delivery_count = period_orders.filter(
-        order_type=Order.OrderType.DELIVERY
-    ).count()
+    delivery_count = period_orders.filter(order_type=Order.OrderType.DELIVERY).count()
 
-    table_count = period_orders.filter(
-        order_type=Order.OrderType.TABLE
-    ).count()
+    table_count = period_orders.filter(order_type=Order.OrderType.TABLE).count()
 
     orders_by_type_counts = [
         {
@@ -2863,11 +2133,7 @@ def admin_dashboard(request):
 
     for item in orders_by_type_counts:
         if total_orders:
-            percentage = (
-                Decimal(item["count"])
-                * Decimal("100")
-                / Decimal(total_orders)
-            )
+            percentage = Decimal(item["count"]) * Decimal("100") / Decimal(total_orders)
         else:
             percentage = Decimal("0.00")
 
@@ -2880,17 +2146,13 @@ def admin_dashboard(request):
             }
         )
 
-    unpaid_orders = (
-        BillOrder.objects
-        .filter(
-            bill__isnull=True,
-            payment_method=BillOrder.PaymentMethod.COD,
-            order__status=Order.Status.DELIVERED,
-            created_at__date__gte=start_date,
-            created_at__date__lte=end_date,
-        )
-        .count()
-    )
+    unpaid_orders = BillOrder.objects.filter(
+        bill__isnull=True,
+        payment_method=BillOrder.PaymentMethod.COD,
+        order__status=Order.Status.DELIVERED,
+        created_at__date__gte=start_date,
+        created_at__date__lte=end_date,
+    ).count()
 
     return render(
         request,
@@ -2912,6 +2174,7 @@ def admin_dashboard(request):
             "orders_by_type": orders_by_type,
         },
     )
+
 
 @login_required(login_url="login")
 @require_POST
@@ -2964,11 +2227,7 @@ def admin_order_list(request):
     date_filter = request.GET.get("date", "").strip()
     sort = request.GET.get("sort", "newest").strip()
 
-    orders = (
-        Order.objects
-        .select_related("user", "table")
-        .all()
-    )
+    orders = Order.objects.select_related("user", "table").all()
 
     if search:
         search_filter = (
@@ -2984,18 +2243,12 @@ def admin_order_list(request):
 
         orders = orders.filter(search_filter).distinct()
 
-    valid_statuses = {
-        choice[0]
-        for choice in Order.Status.choices
-    }
+    valid_statuses = {choice[0] for choice in Order.Status.choices}
 
     if status_filter in valid_statuses:
         orders = orders.filter(status=status_filter)
 
-    valid_order_types = {
-        choice[0]
-        for choice in Order.OrderType.choices
-    }
+    valid_order_types = {choice[0] for choice in Order.OrderType.choices}
 
     if order_type_filter in valid_order_types:
         orders = orders.filter(order_type=order_type_filter)
@@ -3005,19 +2258,13 @@ def admin_order_list(request):
 
     if date_filter == "today":
 
-        orders = orders.filter(
-            created_at__date=today
-        )
+        orders = orders.filter(created_at__date=today)
 
     elif date_filter == "this_week":
 
-        start_of_week = today - timedelta(
-            days=today.weekday()
-        )
+        start_of_week = today - timedelta(days=today.weekday())
 
-        orders = orders.filter(
-            created_at__date__gte=start_of_week
-        )
+        orders = orders.filter(created_at__date__gte=start_of_week)
 
     elif date_filter == "this_month":
 
@@ -3030,9 +2277,7 @@ def admin_order_list(request):
 
         first_of_this_month = today.replace(day=1)
 
-        last_month_end = (
-            first_of_this_month - timedelta(days=1)
-        )
+        last_month_end = first_of_this_month - timedelta(days=1)
 
         last_month_start = last_month_end.replace(day=1)
 
@@ -3065,9 +2310,7 @@ def admin_order_list(request):
         ADMIN_ORDER_PAGE_SIZE,
     )
 
-    page_obj = paginator.get_page(
-        request.GET.get("page")
-    )
+    page_obj = paginator.get_page(request.GET.get("page"))
 
     return render(
         request,
@@ -3094,15 +2337,11 @@ def admin_order_detail(request, order_id):
         return forbidden
 
     order = get_object_or_404(
-        Order.objects
-        .select_related(
+        Order.objects.select_related(
             "user",
             "table",
             "bill_order__bill",
-        )
-        .prefetch_related(
-            "items__product__images"
-        ),
+        ).prefetch_related("items__product__images"),
         id=order_id,
     )
 
@@ -3118,16 +2357,13 @@ def admin_order_detail(request, order_id):
 
     if bill_order:
 
-        payment_method = (
-            bill_order.get_payment_method_display()
-        )
+        payment_method = bill_order.get_payment_method_display()
 
         bill = bill_order.bill
 
         if (
             bill
-            and bill.payment_method
-            == Bill.PaymentMethod.ONLINE
+            and bill.payment_method == Bill.PaymentMethod.ONLINE
             and bill.transaction_method
         ):
             payment_method = (
@@ -3167,10 +2403,7 @@ def admin_update_order_status(request, order_id):
         "",
     ).strip()
 
-    valid_statuses = {
-        choice[0]
-        for choice in Order.Status.choices
-    }
+    valid_statuses = {choice[0] for choice in Order.Status.choices}
 
     if new_status not in valid_statuses:
         return JsonResponse(
@@ -3197,9 +2430,7 @@ def admin_update_order_status(request, order_id):
         return JsonResponse(
             {
                 "success": False,
-                "message": (
-                    "A cancelled order cannot be updated."
-                ),
+                "message": ("A cancelled order cannot be updated."),
                 "order_id": order.id,
                 "order_no": order.order_no,
                 "status": order.status,
@@ -3217,13 +2448,10 @@ def admin_update_order_status(request, order_id):
 
     current_status = order.status
 
-    requires_confirmation = (
-        new_status == Order.Status.CANCELLED
-        or (
-            current_status in status_order
-            and new_status in status_order
-            and status_order[new_status] < status_order[current_status]
-        )
+    requires_confirmation = new_status == Order.Status.CANCELLED or (
+        current_status in status_order
+        and new_status in status_order
+        and status_order[new_status] < status_order[current_status]
     )
 
     confirmed = request.POST.get("confirmed") == "true"
@@ -3266,9 +2494,7 @@ def admin_update_order_status(request, order_id):
             order.cancellation_reason = ""
             update_fields.append("cancellation_reason")
 
-    order.save(
-        update_fields=update_fields
-    )
+    order.save(update_fields=update_fields)
 
     if new_status == Order.Status.DELIVERED:
         reward_referral_for_order(order)
@@ -3281,9 +2507,7 @@ def admin_update_order_status(request, order_id):
             "order_no": order.order_no,
             "status": order.status,
             "status_display": order.get_status_display(),
-            "updated_at": timezone.localtime(
-                order.updated_at
-            ).strftime(
+            "updated_at": timezone.localtime(order.updated_at).strftime(
                 "%d %b %Y, %H:%M"
             ),
         }

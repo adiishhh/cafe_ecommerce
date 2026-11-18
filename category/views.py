@@ -11,148 +11,114 @@ from .forms import CategoryForm
 
 # Create your views here.
 
-@login_required(login_url='login')
+
+@login_required(login_url="login")
 def category_list(request):
     if not request.user.is_staff:
-        return HttpResponseForbidden(
-            'You are not authorized to access this page.'
-        )
+        return HttpResponseForbidden("You are not authorized to access this page.")
 
-    query = request.GET.get('q', '').strip()
+    query = request.GET.get("q", "").strip()
 
-    categories = (
-        Category.objects
-        .annotate(product_count=Count("products"))
-        .order_by("-created_at")
+    categories = Category.objects.annotate(product_count=Count("products")).order_by(
+        "-created_at"
     )
-    
+
     if query:
         categories = categories.filter(
-            Q(name__icontains=query) |
-            Q(description__icontains=query)
+            Q(name__icontains=query) | Q(description__icontains=query)
         )
 
     paginator = Paginator(categories, 8)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
     return render(
         request,
-        'admin_panel/categories.html',
+        "admin_panel/categories.html",
         {
-            'page_obj': page_obj,
-            'query': query,
-            'total_categories': Category.objects.count(),
-            'active_categories': Category.objects.filter(
-                is_active=True
-            ).count(),
-        }
+            "page_obj": page_obj,
+            "query": query,
+            "total_categories": Category.objects.count(),
+            "active_categories": Category.objects.filter(is_active=True).count(),
+        },
     )
 
 
-@login_required(login_url='login')
+@login_required(login_url="login")
 def add_category(request):
     if not request.user.is_staff:
-        return HttpResponseForbidden(
-            'You are not authorized to access this page.'
-        )
+        return HttpResponseForbidden("You are not authorized to access this page.")
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form = CategoryForm(request.POST)
 
         if form.is_valid():
             form.save()
 
-            messages.success(
-                request,
-                'Category added successfully.'
-            )
+            messages.success(request, "Category added successfully.")
 
-            return redirect('category_list')
+            return redirect("category_list")
 
     else:
         form = CategoryForm()
 
     return render(
         request,
-        'admin_panel/category_form.html',
+        "admin_panel/category_form.html",
         {
-            'form': form,
-            'page_title': 'Add Category',
-            'button_text': 'Add Category',
-        }
+            "form": form,
+            "page_title": "Add Category",
+            "button_text": "Add Category",
+        },
     )
 
 
-@login_required(login_url='login')
+@login_required(login_url="login")
 def edit_category(request, category_id):
     if not request.user.is_staff:
-        return HttpResponseForbidden(
-            'You are not authorized to access this page.'
-        )
+        return HttpResponseForbidden("You are not authorized to access this page.")
 
-    category = get_object_or_404(
-        Category,
-        id=category_id
-    )
+    category = get_object_or_404(Category, id=category_id)
 
-    if request.method == 'POST':
-        form = CategoryForm(
-            request.POST,
-            instance=category
-        )
+    if request.method == "POST":
+        form = CategoryForm(request.POST, instance=category)
 
         if form.is_valid():
             form.save()
 
-            messages.success(
-                request,
-                'Category updated successfully.'
-            )
+            messages.success(request, "Category updated successfully.")
 
-            return redirect('category_list')
+            return redirect("category_list")
 
     else:
         form = CategoryForm(instance=category)
 
     return render(
         request,
-        'admin_panel/category_form.html',
+        "admin_panel/category_form.html",
         {
-            'form': form,
-            'category': category,
-            'page_title': 'Edit Category',
-            'button_text': 'Save Changes',
-        }
+            "form": form,
+            "category": category,
+            "page_title": "Edit Category",
+            "button_text": "Save Changes",
+        },
     )
 
 
-@login_required(login_url='login')
+@login_required(login_url="login")
 @require_POST
 def toggle_category_status(request, category_id):
     if not request.user.is_staff:
-        return HttpResponseForbidden(
-            'You are not authorized to perform this action.'
-        )
+        return HttpResponseForbidden("You are not authorized to perform this action.")
 
-    category = get_object_or_404(
-        Category,
-        id=category_id
-    )
-
+    category = get_object_or_404(Category, id=category_id)
 
     category.is_active = not category.is_active
-    category.save(update_fields=['is_active', 'updated_at'])
+    category.save(update_fields=["is_active", "updated_at"])
 
     if category.is_active:
-        messages.success(
-            request,
-            f'"{category.name}" activated successfully.'
-        )
+        messages.success(request, f'"{category.name}" activated successfully.')
     else:
-        messages.warning(
-            request,
-            f'"{category.name}" deactivated successfully.'
-        )
+        messages.warning(request, f'"{category.name}" deactivated successfully.')
 
-    return redirect('category_list')
+    return redirect("category_list")

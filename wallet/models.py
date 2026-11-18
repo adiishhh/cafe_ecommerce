@@ -6,6 +6,7 @@ import uuid
 
 # Create your models here.
 
+
 class Wallet(models.Model):
 
     user = models.OneToOneField(
@@ -18,9 +19,7 @@ class Wallet(models.Model):
         max_digits=12,
         decimal_places=2,
         default=Decimal("0.00"),
-        validators=[
-            MinValueValidator(Decimal("0.00"))
-        ],
+        validators=[MinValueValidator(Decimal("0.00"))],
     )
 
     created_at = models.DateTimeField(
@@ -33,6 +32,7 @@ class Wallet(models.Model):
 
     def __str__(self):
         return f"Wallet - {self.user}"
+
 
 class WalletTransaction(models.Model):
 
@@ -71,9 +71,7 @@ class WalletTransaction(models.Model):
     amount = models.DecimalField(
         max_digits=12,
         decimal_places=2,
-        validators=[
-            MinValueValidator(Decimal("0.01"))
-        ],
+        validators=[MinValueValidator(Decimal("0.01"))],
     )
 
     balance_after = models.DecimalField(
@@ -117,14 +115,13 @@ class WalletTransaction(models.Model):
     def save(self, *args, **kwargs):
 
         if not self.transaction_no:
-            self.transaction_no = (
-                f"WAL-{uuid.uuid4().hex[:12].upper()}"
-            )
+            self.transaction_no = f"WAL-{uuid.uuid4().hex[:12].upper()}"
 
         super().save(*args, **kwargs)
 
     def __str__(self):
         return self.transaction_no
+
 
 class ReferralCode(models.Model):
 
@@ -150,13 +147,9 @@ class ReferralCode(models.Model):
 
             while True:
 
-                generated_code = (
-                    f"SC-{uuid.uuid4().hex[:8].upper()}"
-                )
+                generated_code = f"SC-{uuid.uuid4().hex[:8].upper()}"
 
-                if not ReferralCode.objects.filter(
-                    code=generated_code
-                ).exists():
+                if not ReferralCode.objects.filter(code=generated_code).exists():
 
                     self.code = generated_code
 
@@ -167,6 +160,7 @@ class ReferralCode(models.Model):
     def __str__(self):
 
         return self.code
+
 
 class ReferralUsage(models.Model):
     class Status(models.TextChoices):

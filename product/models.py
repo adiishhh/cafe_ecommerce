@@ -7,24 +7,18 @@ from django.utils import timezone
 
 # Create your models here.
 
+
 class Product(models.Model):
 
     category = models.ForeignKey(
-        Category,
-        on_delete=models.PROTECT,
-        related_name='products'
+        Category, on_delete=models.PROTECT, related_name="products"
     )
 
-    name = models.CharField(
-        max_length=150
-    )
+    name = models.CharField(max_length=150)
 
     description = models.TextField()
 
-    base_price = models.DecimalField(
-        max_digits=10,
-        decimal_places=2
-    )
+    base_price = models.DecimalField(max_digits=10, decimal_places=2)
 
     offer_percentage = models.DecimalField(
         max_digits=5,
@@ -41,17 +35,11 @@ class Product(models.Model):
         blank=True,
     )
 
-    is_active = models.BooleanField(
-        default=True
-    )
+    is_active = models.BooleanField(default=True)
 
-    created_at = models.DateTimeField(
-        auto_now_add=True
-    )
+    created_at = models.DateTimeField(auto_now_add=True)
 
-    updated_at = models.DateTimeField(
-        auto_now=True
-    )
+    updated_at = models.DateTimeField(auto_now=True)
 
     @property
     def has_active_offer(self):
@@ -63,17 +51,10 @@ class Product(models.Model):
 
     @property
     def discounted_price(self):
-        discount = (
-            self.base_price
-            * self.offer_percentage
-            / Decimal("100")
-        )
+        discount = self.base_price * self.offer_percentage / Decimal("100")
 
-        return (
-            self.base_price - discount
-        ).quantize(
-            Decimal("0.01"),
-            rounding=ROUND_HALF_UP
+        return (self.base_price - discount).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
         )
 
     @property
@@ -87,22 +68,16 @@ class Product(models.Model):
         return self.name
 
 
-
 class ProductImage(models.Model):
 
     product = models.ForeignKey(
-        Product,
-        on_delete=models.CASCADE,
-        related_name='images'
+        Product, on_delete=models.CASCADE, related_name="images"
     )
 
-    image = models.ImageField(
-        upload_to='product_images/'
-    )
+    image = models.ImageField(upload_to="product_images/")
 
-    created_at = models.DateTimeField(
-        auto_now_add=True
-    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
 
 class ReviewRating(models.Model):
 
@@ -167,7 +142,4 @@ class ReviewRating(models.Model):
         ordering = ["-created_at", "-id"]
 
     def __str__(self):
-        return (
-            f"{self.user} - {self.product} "
-            f"({self.rating}/5)"
-        )
+        return f"{self.user} - {self.product} " f"({self.rating}/5)"

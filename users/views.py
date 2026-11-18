@@ -1,8 +1,15 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponseForbidden
-from users.forms import SignupForm, SignupOTPForm, ProfileEditForm, ChangeEmailForm, ChangeEmailOTPForm, AddressForm
+from users.forms import (
+    SignupForm,
+    SignupOTPForm,
+    ProfileEditForm,
+    ChangeEmailForm,
+    ChangeEmailOTPForm,
+    AddressForm,
+)
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
-from django.contrib.auth import login,get_user_model, update_session_auth_hash
+from django.contrib.auth import login, get_user_model, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 import random
 import uuid
@@ -23,150 +30,139 @@ from wallet.models import Wallet
 
 User = get_user_model()
 
+
 def signup(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         form = SignupForm(request.POST)
 
         if form.is_valid():
             otp = str(random.randint(100000, 999999))
-            signup_id =str(uuid.uuid4())
-            request.session['signup_id'] = signup_id
+            signup_id = str(uuid.uuid4())
+            request.session["signup_id"] = signup_id
 
             signup_data = {
-                'name': form.cleaned_data['name'],
-                'email': form.cleaned_data['email'],
-                'phone': form.cleaned_data['phone'],
-                'password': make_password(form.cleaned_data['password1']),
-                'otp': make_password(otp),
+                "name": form.cleaned_data["name"],
+                "email": form.cleaned_data["email"],
+                "phone": form.cleaned_data["phone"],
+                "password": make_password(form.cleaned_data["password1"]),
+                "otp": make_password(otp),
             }
 
-            cache.set(
-                f'signup_{signup_id}',
-                signup_data,
-                timeout=300
-            )
+            cache.set(f"signup_{signup_id}", signup_data, timeout=300)
 
             send_mail(
-                subject='SmartCafe - Verify your email',
-                message=f'Your SmartCafe verification OTP is: {otp}',
+                subject="SmartCafe - Verify your email",
+                message=f"Your SmartCafe verification OTP is: {otp}",
                 from_email=None,
-                recipient_list=[form.cleaned_data['email']],
+                recipient_list=[form.cleaned_data["email"]],
             )
 
-            cache.set(
-                f'signup_resend_{signup_id}',
-                time.time() + 60,
-                timeout=60
-            )
-            return redirect('verify_signup_otp')
+            cache.set(f"signup_resend_{signup_id}", time.time() + 60, timeout=60)
+            return redirect("verify_signup_otp")
 
     else:
         form = SignupForm()
 
-    return render(request, 'users/signup.html', {'form': form})
+    return render(request, "users/signup.html", {"form": form})
+
 
 def verify_signup_otp(request):
-    signup_id = request.session.get('signup_id')
+    signup_id = request.session.get("signup_id")
 
     if not signup_id:
-        return redirect('signup')
+        return redirect("signup")
 
-    signup_data = cache.get(f'signup_{signup_id}')
+    signup_data = cache.get(f"signup_{signup_id}")
 
     if not signup_data:
-        request.session.pop('signup_id', None)
-        return redirect('signup')
+        request.session.pop("signup_id", None)
+        return redirect("signup")
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form = SignupOTPForm(request.POST)
 
         if form.is_valid():
-            otp = form.cleaned_data['otp']
+            otp = form.cleaned_data["otp"]
 
-            if check_password(otp, signup_data['otp']):
+            if check_password(otp, signup_data["otp"]):
 
                 with transaction.atomic():
 
                     user = User.objects.create(
-                        name=signup_data['name'],
-                        email=signup_data['email'],
-                        phone=signup_data['phone'],
-                        password=signup_data['password'],
+                        name=signup_data["name"],
+                        email=signup_data["email"],
+                        phone=signup_data["phone"],
+                        password=signup_data["password"],
                     )
 
-                    Wallet.objects.create(
-                        user=user
-                    )
+                    Wallet.objects.create(user=user)
 
-                    cache.delete(f'signup_{signup_id}')
-                    cache.delete(f'signup_resend_{signup_id}')
-                    request.session.pop('signup_id', None)
+                    cache.delete(f"signup_{signup_id}")
+                    cache.delete(f"signup_resend_{signup_id}")
+                    request.session.pop("signup_id", None)
 
-                    return redirect('login')
+                    return redirect("login")
             else:
-                form.add_error('otp', 'Invalid OTP. Please try again.')
+                form.add_error("otp", "Invalid OTP. Please try again.")
 
     else:
         form = SignupOTPForm()
 
-    cooldown_until = cache.get(f'signup_resend_{signup_id}')
+    cooldown_until = cache.get(f"signup_resend_{signup_id}")
     if cooldown_until:
-        resend_available_in = max(0,int(cooldown_until - time.time()))
+        resend_available_in = max(0, int(cooldown_until - time.time()))
     else:
         resend_available_in = 0
 
-    return render(request,'users/verify_signup_otp.html',
-    {
-        'form': form,
-        'resend_available_in': resend_available_in,
-    })
+    return render(
+        request,
+        "users/verify_signup_otp.html",
+        {
+            "form": form,
+            "resend_available_in": resend_available_in,
+        },
+    )
+
 
 @require_POST
 def resend_signup_otp(request):
-    signup_id = request.session.get('signup_id')
+    signup_id = request.session.get("signup_id")
 
     if not signup_id:
-        return redirect('signup')
+        return redirect("signup")
 
-    signup_data = cache.get(f'signup_{signup_id}')
+    signup_data = cache.get(f"signup_{signup_id}")
 
     if not signup_data:
-        return redirect('signup')
+        return redirect("signup")
 
-    cooldown_until = cache.get(f'signup_resend_{signup_id}')
+    cooldown_until = cache.get(f"signup_resend_{signup_id}")
 
     if cooldown_until:
         return redirect(
-            'verify_signup_otp',
+            "verify_signup_otp",
         )
 
     otp = str(random.randint(100000, 999999))
 
-    signup_data['otp'] = make_password(otp)
+    signup_data["otp"] = make_password(otp)
 
-    cache.set(
-        f'signup_{signup_id}',
-        signup_data,
-        timeout=300
-    )
+    cache.set(f"signup_{signup_id}", signup_data, timeout=300)
 
     send_mail(
-        subject='SmartCafe - New verification OTP',
-        message=f'Your new SmartCafe verification OTP is: {otp}',
+        subject="SmartCafe - New verification OTP",
+        message=f"Your new SmartCafe verification OTP is: {otp}",
         from_email=None,
-        recipient_list=[signup_data['email']],
+        recipient_list=[signup_data["email"]],
     )
 
-    cache.set(
-        f'signup_resend_{signup_id}',
-        time.time() + 60,
-        timeout=60
-    )
+    cache.set(f"signup_resend_{signup_id}", time.time() + 60, timeout=60)
 
-    return redirect('verify_signup_otp')
+    return redirect("verify_signup_otp")
+
 
 def login_view(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         form = AuthenticationForm(request, data=request.POST)
 
         if form.is_valid():
@@ -174,134 +170,125 @@ def login_view(request):
             login(request, user)
 
             if user.is_staff:
-                return redirect('admin_dashboard')
+                return redirect("admin_dashboard")
 
-            return redirect('home')
+            return redirect("home")
 
     else:
         form = AuthenticationForm()
 
-    return render(request, 'users/login.html', {'form': form})
+    return render(request, "users/login.html", {"form": form})
+
 
 @login_required
 def profile(request):
     default_address = request.user.addresses.filter(is_default=True).first()
-    return render(request, 'users/profile.html', {'default_address': default_address})
+    return render(request, "users/profile.html", {"default_address": default_address})
+
 
 @login_required
 def edit_profile(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         form = ProfileEditForm(request.POST, request.FILES, instance=request.user)
 
         if form.is_valid():
             form.save()
-            return redirect('profile')
+            return redirect("profile")
 
     else:
         form = ProfileEditForm(instance=request.user)
 
-    return render(request, 'users/edit_profile.html', {'form': form})
+    return render(request, "users/edit_profile.html", {"form": form})
+
 
 @login_required
 def security(request):
-    return render(request, 'users/security.html')
+    return render(request, "users/security.html")
+
 
 @login_required
 def change_email(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         form = ChangeEmailForm(request.POST, user=request.user)
 
         if form.is_valid():
-            new_email = form.cleaned_data['new_email']
+            new_email = form.cleaned_data["new_email"]
             otp = str(random.randint(100000, 999999))
             change_email_id = str(uuid.uuid4())
-            request.session['change_email_id'] = change_email_id
-            change_email_data =  {
+            request.session["change_email_id"] = change_email_id
+            change_email_data = {
                 "user_id": request.user.id,
                 "new_email": new_email,
                 "otp": make_password(otp),
             }
 
-            cache.set(
-                f"change_email_{change_email_id}",
-                change_email_data,
-                timeout=300
-            )
+            cache.set(f"change_email_{change_email_id}", change_email_data, timeout=300)
 
             send_mail(
                 subject="SmartCafe - Verify your new email",
-                message=(
-                    f"Your SmartCafe email change OTP is: {otp}"
-                ),
+                message=(f"Your SmartCafe email change OTP is: {otp}"),
                 from_email=None,
                 recipient_list=[new_email],
             )
 
             cache.set(
-                f"change_email_resend_{change_email_id}",
-                time.time() + 60,
-                timeout=60
+                f"change_email_resend_{change_email_id}", time.time() + 60, timeout=60
             )
 
-            return redirect('verify_change_email')
+            return redirect("verify_change_email")
 
     else:
-        form = ChangeEmailForm(
-            user=request.user
-        )
+        form = ChangeEmailForm(user=request.user)
 
-    return render(request, 'users/change_email.html', {'form': form})
+    return render(request, "users/change_email.html", {"form": form})
+
 
 @login_required
 def verify_change_email(request):
-    change_email_id = request.session.get('change_email_id')
+    change_email_id = request.session.get("change_email_id")
 
     if not change_email_id:
-        return redirect('change_email')
-    
+        return redirect("change_email")
+
     change_email_data = cache.get(f"change_email_{change_email_id}")
 
     if not change_email_data:
-        return redirect('change_email')
+        return redirect("change_email")
 
-    if change_email_data['user_id'] != request.user.id:
-        return HttpResponseForbidden("You do not have permission to access this request.")
+    if change_email_data["user_id"] != request.user.id:
+        return HttpResponseForbidden(
+            "You do not have permission to access this request."
+        )
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form = ChangeEmailOTPForm(request.POST)
 
         if form.is_valid():
-            otp = form.cleaned_data['otp']
+            otp = form.cleaned_data["otp"]
 
-            if check_password(otp, change_email_data['otp']):
-                request.user.email = change_email_data['new_email']
-                request.user.save(update_fields=['email'])
+            if check_password(otp, change_email_data["otp"]):
+                request.user.email = change_email_data["new_email"]
+                request.user.save(update_fields=["email"])
 
                 cache.delete(f"change_email_{change_email_id}")
                 cache.delete(f"change_email_resend_{change_email_id}")
-                request.session.pop('change_email_id', None)
+                request.session.pop("change_email_id", None)
 
                 messages.success(
-                    request,
-                    'Your email address has been changed successfully.'
-                )                
+                    request, "Your email address has been changed successfully."
+                )
 
-                return redirect('security')
-            
+                return redirect("security")
+
             else:
                 form.add_error("otp", "Invalid OTP")
     else:
         form = ChangeEmailOTPForm()
 
-    cooldown_until = cache.get(
-        f"change_email_resend_{change_email_id}"
-    )
+    cooldown_until = cache.get(f"change_email_resend_{change_email_id}")
 
     if cooldown_until:
-        resend_available_in = max(
-            0,
-            int(cooldown_until - time.time())
-        )
+        resend_available_in = max(0, int(cooldown_until - time.time()))
     else:
         resend_available_in = 0
 
@@ -313,99 +300,90 @@ def verify_change_email(request):
             "change_email_id": change_email_id,
             "new_email": change_email_data["new_email"],
             "resend_available_in": resend_available_in,
-        }
+        },
     )
+
 
 @login_required
 @require_POST
-def  resend_change_email_otp(request):
-    change_email_id = request.session.get('change_email_id')
+def resend_change_email_otp(request):
+    change_email_id = request.session.get("change_email_id")
 
     if not change_email_id:
-        return redirect('change_email')
-    
-    change_email_data = cache.get(
-        f"change_email_{change_email_id}"
-    )
+        return redirect("change_email")
+
+    change_email_data = cache.get(f"change_email_{change_email_id}")
 
     if not change_email_data:
         return redirect("change_email")
 
     if change_email_data["user_id"] != request.user.id:
-        return HttpResponseForbidden("You do not have permission to access this request.")
+        return HttpResponseForbidden(
+            "You do not have permission to access this request."
+        )
 
-    cooldown_until = cache.get(
-        f"change_email_resend_{change_email_id}"
-    )
+    cooldown_until = cache.get(f"change_email_resend_{change_email_id}")
 
     if cooldown_until:
-        return redirect(
-            "verify_change_email",
-            change_email_id=change_email_id
-        )
+        return redirect("verify_change_email", change_email_id=change_email_id)
 
     otp = str(random.randint(100000, 999999))
 
     change_email_data["otp"] = make_password(otp)
 
-    cache.set(
-        f"change_email_{change_email_id}",
-        change_email_data,
-        timeout=300
-    )
+    cache.set(f"change_email_{change_email_id}", change_email_data, timeout=300)
 
     send_mail(
         subject="SmartCafe - New email verification OTP",
-        message=(
-            f"Your new SmartCafe email verification OTP is: {otp}"
-        ),
+        message=(f"Your new SmartCafe email verification OTP is: {otp}"),
         from_email=None,
         recipient_list=[change_email_data["new_email"]],
     )
 
-    cache.set(
-        f"change_email_resend_{change_email_id}",
-        time.time() + 60,
-        timeout=60
+    cache.set(f"change_email_resend_{change_email_id}", time.time() + 60, timeout=60)
+
+    return redirect(
+        "verify_change_email",
     )
 
-    return redirect("verify_change_email",)
 
 @login_required
 def change_password(request):
-    if request.method == 'POST':
-        form = PasswordChangeForm(
-            request.user,
-            request.POST
-        )
+    if request.method == "POST":
+        form = PasswordChangeForm(request.user, request.POST)
 
         if form.is_valid():
             user = form.save()
             update_session_auth_hash(request, user)
 
-            messages.success(
-                request,
-                'Your password has been changed successfully.'
-            )
+            messages.success(request, "Your password has been changed successfully.")
 
-            return redirect('security')
-        
+            return redirect("security")
+
     else:
         form = PasswordChangeForm(request.user)
 
-    return render(request, 'users/change_password.html', {'form': form})
+    return render(request, "users/change_password.html", {"form": form})
+
 
 @login_required
 def addresses(request):
 
-    user_addresses = request.user.addresses.all().order_by('-is_default', '-id')
+    user_addresses = request.user.addresses.all().order_by("-is_default", "-id")
 
-    return render(request, 'users/addresses.html', {'addresses': user_addresses,})
+    return render(
+        request,
+        "users/addresses.html",
+        {
+            "addresses": user_addresses,
+        },
+    )
+
 
 @login_required
 def add_address(request):
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form = AddressForm(request.POST)
 
         if form.is_valid():
@@ -417,74 +395,68 @@ def add_address(request):
 
             address.save()
 
-            return redirect('addresses')
+            return redirect("addresses")
 
     else:
         form = AddressForm()
 
     return render(
         request,
-        'users/address_form.html',
+        "users/address_form.html",
         {
-            'form': form,
-            'page_title': 'Add Address',
-            'page_subtitle': 'Add a new delivery address',
-            'button_text': 'Add Address',
-        }
+            "form": form,
+            "page_title": "Add Address",
+            "page_subtitle": "Add a new delivery address",
+            "button_text": "Add Address",
+        },
     )
+
 
 @login_required
 def edit_address(request, address_id):
-    address = get_object_or_404(
-        request.user.addresses,
-        id=address_id
-    )
+    address = get_object_or_404(request.user.addresses, id=address_id)
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form = AddressForm(request.POST, instance=address)
 
         if form.is_valid():
             form.save()
-            return redirect('addresses')
+            return redirect("addresses")
 
     else:
         form = AddressForm(instance=address)
 
     return render(
         request,
-        'users/address_form.html',
+        "users/address_form.html",
         {
-            'form': form,
-            'page_title': 'Edit Address',
-            'page_subtitle': 'Update your delivery address',
-            'button_text': 'Save Changes',
-        }
+            "form": form,
+            "page_title": "Edit Address",
+            "page_subtitle": "Update your delivery address",
+            "button_text": "Save Changes",
+        },
     )
+
 
 @login_required
 @require_POST
 @transaction.atomic
 def set_default_address(request, address_id):
-    address = get_object_or_404(
-        request.user.addresses,
-        id=address_id
-    )
+    address = get_object_or_404(request.user.addresses, id=address_id)
 
     request.user.addresses.update(is_default=False)
 
     address.is_default = True
-    address.save(update_fields=['is_default'])
+    address.save(update_fields=["is_default"])
 
-    return redirect('addresses')
+    return redirect("addresses")
+
 
 @login_required
 @require_POST
 @transaction.atomic
 def delete_address(request, address_id):
-    address = get_object_or_404(
-        request.user.addresses,
-        id=address_id
-    )
+    address = get_object_or_404(request.user.addresses, id=address_id)
 
     was_default = address.is_default
 
@@ -492,121 +464,104 @@ def delete_address(request, address_id):
 
     if was_default:
 
-        replacement = request.user.addresses.order_by('-id').first()
+        replacement = request.user.addresses.order_by("-id").first()
 
         if replacement:
             replacement.is_default = True
-            replacement.save(update_fields=['is_default'])
+            replacement.save(update_fields=["is_default"])
 
-    return redirect('addresses')
+    return redirect("addresses")
 
 
-@login_required(login_url='login')
+@login_required(login_url="login")
 def admin_users_view(request):
     if not request.user.is_staff:
-        return HttpResponseForbidden(
-            "You do not have permission to access this page."
-        )
+        return HttpResponseForbidden("You do not have permission to access this page.")
 
-    search_query = request.GET.get('q', '').strip()
-    start_date = request.GET.get('start_date', '').strip()
-    end_date = request.GET.get('end_date', '').strip()
+    search_query = request.GET.get("q", "").strip()
+    start_date = request.GET.get("start_date", "").strip()
+    end_date = request.GET.get("end_date", "").strip()
 
-    users = User.objects.filter(
-        is_staff=False
-    ).prefetch_related(
-        Prefetch(
-            'addresses',
-            queryset=Address.objects.filter(is_default=True),
-            to_attr='default_addresses'
+    users = (
+        User.objects.filter(is_staff=False)
+        .prefetch_related(
+            Prefetch(
+                "addresses",
+                queryset=Address.objects.filter(is_default=True),
+                to_attr="default_addresses",
+            )
         )
-    ).order_by('-created_at')
+        .order_by("-created_at")
+    )
 
     if search_query:
         users = users.filter(
-            Q(name__icontains=search_query) |
-            Q(email__icontains=search_query)
+            Q(name__icontains=search_query) | Q(email__icontains=search_query)
         )
 
     if start_date:
-        users = users.filter(
-            created_at__date__gte=start_date
-        )
+        users = users.filter(created_at__date__gte=start_date)
 
     if end_date:
-        users = users.filter(
-            created_at__date__lte=end_date
-        )
+        users = users.filter(created_at__date__lte=end_date)
 
     paginator = Paginator(users, 5)
 
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
     return render(
         request,
-        'admin_panel/admin_users.html',
+        "admin_panel/admin_users.html",
         {
-            'page_obj': page_obj,
-            'search_query': search_query,
-            'start_date': start_date,
-            'end_date': end_date,
-        }
+            "page_obj": page_obj,
+            "search_query": search_query,
+            "start_date": start_date,
+            "end_date": end_date,
+        },
     )
-    
 
-@login_required(login_url='login')
+
+@login_required(login_url="login")
 @require_POST
 def toggle_user_status(request, user_id):
     if not request.user.is_staff:
-        return HttpResponseForbidden("You do not have permission to perform this action.")
+        return HttpResponseForbidden(
+            "You do not have permission to perform this action."
+        )
 
-    user = get_object_or_404(
-        User,
-        id=user_id,
-        is_staff=False
-    )
+    user = get_object_or_404(User, id=user_id, is_staff=False)
 
     user.is_active = not user.is_active
-    user.save(update_fields=['is_active'])
+    user.save(update_fields=["is_active"])
 
     if user.is_active:
-        messages.success(
-            request,
-            f'{user.name or user.email} has been activated.'
-        )
+        messages.success(request, f"{user.name or user.email} has been activated.")
     else:
-        messages.success(
-            request,
-            f'{user.name or user.email} has been deactivated.'
-        )
+        messages.success(request, f"{user.name or user.email} has been deactivated.")
 
-    return redirect('admin_users')
+    return redirect("admin_users")
 
-@login_required(login_url='login')
+
+@login_required(login_url="login")
 def admin_user_detail(request, user_id):
     if not request.user.is_staff:
         return HttpResponseForbidden("You do not have permission to access this page.")
 
-    user = get_object_or_404(
-        User,
-        id=user_id,
-        is_staff=False
-    )
+    user = get_object_or_404(User, id=user_id, is_staff=False)
 
-    default_address = user.addresses.filter(
-        is_default=True
-    ).first()
+    default_address = user.addresses.filter(is_default=True).first()
 
     return render(
         request,
-        'admin_panel/user_detail.html',
+        "admin_panel/user_detail.html",
         {
-            'user': user,
-            'default_address': default_address,
-        }
+            "user": user,
+            "default_address": default_address,
+        },
     )
+
 
 def logout_view(request):
     logout(request)
-    return redirect('home')
+    return redirect("home")

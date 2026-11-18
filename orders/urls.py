@@ -1,7 +1,6 @@
 from django.urls import path
 from . import views
 
-
 urlpatterns = [
     path("order/type/", views.order_type, name="order_type"),
     path(
@@ -9,45 +8,29 @@ urlpatterns = [
         views.select_checkout_address,
         name="select_checkout_address",
     ),
-    path(
-        "order/continue/",
-        views.continue_checkout,
-        name="continue_checkout"
-    ),
-    path(
-        "order/dine-in/checkout/",
-        views.dine_in_checkout,
-        name="dine_in_checkout"
-    ),
-    path(
-        "order/dine-in/place/",
-        views.place_dine_in_order,
-        name="place_dine_in_order"
-    ),
+    path("order/continue/", views.continue_checkout, name="continue_checkout"),
+    path("order/dine-in/checkout/", views.dine_in_checkout, name="dine_in_checkout"),
+    path("order/dine-in/place/", views.place_dine_in_order, name="place_dine_in_order"),
     path(
         "order/guest/<int:order_id>/detail/",
         views.guest_order_detail,
-        name="guest_order_detail"
+        name="guest_order_detail",
     ),
-    path(
-        "order/guest/track/",
-        views.track_guest_order,
-        name="track_guest_order"
-    ),
+    path("order/guest/track/", views.track_guest_order, name="track_guest_order"),
     path(
         "order/guest/check-tracking/",
         views.check_guest_tracking,
-        name="check_guest_tracking"
+        name="check_guest_tracking",
     ),
     path(
         "order/guest/<int:order_id>/cancel/",
         views.guest_cancel_order,
-        name="guest_cancel_order"
+        name="guest_cancel_order",
     ),
     path(
         "order/guest/item/<int:item_id>/cancel/",
         views.guest_cancel_order_item,
-        name="guest_cancel_order_item"
+        name="guest_cancel_order_item",
     ),
     path(
         "order/checkout/",

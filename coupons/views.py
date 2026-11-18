@@ -14,6 +14,7 @@ from .models import Coupon
 
 ADMIN_COUPON_PAGE_SIZE = 10
 
+
 def apply_coupon(coupon_code, subtotal):
     coupon_code = (coupon_code or "").strip().upper()
 
@@ -27,9 +28,7 @@ def apply_coupon(coupon_code, subtotal):
 
     subtotal = Decimal(subtotal)
 
-    coupon = Coupon.objects.filter(
-        code__iexact=coupon_code
-    ).first()
+    coupon = Coupon.objects.filter(code__iexact=coupon_code).first()
 
     if coupon is None:
         return {
@@ -65,10 +64,7 @@ def apply_coupon(coupon_code, subtotal):
             "message": "This coupon has expired.",
         }
 
-    if (
-        coupon.usage_limit is not None
-        and coupon.used_count >= coupon.usage_limit
-    ):
+    if coupon.usage_limit is not None and coupon.used_count >= coupon.usage_limit:
         return {
             "success": False,
             "coupon": coupon,
@@ -88,9 +84,7 @@ def apply_coupon(coupon_code, subtotal):
         }
 
     if coupon.discount_type == Coupon.DiscountType.PERCENTAGE:
-        discount = (
-            subtotal * coupon.discount_value / Decimal("100")
-        )
+        discount = subtotal * coupon.discount_value / Decimal("100")
 
     else:
         discount = coupon.discount_value
@@ -106,17 +100,13 @@ def apply_coupon(coupon_code, subtotal):
         subtotal,
     )
 
-    discount = discount.quantize(
-        Decimal("0.01")
-    )
+    discount = discount.quantize(Decimal("0.01"))
 
     return {
         "success": True,
         "coupon": coupon,
         "discount": discount,
-        "message": (
-            f"Coupon {coupon.code} applied successfully."
-        ),
+        "message": (f"Coupon {coupon.code} applied successfully."),
     }
 
 
@@ -126,9 +116,7 @@ def _coupon_admin_check(request):
         return redirect("login")
 
     if not request.user.is_staff:
-        return HttpResponseForbidden(
-            "You are not authorized to access this page."
-        )
+        return HttpResponseForbidden("You are not authorized to access this page.")
 
     return None
 
@@ -149,29 +137,18 @@ def coupon_list(request):
     coupons = Coupon.objects.all()
 
     if search:
-        coupons = coupons.filter(
-            Q(code__icontains=search)
-        )
+        coupons = coupons.filter(Q(code__icontains=search))
 
-    valid_discount_types = {
-        choice[0]
-        for choice in Coupon.DiscountType.choices
-    }
+    valid_discount_types = {choice[0] for choice in Coupon.DiscountType.choices}
 
     if discount_type_filter in valid_discount_types:
-        coupons = coupons.filter(
-            discount_type=discount_type_filter
-        )
+        coupons = coupons.filter(discount_type=discount_type_filter)
 
     if status_filter == "active":
-        coupons = coupons.filter(
-            is_active=True
-        )
+        coupons = coupons.filter(is_active=True)
 
     elif status_filter == "inactive":
-        coupons = coupons.filter(
-            is_active=False
-        )
+        coupons = coupons.filter(is_active=False)
 
     sort_options = {
         "newest": "-created_at",
@@ -197,9 +174,7 @@ def coupon_list(request):
         ADMIN_COUPON_PAGE_SIZE,
     )
 
-    page_obj = paginator.get_page(
-        request.GET.get("page")
-    )
+    page_obj = paginator.get_page(request.GET.get("page"))
 
     return render(
         request,
@@ -303,9 +278,7 @@ def edit_coupon(request, coupon_id):
             "form": form,
             "coupon": coupon,
             "page_heading": "Edit Coupon",
-            "page_description": (
-                f"Update the settings for {coupon.code}."
-            ),
+            "page_description": (f"Update the settings for {coupon.code}."),
             "submit_text": "Save Changes",
             "is_edit": True,
         },

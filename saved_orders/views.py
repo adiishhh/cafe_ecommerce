@@ -9,22 +9,14 @@ from orders.models import Order
 
 # Create your views here.
 
+
 def _clear_saved_order_session(request):
 
-    request.session.pop(
-        "save_order_mode",
-        None
-    )
+    request.session.pop("save_order_mode", None)
 
-    request.session.pop(
-        "saved_order_edit_id",
-        None
-    )
+    request.session.pop("saved_order_edit_id", None)
 
-    request.session.pop(
-        "saved_order_edit_name",
-        None
-    )
+    request.session.pop("saved_order_edit_name", None)
 
     request.session.modified = True
 
@@ -33,8 +25,7 @@ def _clear_saved_order_session(request):
 def my_usuals(request):
 
     saved_orders = (
-        SavedOrder.objects
-        .filter(user=request.user)
+        SavedOrder.objects.filter(user=request.user)
         .prefetch_related("items__product")
         .order_by("-updated_at")
     )
@@ -53,15 +44,9 @@ def create_usual(request):
 
     request.session["save_order_mode"] = True
 
-    request.session.pop(
-        "saved_order_edit_id",
-        None
-    )
+    request.session.pop("saved_order_edit_id", None)
 
-    request.session.pop(
-        "saved_order_edit_name",
-        None
-    )
+    request.session.pop("saved_order_edit_name", None)
 
     request.session["cart"] = {}
 
@@ -74,27 +59,16 @@ def create_usual(request):
 @require_POST
 def save_usual(request):
 
-    cart = request.session.get(
-        "cart",
-        {}
-    )
+    cart = request.session.get("cart", {})
 
     if not cart:
-        messages.error(
-            request,
-            "Your usual cannot be saved because it is empty."
-        )
+        messages.error(request, "Your usual cannot be saved because it is empty.")
 
         return redirect("cart")
 
-    name = request.POST.get(
-        "name",
-        ""
-    ).strip()
+    name = request.POST.get("name", "").strip()
 
-    edit_id = request.session.get(
-        "saved_order_edit_id"
-    )
+    edit_id = request.session.get("saved_order_edit_id")
 
     if edit_id:
 
@@ -136,58 +110,37 @@ def save_usual(request):
                 cart,
             )
 
-    request.session.pop(
-        "cart",
-        None
-    )
+    request.session.pop("cart", None)
 
-    _clear_saved_order_session(
-        request
-    )
+    _clear_saved_order_session(request)
 
-    messages.success(
-        request,
-        "Your usual has been saved."
-    )
+    messages.success(request, "Your usual has been saved.")
 
-    return redirect(
-        "my_usuals"
-    )
+    return redirect("my_usuals")
+
 
 @login_required
 @require_POST
 def save_order_as_usual(request, order_id):
 
     order = get_object_or_404(
-        Order.objects.prefetch_related(
-            "items"
-        ),
+        Order.objects.prefetch_related("items"),
         id=order_id,
         user=request.user,
     )
 
-    name = request.POST.get(
-        "name",
-        ""
-    ).strip()
+    name = request.POST.get("name", "").strip()
 
-    order_items = [
-        item
-        for item in order.items.all()
-        if not item.is_cancelled
-    ]
+    order_items = [item for item in order.items.all() if not item.is_cancelled]
 
     if not order_items:
 
         messages.error(
             request,
-            "This order cannot be saved as a usual because it has no active items."
+            "This order cannot be saved as a usual because it has no active items.",
         )
 
-        return redirect(
-            "order_detail",
-            order_id=order.id
-        )
+        return redirect("order_detail", order_id=order.id)
 
     with transaction.atomic():
 
@@ -208,34 +161,22 @@ def save_order_as_usual(request, order_id):
             ]
         )
 
-    messages.success(
-        request,
-        "This order has been saved to My Usuals."
-    )
+    messages.success(request, "This order has been saved to My Usuals.")
 
-    return redirect(
-        "my_usuals"
-    )
+    return redirect("my_usuals")
 
 
 def _create_saved_items(saved_order, cart):
 
-    product_ids = [
-        int(product_id)
-        for product_id in cart.keys()
-    ]
+    product_ids = [int(product_id) for product_id in cart.keys()]
 
-    products = Product.objects.in_bulk(
-        product_ids
-    )
+    products = Product.objects.in_bulk(product_ids)
 
     items = []
 
     for product_id, cart_item in cart.items():
 
-        product = products.get(
-            int(product_id)
-        )
+        product = products.get(int(product_id))
 
         if not product:
             continue
@@ -247,17 +188,9 @@ def _create_saved_items(saved_order, cart):
 
         else:
 
-            quantity = int(
-                cart_item.get(
-                    "quantity",
-                    0
-                )
-            )
+            quantity = int(cart_item.get("quantity", 0))
 
-            instructions = cart_item.get(
-                "instructions",
-                ""
-            ).strip()
+            instructions = cart_item.get("instructions", "").strip()
 
         if quantity < 1:
             continue
@@ -271,9 +204,7 @@ def _create_saved_items(saved_order, cart):
             )
         )
 
-    SavedOrderItem.objects.bulk_create(
-        items
-    )
+    SavedOrderItem.objects.bulk_create(items)
 
 
 @login_required
@@ -288,14 +219,9 @@ def delete_usual(request, saved_order_id):
 
     saved_order.delete()
 
-    messages.success(
-        request,
-        "Your usual has been deleted."
-    )
+    messages.success(request, "Your usual has been deleted.")
 
-    return redirect(
-        "my_usuals"
-    )
+    return redirect("my_usuals")
 
 
 @login_required
@@ -303,9 +229,7 @@ def delete_usual(request, saved_order_id):
 def order_again(request, saved_order_id):
 
     saved_order = get_object_or_404(
-        SavedOrder.objects.prefetch_related(
-            "items"
-        ),
+        SavedOrder.objects.prefetch_related("items"),
         id=saved_order_id,
         user=request.user,
     )
@@ -321,26 +245,15 @@ def order_again(request, saved_order_id):
 
     request.session["cart"] = cart
 
-    request.session.pop(
-        "save_order_mode",
-        None
-    )
+    request.session.pop("save_order_mode", None)
 
-    request.session.pop(
-        "saved_order_edit_id",
-        None
-    )
+    request.session.pop("saved_order_edit_id", None)
 
-    request.session.pop(
-        "saved_order_edit_name",
-        None
-    )
+    request.session.pop("saved_order_edit_name", None)
 
     request.session.modified = True
 
-    return redirect(
-        "cart"
-    )
+    return redirect("cart")
 
 
 @login_required
@@ -348,9 +261,7 @@ def order_again(request, saved_order_id):
 def edit_usual(request, saved_order_id):
 
     saved_order = get_object_or_404(
-        SavedOrder.objects.prefetch_related(
-            "items"
-        ),
+        SavedOrder.objects.prefetch_related("items"),
         id=saved_order_id,
         user=request.user,
     )
@@ -368,16 +279,10 @@ def edit_usual(request, saved_order_id):
 
     request.session["save_order_mode"] = True
 
-    request.session["saved_order_edit_id"] = (
-        saved_order.id
-    )
+    request.session["saved_order_edit_id"] = saved_order.id
 
-    request.session["saved_order_edit_name"] = (
-        saved_order.name
-    )
+    request.session["saved_order_edit_name"] = saved_order.name
 
     request.session.modified = True
 
-    return redirect(
-        "cart"
-    )
+    return redirect("cart")

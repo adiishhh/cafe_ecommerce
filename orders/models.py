@@ -4,12 +4,14 @@ from product.models import Product
 
 # Create your models here.
 
+
 class Tax(models.Model):
     percentage = models.DecimalField(
         max_digits=5,
         decimal_places=2,
         default=5.00,
     )
+
 
 class Order(models.Model):
 
@@ -103,12 +105,37 @@ class Order(models.Model):
         decimal_places=2,
     )
 
-    coupon_code = models.CharField(max_length=50, blank=True,)
-    coupon_discount_type = models.CharField(max_length=20, blank=True,)
-    coupon_discount_value = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,)
-    coupon_minimum_order_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,)
-    coupon_maximum_discount_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,)
-    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0,)
+    coupon_code = models.CharField(
+        max_length=50,
+        blank=True,
+    )
+    coupon_discount_type = models.CharField(
+        max_length=20,
+        blank=True,
+    )
+    coupon_discount_value = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+    coupon_minimum_order_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+    coupon_maximum_discount_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+    discount_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+    )
 
     created_at = models.DateTimeField(
         auto_now_add=True,
@@ -118,14 +145,9 @@ class Order(models.Model):
         auto_now=True,
     )
 
-    cancelled_at = models.DateTimeField(
-        null=True,
-        blank=True
-    )
+    cancelled_at = models.DateTimeField(null=True, blank=True)
 
-    cancellation_reason = models.TextField(
-        blank=True
-    )
+    cancellation_reason = models.TextField(blank=True)
 
     def __str__(self):
         return self.order_no
@@ -161,18 +183,11 @@ class OrderItem(models.Model):
         decimal_places=2,
     )
 
-    is_cancelled = models.BooleanField(
-        default=False
-    )
-    
-    cancellation_reason = models.TextField(
-        blank=True
-    )
-    
-    cancelled_at = models.DateTimeField(
-        null=True,
-        blank=True
-    )
+    is_cancelled = models.BooleanField(default=False)
+
+    cancellation_reason = models.TextField(blank=True)
+
+    cancelled_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.order.order_no} - {self.product.name}"

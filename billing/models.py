@@ -5,6 +5,7 @@ from django.utils import timezone
 
 # Create your models here.
 
+
 class Bill(models.Model):
 
     class PaymentMethod(models.TextChoices):
@@ -78,14 +79,13 @@ class Bill(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.bill_no:
-            self.bill_no = (
-                f"BILL-{uuid.uuid4().hex[:12].upper()}"
-            )
+            self.bill_no = f"BILL-{uuid.uuid4().hex[:12].upper()}"
 
         super().save(*args, **kwargs)
 
     def __str__(self):
         return self.bill_no
+
 
 class BillOrder(models.Model):
 
@@ -158,6 +158,7 @@ class BillingSectionReadState(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.get_section_display()}"
+
 
 class RefundRequest(models.Model):
 
@@ -254,14 +255,13 @@ class RefundRequest(models.Model):
     def save(self, *args, **kwargs):
 
         if not self.request_no:
-            self.request_no = (
-                f"REF-{uuid.uuid4().hex[:12].upper()}"
-            )
+            self.request_no = f"REF-{uuid.uuid4().hex[:12].upper()}"
 
         super().save(*args, **kwargs)
 
     def __str__(self):
         return self.request_no
+
 
 class Payment(models.Model):
 
@@ -370,4 +370,3 @@ class Payment(models.Model):
             f"{self.bill.bill_no} - "
             f"{self.get_status_display()}"
         )
-    
