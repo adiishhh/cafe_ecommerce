@@ -1,29 +1,30 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponseForbidden
-from users.forms import (
-    SignupForm,
-    SignupOTPForm,
-    ProfileEditForm,
-    ChangeEmailForm,
-    ChangeEmailOTPForm,
-    AddressForm,
-)
-from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
-from django.contrib.auth import login, get_user_model, update_session_auth_hash
-from django.contrib.auth.decorators import login_required
 import random
+import time
 import uuid
+
+from django.contrib import messages
+from django.contrib.auth import get_user_model, login, logout, update_session_auth_hash
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
+from django.contrib.auth.hashers import check_password, make_password
 from django.core.cache import cache
 from django.core.mail import send_mail
-from django.contrib.auth.hashers import make_password, check_password
-import time
-from users.models import Address
-from django.contrib import messages
-from django.db import transaction
-from django.contrib.auth import logout
 from django.core.paginator import Paginator
-from django.db.models import Q, Prefetch
+from django.db import transaction
+from django.db.models import Prefetch, Q
+from django.http import HttpResponseForbidden
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
+
+from users.forms import (
+    AddressForm,
+    ChangeEmailForm,
+    ChangeEmailOTPForm,
+    ProfileEditForm,
+    SignupForm,
+    SignupOTPForm,
+)
+from users.models import Address
 from wallet.models import Wallet
 
 # Create your views here.

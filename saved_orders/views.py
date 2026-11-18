@@ -3,9 +3,11 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
-from product.models import Product
-from .models import SavedOrder, SavedOrderItem
+
 from orders.models import Order
+from product.models import Product
+
+from .models import SavedOrder, SavedOrderItem
 
 # Create your views here.
 

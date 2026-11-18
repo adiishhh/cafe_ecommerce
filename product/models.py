@@ -1,9 +1,11 @@
-from django.db import models
-from category.models import Category
+from decimal import ROUND_HALF_UP, Decimal
+
 from django.conf import settings
-from django.core.validators import MinValueValidator, MaxValueValidator
-from decimal import Decimal, ROUND_HALF_UP
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
 from django.utils import timezone
+
+from category.models import Category
 
 # Create your models here.
 
@@ -44,14 +46,14 @@ class Product(models.Model):
     @property
     def has_active_offer(self):
         return (
-            self.offer_percentage > Decimal("0")
+            self.offer_percentage > Decimal(0)
             and self.offer_valid_until is not None
             and self.offer_valid_until >= timezone.localdate()
         )
 
     @property
     def discounted_price(self):
-        discount = self.base_price * self.offer_percentage / Decimal("100")
+        discount = self.base_price * self.offer_percentage / Decimal(100)
 
         return (self.base_price - discount).quantize(
             Decimal("0.01"), rounding=ROUND_HALF_UP

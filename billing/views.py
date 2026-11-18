@@ -1,32 +1,33 @@
-from django.shortcuts import redirect, render, get_object_or_404
-from .models import Bill, BillOrder, Payment, RefundRequest, BillingSectionReadState
+import csv
+import logging
+import uuid
+from collections import defaultdict
+from datetime import date, datetime, timedelta
+from decimal import ROUND_HALF_UP, Decimal
+from io import BytesIO
+
+import razorpay
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from decimal import Decimal, ROUND_HALF_UP
+from django.core.paginator import Paginator
 from django.db import transaction
-from django.utils import timezone
-from datetime import date, datetime, timedelta
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST, require_GET
-import uuid
-from django.conf import settings
-import razorpay
-from orders.models import Order, OrderItem
-from orders.views import _get_checkout_cart
-from coupons.views import apply_coupon
-from coupons.models import Coupon
-import logging
+from django.db.models import Count, Sum
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from orders.views import _generate_order_number
+from django.utils import timezone
+from django.views.decorators.http import require_GET, require_POST
+
+from coupons.models import Coupon
+from coupons.views import apply_coupon
+from orders.models import Order, OrderItem
+from orders.views import _generate_order_number, _get_checkout_cart
 from product.models import Product
 from wallet.models import WalletTransaction
 from wallet.views import credit_wallet
-from django.db.models import Sum, Count, Q
-from django.http import HttpResponse, HttpResponseBadRequest
-import csv
-from collections import defaultdict
-from io import BytesIO
-from django.core.paginator import Paginator
+
+from .models import Bill, BillingSectionReadState, BillOrder, Payment, RefundRequest
 
 # Create you views here.
 
@@ -1376,8 +1377,8 @@ def initiate_online_payment(request):
         snapshot = _get_online_checkout(request)
 
         amount_paise = int(
-            (Decimal(snapshot["total"]) * Decimal("100")).quantize(
-                Decimal("1"),
+            (Decimal(snapshot["total"]) * Decimal(100)).quantize(
+                Decimal(1),
                 rounding=ROUND_HALF_UP,
             )
         )
@@ -2017,7 +2018,7 @@ def admin_reports(request):
     discount_rate = Decimal("0.00")
 
     if order_subtotal > 0:
-        discount_rate = (total_discounts / order_subtotal * Decimal("100")).quantize(
+        discount_rate = (total_discounts / order_subtotal * Decimal(100)).quantize(
             Decimal("0.01")
         )
 
@@ -2076,7 +2077,7 @@ def admin_reports(request):
     collection_rate = Decimal("0.00")
 
     if order_total > 0:
-        collection_rate = (amount_collected / order_total * Decimal("100")).quantize(
+        collection_rate = (amount_collected / order_total * Decimal(100)).quantize(
             Decimal("0.01")
         )
 
@@ -2314,11 +2315,11 @@ def export_admin_report(
     if export_format == "pdf":
         try:
             from reportlab.lib import colors
-            from reportlab.lib.pagesizes import landscape, A4
+            from reportlab.lib.pagesizes import A4, landscape
             from reportlab.lib.styles import getSampleStyleSheet
             from reportlab.platypus import (
-                SimpleDocTemplate,
                 Paragraph,
+                SimpleDocTemplate,
                 Spacer,
                 Table,
                 TableStyle,

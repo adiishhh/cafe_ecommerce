@@ -1,12 +1,14 @@
-from django.shortcuts import get_object_or_404, redirect, render
-from django.contrib.auth.decorators import login_required
-from django.db.models import Q
-from django.views.decorators.http import require_POST
 from decimal import Decimal
+
 from django.contrib import messages
-from django.http import HttpResponseForbidden
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db.models import Q
+from django.http import HttpResponseForbidden
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.decorators.http import require_POST
+
 from .forms import CouponForm
 from .models import Coupon
 
@@ -84,7 +86,7 @@ def apply_coupon(coupon_code, subtotal):
         }
 
     if coupon.discount_type == Coupon.DiscountType.PERCENTAGE:
-        discount = subtotal * coupon.discount_value / Decimal("100")
+        discount = subtotal * coupon.discount_value / Decimal(100)
 
     else:
         discount = coupon.discount_value

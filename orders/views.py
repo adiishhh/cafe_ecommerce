@@ -1,26 +1,27 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from decimal import Decimal
-from django.contrib.auth.decorators import login_required
-from product.models import Product
 import random
-from django.contrib import messages
-from django.core.exceptions import ValidationError
-from django.db import transaction
-from django.views.decorators.http import require_POST
-from users.models import Address
 import secrets
-from tables.views import get_qr_table
-from .models import Order, OrderItem, Tax
-from django.http import HttpResponse, JsonResponse
-from django.conf import settings
-from django.db.models import Q, Count, Sum
-from django.utils import timezone
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
+from decimal import Decimal
+
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
-from coupons.views import apply_coupon
+from django.db import transaction
+from django.db.models import Count, Q, Sum
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from django.views.decorators.http import require_POST
+
 from billing.models import Bill, BillOrder, Payment, RefundRequest
+from coupons.views import apply_coupon
+from product.models import Product
+from tables.views import get_qr_table
 from wallet.models import WalletTransaction
-from wallet.views import reward_referral_for_order, debit_wallet, get_customer_wallet
+from wallet.views import debit_wallet, get_customer_wallet, reward_referral_for_order
+
+from .models import Order, OrderItem, Tax
 
 # Create your views here.
 
@@ -111,7 +112,7 @@ def _get_checkout_cart(request):
     tax = _get_current_tax()
     tax_percentage = tax.percentage
 
-    tax_rate = tax_percentage / Decimal("100")
+    tax_rate = tax_percentage / Decimal(100)
 
     gst = (subtotal * tax_rate).quantize(Decimal("0.01"))
 
@@ -1558,7 +1559,7 @@ def _recalculate_order_totals(order):
 
     subtotal = sum((item.subtotal for item in active_items), Decimal("0.00"))
 
-    tax_rate = order.tax_percentage / Decimal("100")
+    tax_rate = order.tax_percentage / Decimal(100)
 
     tax_amount = (subtotal * tax_rate).quantize(Decimal("0.01"))
 
@@ -1572,7 +1573,7 @@ def _recalculate_order_totals(order):
             discount_value = order.coupon_discount_value or Decimal("0.00")
 
             if discount_type == "percentage":
-                discount = subtotal * discount_value / Decimal("100")
+                discount = subtotal * discount_value / Decimal(100)
 
             elif discount_type == "fixed":
                 discount = discount_value
@@ -2133,7 +2134,7 @@ def admin_dashboard(request):
 
     for item in orders_by_type_counts:
         if total_orders:
-            percentage = Decimal(item["count"]) * Decimal("100") / Decimal(total_orders)
+            percentage = Decimal(item["count"]) * Decimal(100) / Decimal(total_orders)
         else:
             percentage = Decimal("0.00")
 

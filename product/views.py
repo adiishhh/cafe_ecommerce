@@ -1,34 +1,40 @@
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden, JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
-from django.core.paginator import Paginator
-from django.db.models import (
-    Q,
-    Avg,
-    Count,
-    F,
-    Value,
-    Case,
-    When,
-    ExpressionWrapper,
-    DecimalField,
-)
-from django.contrib import messages
-from django.views.decorators.http import require_POST
-from .forms import ProductForm, ProductImageFormSet
-from .models import Product
-from orders.models import Tax
-from category.models import Category
-from tables.views import get_qr_table
-from decimal import Decimal, InvalidOperation
-from django.utils import timezone
-from .models import ReviewRating
-from django.http import HttpResponseBadRequest, Http404, HttpResponse
-from django.core.files.storage import default_storage
 import json
 import uuid
-from django.core.files.base import ContentFile
+from decimal import Decimal, InvalidOperation
+
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.paginator import Paginator
+from django.db.models import (
+    Avg,
+    Case,
+    Count,
+    DecimalField,
+    ExpressionWrapper,
+    F,
+    Q,
+    Value,
+    When,
+)
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponseBadRequest,
+    HttpResponseForbidden,
+    JsonResponse,
+)
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from django.views.decorators.http import require_POST
+
+from category.models import Category
+from orders.models import Tax
+from tables.views import get_qr_table
+
+from .forms import ProductForm, ProductImageFormSet
+from .models import Product, ReviewRating
 
 
 def _get_current_tax():
@@ -549,8 +555,7 @@ def add_to_cart(request, product_id):
     except (TypeError, ValueError):
         quantity = 1
 
-    if quantity < 1:
-        quantity = 1
+    quantity = max(quantity, 1)
 
     if quantity > MAX_CART_QUANTITY:
 
@@ -703,7 +708,7 @@ def cart(request):
     tax = _get_current_tax()
     tax_percentage = tax.percentage
 
-    tax_rate = tax_percentage / Decimal("100")
+    tax_rate = tax_percentage / Decimal(100)
 
     gst = (subtotal * tax_rate).quantize(Decimal("0.01"))
 
@@ -762,7 +767,7 @@ def cart_totals(request):
     tax = _get_current_tax()
     tax_percentage = tax.percentage
 
-    tax_rate = tax_percentage / Decimal("100")
+    tax_rate = tax_percentage / Decimal(100)
 
     gst = (subtotal * tax_rate).quantize(Decimal("0.01"))
 

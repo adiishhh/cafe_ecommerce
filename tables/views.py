@@ -1,15 +1,17 @@
 from io import BytesIO
+
 import qrcode
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.http import HttpResponse, HttpResponseForbidden
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.views.decorators.http import require_POST
-from .models import Table
-from .forms import TableForm
 from django.utils import timezone
+from django.views.decorators.http import require_POST
+
+from .forms import TableForm
+from .models import Table
 
 # =========================================================
 # ADMIN STAFF CHECK
