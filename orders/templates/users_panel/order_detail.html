@@ -71,6 +71,27 @@
                         {{ order.order_no }}
                     </p>
 
+                    {% if is_guest_order %}
+
+                    <div class="tracking-number-row">
+                                
+                        <strong id="guest-tracking-number">
+                            {{ order.tracking_no }}
+                        </strong>
+                    
+                        <button
+                            type="button"
+                            class="copy-tracking-button"
+                            id="copy-tracking-number"
+                            aria-label="Copy tracking number"
+                        >
+                            Copy
+                        </button>
+                    
+                    </div>
+
+                    {%endif%}
+
                 </div>
 
 
@@ -643,11 +664,36 @@
 
 
                         {% if is_guest_order %}
-                            <span>
-                                Tracking Number
-                                <strong>{{ order.tracking_no }}</strong>
-                            </span>
-
+                            <div class="tracking-number-item">
+                            
+                                <span class="tracking-label">
+                                    Tracking Number
+                                </span>
+                            
+                                <div class="tracking-number-row">
+                                
+                                    <strong id="guest-tracking-number">
+                                        {{ order.tracking_no }}
+                                    </strong>
+                                
+                                    <button
+                                        type="button"
+                                        class="copy-tracking-button"
+                                        id="copy-tracking-number"
+                                        aria-label="Copy tracking number"
+                                    >
+                                        Copy
+                                    </button>
+                                
+                                </div>
+                            
+                                <small
+                                    id="tracking-copy-feedback"
+                                    class="tracking-copy-feedback"
+                                    aria-live="polite"
+                                ></small>
+                            
+                            </div>
                         {% endif %}
 
                         {% if order.order_type == 'table' and order.table %}
@@ -1562,6 +1608,60 @@
                     ) {
                     
                         closeSaveOrderUsualModal();
+                    
+                    }
+                
+                }
+            );
+            
+        }
+
+        /* =====================================================
+           COPY GUEST TRACKING NUMBER
+           ===================================================== */
+
+        const copyTrackingButton = document.getElementById(
+            "copy-tracking-number"
+        );
+
+        const trackingNumber = document.getElementById(
+            "guest-tracking-number"
+        );
+
+        const trackingCopyFeedback = document.getElementById(
+            "tracking-copy-feedback"
+        );
+
+
+        if (copyTrackingButton && trackingNumber) {
+        
+            copyTrackingButton.addEventListener(
+                "click",
+                async function () {
+                
+                    const trackingCode =
+                        trackingNumber.textContent.trim();
+                
+                    try {
+                    
+                        await navigator.clipboard.writeText(
+                            trackingCode
+                        );
+                    
+                        copyTrackingButton.textContent = "Copied!";
+                    
+                        setTimeout(function () {
+                        
+                            copyTrackingButton.textContent = "Copy";
+                        
+                            trackingCopyFeedback.textContent = "";
+                        
+                        }, 2000);
+                    
+                    } catch (error) {
+                    
+                        trackingCopyFeedback.textContent =
+                            "Unable to copy. Please select and copy manually.";
                     
                     }
                 
