@@ -391,13 +391,13 @@
 }
 
 
-.gst-input-wrapper input {
+.gst-input-wrapper select {
 
-    width: 66px;
+    min-width: 155px;
 
-    height: 28px;
+    height: 30px;
 
-    padding: 0 7px;
+    padding: 0 8px;
 
     border: 1px solid #cdb9a4;
 
@@ -411,9 +411,21 @@
 
     font-family: inherit;
 
-    font-size: 14px;
+    font-size: 12px;
 
-    font-weight: 700;
+    font-weight: 600;
+
+    cursor: pointer;
+
+}
+
+
+.gst-input-wrapper select:focus {
+
+    border-color: #8b3f16;
+
+    box-shadow:
+        0 0 0 2px rgba(139, 63, 22, 0.08);
 
 }
 

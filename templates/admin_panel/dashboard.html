@@ -132,46 +132,56 @@
                     
                         
                         <div class="gst-input-wrapper">
-                            
-                            <input
-                            type="number"
-                            name="percentage"
-                            id="gstPercentage"
-                            value="{{ tax_percentage|default:'5.00'|floatformat:2 }}"
-                            min="0"
-                                max="100"
-                                step="0.01"
+
+                            <select
+                                name="percentage"
+                                id="gstPercentage"
                                 required
-                                >
-                                
-                                <span>
-                                    %
-                                </span>
-                                
-                            </div>
-                            
-                        </div>
-                        
-                        
-                        <div class="gst-edit-actions">
-                            
-                            <button
-                            type="submit"
-                            class="gst-save-button"
                             >
-                            Save
-                        </button>
+
+                                {% for rate, label in tax_rate_choices %}
+
+                                    <option
+                                        value="{{ rate }}"
+                                        {% if tax_percentage|stringformat:".2f" == rate %}
+                                            selected
+                                        {% endif %}
+                                    >
+                                        {{ label }}
+                                    </option>
+                                
+                                {% endfor %}
+                                
+                            </select>
+                        
+                        </div>
+
+                        </div>
+
+
+                        <div class="gst-edit-actions">
+                        
+                            <button
+                                type="submit"
+                                class="gst-save-button"
+                            >
+                                Save
+                            </button>
                         
                         
-                        <button
-                        type="button"
-                        class="gst-cancel-button"
-                        id="gstCancelButton"
-                        >
-                        Cancel
-                    </button>
-                    
-                </div>
+                            <button
+                                type="button"
+                                class="gst-cancel-button"
+                                id="gstCancelButton"
+                            >
+                                Cancel
+                            </button>
+                        
+                        </div>
+
+                        </form>
+
+                        </div>
                 
             </form>
             
@@ -1013,8 +1023,6 @@
             gstEditForm.classList.add("active");
 
             gstPercentage.focus();
-
-            gstPercentage.select();
 
         }
     );

@@ -28,6 +28,15 @@ from .models import Order, OrderItem, Tax
 MAX_CART_QUANTITY = 10
 ADMIN_ORDER_PAGE_SIZE = 10
 
+MAX_CART_QUANTITY = 10
+ADMIN_ORDER_PAGE_SIZE = 10
+
+
+GST_RATE_CHOICES = (
+    ("5.00", "5% - Restaurant Service (Without ITC)"),
+    ("18.00", "18% - Specified Premises (With ITC)"),
+)
+
 
 def _get_current_tax():
     tax = Tax.objects.first()
@@ -2165,6 +2174,7 @@ def admin_dashboard(request):
             "start_date_value": start_date.strftime("%Y-%m-%d"),
             "end_date_value": end_date.strftime("%Y-%m-%d"),
             "tax_percentage": tax.percentage,
+            "tax_rate_choices": GST_RATE_CHOICES,
             "total_sales": total_sales,
             "total_orders": total_orders,
             "pending_orders": pending_orders,
@@ -2180,6 +2190,7 @@ def admin_dashboard(request):
 @login_required(login_url="login")
 @require_POST
 def admin_update_tax(request):
+
     forbidden = _admin_staff_check(request)
 
     if forbidden:
@@ -2187,25 +2198,39 @@ def admin_update_tax(request):
 
     percentage = request.POST.get("percentage", "").strip()
 
+    allowed_rates = {
+        Decimal(rate)
+        for rate, label in GST_RATE_CHOICES
+    }
+
     try:
         percentage = Decimal(percentage)
-    except Exception:
+
+    except (ValueError, TypeError, ArithmeticError):
+
         messages.error(
             request,
-            "Please enter a valid GST percentage.",
+            "Please select a valid GST rate.",
         )
+
         return redirect("admin_dashboard")
 
-    if percentage < 0 or percentage > 100:
+    if percentage not in allowed_rates:
+
         messages.error(
             request,
-            "GST percentage must be between 0 and 100.",
+            "Invalid GST rate selected.",
         )
+
         return redirect("admin_dashboard")
 
     tax = _get_current_tax()
+
     tax.percentage = percentage
-    tax.save(update_fields=["percentage"])
+
+    tax.save(
+        update_fields=["percentage"]
+    )
 
     messages.success(
         request,
